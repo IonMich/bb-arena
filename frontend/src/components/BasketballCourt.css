@@ -1,0 +1,50 @@
+.basketball-court-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.basketball-court-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-family: 'Arial', sans-serif;
+}
+
+.court-wrapper {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.basketball-court {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.court-info {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.court-info p {
+  margin: 5px 0;
+}
+
+/* Responsive design */
+@media (max-width: 800px) {
+  .basketball-court {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .court-wrapper {
+    padding: 10px;
+    overflow-x: auto;
+  }
+}
