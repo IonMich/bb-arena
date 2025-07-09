@@ -36,6 +36,24 @@
   margin: 5px 0;
 }
 
+/* Courtside seating styles */
+.courtside-seat {
+  cursor: pointer;
+  transition: fill 0.2s ease;
+}
+
+.courtside-seat:hover {
+  fill: #A0522D !important;
+  stroke: #8B4513;
+  stroke-width: 1;
+}
+
+.seat-number {
+  pointer-events: none;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
 /* Responsive design */
 @media (max-width: 800px) {
   .basketball-court {
