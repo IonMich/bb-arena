@@ -54,6 +54,29 @@
   font-weight: bold;
 }
 
+/* Lower-tier seating styles */
+.lower-tier-section .section-area {
+  cursor: pointer;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.lower-tier-section .section-area:hover {
+  fill: #5A67D8 !important;
+  stroke: #4C51BF;
+  stroke-width: 2;
+}
+
+.lower-tier-section .section-number {
+  pointer-events: none;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
+.lower-tier-section .section-capacity {
+  pointer-events: none;
+  font-family: 'Arial', sans-serif;
+}
+
 /* Responsive design */
 @media (max-width: 800px) {
   .basketball-court {

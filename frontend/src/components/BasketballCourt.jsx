@@ -6,6 +6,8 @@ import FreeThrowLanes from './court/FreeThrowLanes';
 import BasketAndBackboard from './court/BasketAndBackboard';
 import ThreePointLine from './court/ThreePointLine';
 import CourtsideSeating from './court/CourtsideSeating';
+import LowerTierSeating from './court/LowerTierSeating';
+import LuxuryBoxes from './court/LuxuryBoxes';
 
 const BasketballCourt = () => {
   // NBA court dimensions in feet
@@ -21,6 +23,9 @@ const BasketballCourt = () => {
   const BASKET_DISTANCE_FROM_BASELINE = BACKBOARD_DISTANCE_FROM_BASELINE + BASKET_INNER_DIAMETER / 12 / 2; // feet
   const BUFFER_ZONE = 4; // 4 feet buffer around the court
   const COURTSIDE_SEATING_WIDTH = 10; // 10 feet wide seating area
+  const LOWER_TIER_SEATING_WIDTH = 30; // 30 feet wide lower tier seating area
+  const LUXURY_BOX_DEPTH = 4; // 4 feet deep luxury boxes (reduced from 8 feet)
+  const LUXURY_BOX_GAP = 4; // 4 feet gap between lower-tier and luxury boxes
   const COURTSIDE_ROWS = 5;
   const ROW_DEPTH = 2; // 2 feet per row
   
@@ -33,6 +38,14 @@ const BasketballCourt = () => {
   const courtWidth = NBA_WIDTH * SCALE;
   const bufferSize = BUFFER_ZONE * SCALE;
   const seatingDepth = COURTSIDE_SEATING_WIDTH * SCALE;
+  const lowerTierDepth = LOWER_TIER_SEATING_WIDTH * SCALE;
+  const luxuryBoxDepth = LUXURY_BOX_DEPTH * SCALE;
+  const luxuryBoxGap = LUXURY_BOX_GAP * SCALE;
+  
+  // Calculate luxury box layout - always exactly 25 boxes per row
+  const maxBoxesPerRow = 25; // Maximum 25 boxes per row (50 total)
+  const luxuryBoxesPerRow = maxBoxesPerRow; // Always 25 boxes
+  const totalLuxuryBoxes = luxuryBoxesPerRow * 2; // North and South rows
   
   // Calculate courtside seating layout (using only 3 sides)
   const seatSpacing = 1.5 * SCALE; // 1.5 feet between seats
@@ -42,9 +55,9 @@ const BasketballCourt = () => {
   const totalSeatsPerSide = seatsPerRow + seatsPerSideRow + seatsPerSideRow; // south + east + west
   const calculatedRows = Math.ceil(maxSeats / totalSeatsPerSide);
   
-  // Total SVG dimensions including buffer and seating
-  const totalWidth = courtLength + (2 * bufferSize) + (2 * seatingDepth);
-  const totalHeight = courtWidth + (2 * bufferSize) + (2 * seatingDepth);
+  // Total SVG dimensions including buffer, courtside seating, lower tier seating, luxury boxes, and gaps
+  const totalWidth = courtLength + (2 * bufferSize) + (2 * seatingDepth) + (2 * lowerTierDepth);
+  const totalHeight = courtWidth + (2 * bufferSize) + (2 * seatingDepth) + (2 * lowerTierDepth) + (2 * luxuryBoxDepth) + (2 * luxuryBoxGap);
 
   return (
     <div className="basketball-court-container">
@@ -69,8 +82,8 @@ const BasketballCourt = () => {
           
           {/* Buffer zone background */}
           <rect
-            x={seatingDepth}
-            y={seatingDepth}
+            x={seatingDepth + lowerTierDepth}
+            y={seatingDepth + lowerTierDepth + luxuryBoxDepth + luxuryBoxGap}
             width={courtLength + (2 * bufferSize)}
             height={courtWidth + (2 * bufferSize)}
             fill="#f5f5f5"
@@ -80,16 +93,37 @@ const BasketballCourt = () => {
           
           {/* Playing court background */}
           <rect
-            x={seatingDepth + bufferSize}
-            y={seatingDepth + bufferSize}
+            x={seatingDepth + lowerTierDepth + bufferSize}
+            y={seatingDepth + lowerTierDepth + luxuryBoxDepth + luxuryBoxGap + bufferSize}
             width={courtLength}
             height={courtWidth}
             fill="#d2b48c"
             stroke="none"
           />
           
+          {/* Luxury boxes positioned above north and below south lower-tier seating */}
+          <g transform={`translate(${lowerTierDepth}, ${lowerTierDepth + luxuryBoxDepth + luxuryBoxGap})`}>
+            <LuxuryBoxes 
+              courtLength={courtLength}
+              courtWidth={courtWidth}
+              scale={SCALE}
+              bufferSize={bufferSize}
+            />
+          </g>
+          
+          {/* Lower-tier seating positioned around the courtside area */}
+          <g transform={`translate(${lowerTierDepth}, ${lowerTierDepth + luxuryBoxDepth + luxuryBoxGap})`}>
+            <LowerTierSeating 
+              courtLength={courtLength}
+              courtWidth={courtWidth}
+              scale={SCALE}
+              bufferSize={bufferSize}
+              luxuryBoxExpansion={0}
+            />
+          </g>
+          
           {/* Courtside seating positioned directly around the court (outside buffer zone) */}
-          <g transform={`translate(${seatingDepth}, ${seatingDepth})`}>
+          <g transform={`translate(${seatingDepth + lowerTierDepth}, ${seatingDepth + lowerTierDepth + luxuryBoxDepth + luxuryBoxGap})`}>
             <CourtsideSeating 
               courtLength={courtLength}
               courtWidth={courtWidth}
@@ -98,8 +132,8 @@ const BasketballCourt = () => {
             />
           </g>
           
-          {/* All court components are offset by the seating depth and buffer size */}
-          <g transform={`translate(${seatingDepth + bufferSize}, ${seatingDepth + bufferSize})`}>
+          {/* All court components are offset by the seating depth, lower tier depth, luxury box depth, gap, and buffer size */}
+          <g transform={`translate(${seatingDepth + lowerTierDepth + bufferSize}, ${seatingDepth + lowerTierDepth + luxuryBoxDepth + luxuryBoxGap + bufferSize})`}>
             <CourtOutline 
               courtLength={courtLength}
               courtWidth={courtWidth}
@@ -147,7 +181,9 @@ const BasketballCourt = () => {
       <div className="court-info">
         <p>Court Dimensions: {NBA_LENGTH}' × {NBA_WIDTH}' (NBA Standard)</p>
         <p>Buffer Zone: {BUFFER_ZONE}' around court</p>
+        <p>Luxury Boxes: {totalLuxuryBoxes} boxes ({luxuryBoxesPerRow} North + {luxuryBoxesPerRow} South) - each box is 1 ticket</p>
         <p>Courtside Seating: Max {maxSeats} seats, {calculatedRows} rows (3 sides: {seatsPerRow}+{seatsPerSideRow}+{seatsPerSideRow} seats per row)</p>
+        <p>Lower-Tier Seating: 16 sections (101-105 North, 201-205 South, 301-303 West, 401-403 East) × 500 seats = 8,000 seats (deeper trapezoidal sections)</p>
         <p>Scale: 1 foot = {SCALE} pixels</p>
         <p>Line Thickness: 2 inches</p>
       </div>
