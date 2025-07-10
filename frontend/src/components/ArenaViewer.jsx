@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { arenaService } from '../services/arenaService';
-import ArenaDesigner from './ArenaDesigner';
+import ArenaDetailView from './ArenaDetailView';
+import BBArenaCollector from './BBArenaCollector';
 import './ArenaViewer.css';
 
 const ArenaViewer = () => {
@@ -57,27 +58,10 @@ const ArenaViewer = () => {
 
   if (viewMode === 'court' && selectedArena) {
     return (
-      <div className="arena-viewer">
-        <div className="court-header">
-          <button onClick={handleBackToList} className="back-button">
-            ← Back to Arena List
-          </button>
-          <h2>{selectedArena.arena_name || `Arena ${selectedArena.id}`}</h2>
-          <div className="arena-details">
-            <span>Team ID: {selectedArena.team_id}</span>
-            <span>Total Capacity: {formatNumber(selectedArena.total_capacity)}</span>
-            <span>Created: {formatDate(selectedArena.created_at)}</span>
-          </div>
-        </div>
-        <ArenaDesigner 
-          initialSeatCounts={{
-            courtside: selectedArena.courtside_capacity,
-            lowerTierTotal: selectedArena.lower_tier_capacity,
-            luxuryBoxCount: selectedArena.luxury_boxes_capacity,
-          }}
-          readonly={true}
-        />
-      </div>
+      <ArenaDetailView 
+        selectedArena={selectedArena}
+        onBackToList={handleBackToList}
+      />
     );
   }
 
@@ -87,6 +71,9 @@ const ArenaViewer = () => {
         <h2>Saved Arenas from Database</h2>
         <p>Total arenas: {formatNumber(totalCount)}</p>
       </div>
+
+      {/* BuzzerBeater Arena Collector */}
+      <BBArenaCollector onDataCollected={fetchArenas} />
 
       {loading && (
         <div className="loading">Loading arenas...</div>
@@ -112,7 +99,10 @@ const ArenaViewer = () => {
               >
                 <div className="arena-card-header">
                   <h3>{arena.arena_name || `Arena ${arena.id}`}</h3>
-                  <span className="team-id">Team: {arena.team_id}</span>
+                  <div className="team-info">
+                    <span className="team-id">Team: {arena.team_id}</span>
+                    <span className="latest-indicator">Latest Snapshot</span>
+                  </div>
                 </div>
                 
                 <div className="arena-card-body">

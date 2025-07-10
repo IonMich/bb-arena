@@ -98,6 +98,23 @@
   border-radius: 4px;
 }
 
+.team-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.latest-indicator {
+  background-color: #4caf50;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
 .arena-card-body {
   margin-bottom: 15px;
 }

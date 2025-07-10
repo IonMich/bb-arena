@@ -196,6 +196,29 @@ class BuzzerBeaterAPI:
 
         return self._parse_boxscore_data(root)
 
+    def get_league_standings(
+        self, league_id: int, season: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get league standings which includes all teams in the league.
+
+        Args:
+            league_id: The league ID to get standings for
+            season: Optional season number (defaults to current season)
+
+        Returns:
+            Dictionary with standings data including team IDs or None if error
+        """
+        params = {"leagueid": league_id}
+        if season:
+            params["season"] = season
+
+        root = self._make_request("standings.aspx", params)
+
+        if root is None:
+            return None
+
+        return self._parse_standings_data(root)
+
     def _parse_arena_data(self, root: ET.Element) -> dict[str, Any]:
         """Parse arena XML data into a structured format."""
         arena_data: dict[str, Any] = {
@@ -476,6 +499,38 @@ class BuzzerBeaterAPI:
                     pass
 
         return boxscore_data
+
+    def _parse_standings_data(self, root: ET.Element) -> dict[str, Any]:
+        """Parse standings XML data to extract team information."""
+        standings_data: dict[str, Any] = {"teams": [], "league_info": {}}
+        
+        # Get league info from standings element
+        standings_elem = root.find(".//standings")
+        if standings_elem is not None:
+            standings_data["league_info"] = {
+                "league_id": standings_elem.get("leagueid"),
+                "season": standings_elem.get("season"),
+                "league_name": standings_elem.get("leaguename")
+            }
+
+        # Extract team information from standings
+        for team_elem in root.findall(".//team"):
+            team_id = team_elem.get("id")
+            team_name_elem = team_elem.find("./teamName")
+            team_name = team_name_elem.text if team_name_elem is not None else "Unknown"
+            
+            # Get additional team info if available
+            team_info = {
+                "id": team_id,
+                "name": team_name,
+                "wins": team_elem.get("wins"),
+                "losses": team_elem.get("losses"),
+                "position": team_elem.get("position")
+            }
+            
+            standings_data["teams"].append(team_info)
+
+        return standings_data
 
     def __enter__(self) -> "BuzzerBeaterAPI":
         """Context manager entry."""
