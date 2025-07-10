@@ -510,3 +510,136 @@ class DatabaseManager:
 
     def close(self) -> None:
         """Close database connections (placeholder for future connection pooling)."""
+
+    def get_arena_snapshots(
+        self, limit: int = 50, offset: int = 0
+    ) -> list[ArenaSnapshot]:
+        """Get arena snapshots with pagination.
+
+        Args:
+            limit: Maximum number of records to return
+            offset: Number of records to skip
+
+        Returns:
+            List of ArenaSnapshot instances
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            query = """
+                SELECT * FROM arena_snapshots 
+                ORDER BY created_at DESC 
+                LIMIT ? OFFSET ?
+            """
+            cursor = conn.execute(query, [limit, offset])
+
+            snapshots = []
+            for row in cursor.fetchall():
+                snapshots.append(ArenaSnapshot(
+                    id=row["id"],
+                    team_id=row["team_id"],
+                    arena_name=row["arena_name"],
+                    bleachers_capacity=row["bleachers_capacity"],
+                    lower_tier_capacity=row["lower_tier_capacity"],
+                    courtside_capacity=row["courtside_capacity"],
+                    luxury_boxes_capacity=row["luxury_boxes_capacity"],
+                    total_capacity=row["total_capacity"],
+                    expansion_in_progress=bool(row["expansion_in_progress"]),
+                    expansion_completion_date=row["expansion_completion_date"],
+                    expansion_cost=row["expansion_cost"],
+                    created_at=datetime.fromisoformat(row["created_at"])
+                    if row["created_at"]
+                    else None,
+                ))
+
+            return snapshots
+
+    def get_arena_snapshots_count(self) -> int:
+        """Get total count of arena snapshots.
+
+        Returns:
+            Total count of arena snapshots
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT COUNT(*) FROM arena_snapshots")
+            return cursor.fetchone()[0]
+
+    def get_arena_snapshot_by_id(self, arena_id: int) -> ArenaSnapshot | None:
+        """Get a specific arena snapshot by ID.
+
+        Args:
+            arena_id: Arena snapshot ID
+
+        Returns:
+            ArenaSnapshot instance or None if not found
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            cursor = conn.execute(
+                "SELECT * FROM arena_snapshots WHERE id = ?", [arena_id]
+            )
+            row = cursor.fetchone()
+
+            if row:
+                return ArenaSnapshot(
+                    id=row["id"],
+                    team_id=row["team_id"],
+                    arena_name=row["arena_name"],
+                    bleachers_capacity=row["bleachers_capacity"],
+                    lower_tier_capacity=row["lower_tier_capacity"],
+                    courtside_capacity=row["courtside_capacity"],
+                    luxury_boxes_capacity=row["luxury_boxes_capacity"],
+                    total_capacity=row["total_capacity"],
+                    expansion_in_progress=bool(row["expansion_in_progress"]),
+                    expansion_completion_date=row["expansion_completion_date"],
+                    expansion_cost=row["expansion_cost"],
+                    created_at=datetime.fromisoformat(row["created_at"])
+                    if row["created_at"]
+                    else None,
+                )
+            return None
+
+    def get_arena_snapshots_by_team(
+        self, team_id: str, limit: int = 50
+    ) -> list[ArenaSnapshot]:
+        """Get arena snapshots for a specific team.
+
+        Args:
+            team_id: Team ID to query
+            limit: Maximum number of records to return
+
+        Returns:
+            List of ArenaSnapshot instances
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            query = """
+                SELECT * FROM arena_snapshots 
+                WHERE team_id = ? 
+                ORDER BY created_at DESC 
+                LIMIT ?
+            """
+            cursor = conn.execute(query, [team_id, limit])
+
+            snapshots = []
+            for row in cursor.fetchall():
+                snapshots.append(ArenaSnapshot(
+                    id=row["id"],
+                    team_id=row["team_id"],
+                    arena_name=row["arena_name"],
+                    bleachers_capacity=row["bleachers_capacity"],
+                    lower_tier_capacity=row["lower_tier_capacity"],
+                    courtside_capacity=row["courtside_capacity"],
+                    luxury_boxes_capacity=row["luxury_boxes_capacity"],
+                    total_capacity=row["total_capacity"],
+                    expansion_in_progress=bool(row["expansion_in_progress"]),
+                    expansion_completion_date=row["expansion_completion_date"],
+                    expansion_cost=row["expansion_cost"],
+                    created_at=datetime.fromisoformat(row["created_at"])
+                    if row["created_at"]
+                    else None,
+                ))
+
+            return snapshots

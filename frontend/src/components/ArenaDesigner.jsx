@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './BasketballCourt.css';
+import './ArenaDesigner.css';
 import CourtOutline from './court/CourtOutline';
 import CenterCourt from './court/CenterCourt';
 import FreeThrowLanes from './court/FreeThrowLanes';
@@ -9,13 +9,15 @@ import CourtsideSeating from './court/CourtsideSeating';
 import LowerTierSeating from './court/LowerTierSeating';
 import LuxuryBoxes from './court/LuxuryBoxes';
 
-const BasketballCourt = () => {
+const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
   // State for seat counts
-  const [seatCounts, setSeatCounts] = useState({
-    courtside: 500,
-    lowerTierTotal: 1920, // total seats across all 16 sections
-    luxuryBoxCount: 50, // number of luxury boxes (10-50)
-  });
+  const [seatCounts, setSeatCounts] = useState(
+    initialSeatCounts || {
+      courtside: 500, // total courtside seats (50-500)
+      lowerTierTotal: 1920, // total seats across all 16 sections
+      luxuryBoxCount: 50, // number of luxury boxes (10-50)
+    }
+  );
 
   // Functions to update seat counts
   const updateSeatCount = (section, value) => {
@@ -48,7 +50,7 @@ const BasketballCourt = () => {
   const ROW_DEPTH = 2; // 2 feet per row
   
   // Scale factor to make it fit nicely on screen (1 foot = 8 pixels)
-  const SCALE = 8;
+  const SCALE = 4;
   const LINE_THICKNESS = 2; // 2 inches thick lines
   
   // Calculated dimensions
@@ -76,69 +78,73 @@ const BasketballCourt = () => {
   const totalCapacity = seatCounts.courtside + seatCounts.lowerTierTotal + totalLuxuryTickets;
   
   return (
-    <div className="basketball-court-container">
-      <h2>Basketball Arena - Top View</h2>
-      
-      {/* Seat Configuration Panel */}
-      <div className="seat-config-panel">
-        <h3>Seat Configuration</h3>
-        <div className="config-controls">
-          
-          
-          <div className="config-group">
-            <label htmlFor="lower-tier-total">
-              Lower Tier (Total Seats):
-              <input
-                id="lower-tier-total"
-                type="number"
-                min="1000"
-                max="20000"
-                value={seatCounts.lowerTierTotal}
-                onChange={(e) => updateSeatCount('lowerTierTotal', e.target.value)}
-              />
-            </label>
-          </div>
-          <div className="config-group">
-            <label htmlFor="courtside-seats">
-              Courtside Seating (Total):
-              <input
-                id="courtside-seats"
-                type="number"
-                min="1"
-                max="2000"
-                value={seatCounts.courtside}
-                onChange={(e) => updateSeatCount('courtside', e.target.value)}
-              />
-            </label>
-          </div>
-          
-          <div className="config-group">
-            <label htmlFor="luxury-box-count">
-              Number of Luxury Boxes:
-              <input
-                id="luxury-box-count"
-                type="number"
-                min="10"
-                max="50"
-                value={seatCounts.luxuryBoxCount}
-                onChange={(e) => updateSeatCount('luxuryBoxCount', e.target.value)}
-              />
-            </label>
+    <div className="arena-designer-container">
+      <div className="arena-layout">
+        {/* Seat Configuration Sidebar - only show if not readonly */}
+        {!readonly && (
+          <div className="seat-config-sidebar">
+            <h3>Seat Configuration</h3>
+            <div className="config-controls">
+              <div className="config-group">
+                <label htmlFor="courtside-seats">
+                  Courtside Seating (Total):
+                  <input
+                    id="courtside-seats"
+                    type="number"
+                    min="1"
+                    max="2000"
+                    value={seatCounts.courtside}
+                    onChange={(e) => updateSeatCount('courtside', e.target.value)}
+                  />
+                </label>
+              </div>
+              
+              <div className="config-group">
+                <label htmlFor="lower-tier-total">
+                  Lower Tier (Total Seats):
+                  <input
+                    id="lower-tier-total"
+                    type="number"
+                    min="1000"
+                    max="20000"
+                    value={seatCounts.lowerTierTotal}
+                    onChange={(e) => updateSeatCount('lowerTierTotal', e.target.value)}
+                  />
+                </label>
+                <span className="section-info">Distributed across 16 sections (~{seatsPerLowerTierSection} per section)</span>
+              </div>
+              
+              <div className="config-group">
+                <label htmlFor="luxury-box-count">
+                  Number of Luxury Boxes:
+                  <input
+                    id="luxury-box-count"
+                    type="number"
+                    min="10"
+                    max="50"
+                    value={seatCounts.luxuryBoxCount}
+                    onChange={(e) => updateSeatCount('luxuryBoxCount', e.target.value)}
+                  />
+                </label>
+                <span className="section-info">1 ticket per box = {totalLuxuryTickets} total tickets</span>
+              </div>
+              
+              <div className="total-capacity">
+                <strong>Total Arena Capacity: {totalCapacity.toLocaleString()}</strong>
+              </div>
             </div>
-          
-          <div className="total-capacity">
-            <strong>Total Arena Capacity: {totalCapacity.toLocaleString()}</strong>
           </div>
-        </div>
-      </div>
-      
-      <div className="court-wrapper">
-        <svg 
-          width={totalWidth} 
-          height={totalHeight}
-          viewBox={`0 0 ${totalWidth} ${totalHeight}`}
-          className="basketball-court"
-        >
+        )}
+
+        {/* Main Court Area */}
+        <div className={`court-main ${readonly ? 'full-width' : ''}`}>
+          <div className="court-wrapper">
+            <svg 
+              width={totalWidth} 
+              height={totalHeight}
+              viewBox={`0 0 ${totalWidth} ${totalHeight}`}
+              className="arena-court"
+            >
           {/* Arena background including seating areas */}
           <rect
             x={0}
@@ -250,10 +256,10 @@ const BasketballCourt = () => {
             />
           </g>
         </svg>
-      </div>
+          </div>
       
       <div className="court-info">
-        <p>Court Dimensions: {NBA_LENGTH}' × {NBA_WIDTH}' (NBA Standard)</p>
+        <p>Court Dimensions: {NBA_LENGTH}' x {NBA_WIDTH}' (NBA Standard)</p>
         <p>Buffer Zone: {BUFFER_ZONE}' around court</p>
         <p>Luxury Boxes: {totalLuxuryTickets} tickets ({Math.ceil(seatCounts.luxuryBoxCount/2)} North + {Math.floor(seatCounts.luxuryBoxCount/2)} South) - 1 ticket per box</p>
         <p>Courtside Seating: {seatCounts.courtside} seats, {calculatedRows} rows (3 sides: {seatsPerRow}+{seatsPerSideRow}+{seatsPerSideRow} seats per row)</p>
@@ -262,8 +268,10 @@ const BasketballCourt = () => {
         <p>Scale: 1 foot = {SCALE} pixels</p>
         <p>Line Thickness: 2 inches</p>
       </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default BasketballCourt;
+export default ArenaDesigner;

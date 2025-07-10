@@ -1,3 +1,66 @@
-.App {
-  text-align: center;
+/* Global reset for full width */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+}
+
+/* Navigation Styles */
+.app-nav {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 0;
+}
+
+.nav-button {
+  background-color: #f5f5f5;
+  border: 2px solid #ddd;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.nav-button:hover {
+  background-color: #e9e9e9;
+  border-color: #bbb;
+}
+
+.nav-button.active {
+  background-color: #1976d2;
+  border-color: #1976d2;
+  color: white;
+}
+
+.nav-button.active:hover {
+  background-color: #1565c0;
+  border-color: #1565c0;
+}
+
+@media (max-width: 600px) {
+  .app-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .nav-button {
+    width: 200px;
+  }
 }
