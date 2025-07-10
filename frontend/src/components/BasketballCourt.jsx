@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './BasketballCourt.css';
 import CourtOutline from './court/CourtOutline';
 import CenterCourt from './court/CenterCourt';
@@ -10,6 +10,24 @@ import LowerTierSeating from './court/LowerTierSeating';
 import LuxuryBoxes from './court/LuxuryBoxes';
 
 const BasketballCourt = () => {
+  // State for seat counts
+  const [seatCounts, setSeatCounts] = useState({
+    courtside: 500,
+    lowerTierTotal: 1920, // total seats across all 16 sections
+    luxuryBoxCount: 50, // number of luxury boxes (10-50)
+  });
+
+  // Functions to update seat counts
+  const updateSeatCount = (section, value) => {
+    setSeatCounts(prev => ({
+      ...prev,
+      [section]: Math.max(1, parseInt(value) || 1)
+    }));
+  };
+
+  // Calculate seat distribution
+  const seatsPerLowerTierSection = Math.floor(seatCounts.lowerTierTotal / 16);
+  const remainingSeats = seatCounts.lowerTierTotal % 16;
   // NBA court dimensions in feet
   const NBA_LENGTH = 94;
   const NBA_WIDTH = 50;
@@ -42,26 +60,78 @@ const BasketballCourt = () => {
   const luxuryBoxDepth = LUXURY_BOX_DEPTH * SCALE;
   const luxuryBoxGap = LUXURY_BOX_GAP * SCALE;
   
-  // Calculate luxury box layout - always exactly 25 boxes per row
-  const maxBoxesPerRow = 25; // Maximum 25 boxes per row (50 total)
-  const luxuryBoxesPerRow = maxBoxesPerRow; // Always 25 boxes
-  const totalLuxuryBoxes = luxuryBoxesPerRow * 2; // North and South rows
-  
   // Calculate courtside seating layout (using only 3 sides)
   const seatSpacing = 1.5 * SCALE; // 1.5 feet between seats
-  const maxSeats = 500;
   const seatsPerRow = Math.floor((courtLength - (2 * SCALE)) / seatSpacing);
   const seatsPerSideRow = Math.floor((courtWidth - (2 * SCALE)) / seatSpacing);
   const totalSeatsPerSide = seatsPerRow + seatsPerSideRow + seatsPerSideRow; // south + east + west
-  const calculatedRows = Math.ceil(maxSeats / totalSeatsPerSide);
+  const calculatedRows = Math.ceil(seatCounts.courtside / totalSeatsPerSide);
   
   // Total SVG dimensions including buffer, courtside seating, lower tier seating, luxury boxes, and gaps
   const totalWidth = courtLength + (2 * bufferSize) + (2 * seatingDepth) + (2 * lowerTierDepth);
   const totalHeight = courtWidth + (2 * bufferSize) + (2 * seatingDepth) + (2 * lowerTierDepth) + (2 * luxuryBoxDepth) + (2 * luxuryBoxGap);
 
+  // Calculate total seats and capacity
+  const totalLuxuryTickets = seatCounts.luxuryBoxCount; // 1 ticket per box
+  const totalCapacity = seatCounts.courtside + seatCounts.lowerTierTotal + totalLuxuryTickets;
+  
   return (
     <div className="basketball-court-container">
       <h2>Basketball Arena - Top View</h2>
+      
+      {/* Seat Configuration Panel */}
+      <div className="seat-config-panel">
+        <h3>Seat Configuration</h3>
+        <div className="config-controls">
+          
+          
+          <div className="config-group">
+            <label htmlFor="lower-tier-total">
+              Lower Tier (Total Seats):
+              <input
+                id="lower-tier-total"
+                type="number"
+                min="1000"
+                max="20000"
+                value={seatCounts.lowerTierTotal}
+                onChange={(e) => updateSeatCount('lowerTierTotal', e.target.value)}
+              />
+            </label>
+          </div>
+          <div className="config-group">
+            <label htmlFor="courtside-seats">
+              Courtside Seating (Total):
+              <input
+                id="courtside-seats"
+                type="number"
+                min="1"
+                max="2000"
+                value={seatCounts.courtside}
+                onChange={(e) => updateSeatCount('courtside', e.target.value)}
+              />
+            </label>
+          </div>
+          
+          <div className="config-group">
+            <label htmlFor="luxury-box-count">
+              Number of Luxury Boxes:
+              <input
+                id="luxury-box-count"
+                type="number"
+                min="10"
+                max="50"
+                value={seatCounts.luxuryBoxCount}
+                onChange={(e) => updateSeatCount('luxuryBoxCount', e.target.value)}
+              />
+            </label>
+            </div>
+          
+          <div className="total-capacity">
+            <strong>Total Arena Capacity: {totalCapacity.toLocaleString()}</strong>
+          </div>
+        </div>
+      </div>
+      
       <div className="court-wrapper">
         <svg 
           width={totalWidth} 
@@ -108,6 +178,7 @@ const BasketballCourt = () => {
               courtWidth={courtWidth}
               scale={SCALE}
               bufferSize={bufferSize}
+              totalBoxes={seatCounts.luxuryBoxCount}
             />
           </g>
           
@@ -119,6 +190,8 @@ const BasketballCourt = () => {
               scale={SCALE}
               bufferSize={bufferSize}
               luxuryBoxExpansion={0}
+              seatsPerSection={seatsPerLowerTierSection}
+              remainingSeats={remainingSeats}
             />
           </g>
           
@@ -129,6 +202,7 @@ const BasketballCourt = () => {
               courtWidth={courtWidth}
               scale={SCALE}
               bufferSize={bufferSize}
+              maxSeats={seatCounts.courtside}
             />
           </g>
           
@@ -181,9 +255,10 @@ const BasketballCourt = () => {
       <div className="court-info">
         <p>Court Dimensions: {NBA_LENGTH}' × {NBA_WIDTH}' (NBA Standard)</p>
         <p>Buffer Zone: {BUFFER_ZONE}' around court</p>
-        <p>Luxury Boxes: {totalLuxuryBoxes} boxes ({luxuryBoxesPerRow} North + {luxuryBoxesPerRow} South) - each box is 1 ticket</p>
-        <p>Courtside Seating: Max {maxSeats} seats, {calculatedRows} rows (3 sides: {seatsPerRow}+{seatsPerSideRow}+{seatsPerSideRow} seats per row)</p>
-        <p>Lower-Tier Seating: 16 sections (101-105 North, 201-205 South, 301-303 West, 401-403 East) × 500 seats = 8,000 seats (deeper trapezoidal sections)</p>
+        <p>Luxury Boxes: {totalLuxuryTickets} tickets ({Math.ceil(seatCounts.luxuryBoxCount/2)} North + {Math.floor(seatCounts.luxuryBoxCount/2)} South) - 1 ticket per box</p>
+        <p>Courtside Seating: {seatCounts.courtside} seats, {calculatedRows} rows (3 sides: {seatsPerRow}+{seatsPerSideRow}+{seatsPerSideRow} seats per row)</p>
+        <p>Lower-Tier Seating: 16 sections (101-105 North, 201-205 South, 301-303 West, 401-403 East) = {seatCounts.lowerTierTotal.toLocaleString()} total seats (~{seatsPerLowerTierSection} per section)</p>
+        <p><strong>Total Capacity: {totalCapacity.toLocaleString()}</strong></p>
         <p>Scale: 1 foot = {SCALE} pixels</p>
         <p>Line Thickness: 2 inches</p>
       </div>

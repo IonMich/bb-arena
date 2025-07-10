@@ -5,15 +5,22 @@ const LowerTierSeating = ({
   courtWidth,  // Already in pixels (court width)
   scale,       // Conversion factor: feet to pixels (8 pixels per foot)
   bufferSize = 0, // Already in pixels
-  luxuryBoxExpansion = 0 // Additional expansion for luxury boxes alignment
+  luxuryBoxExpansion = 0, // Additional expansion for luxury boxes alignment
+  seatsPerSection = 500, // Base seats per section
+  remainingSeats = 0 // Additional seats to distribute
 }) => {
   const sectionDepth = 20 * scale; // 20 feet converted to pixels (increased from 8 feet)
-  const seatsPerSection = 500; // Increased seats per section due to deeper section
+  
+  // Function to calculate seats for each section
+  const getSectionSeats = (sectionIndex) => {
+    // Distribute remaining seats among the first sections
+    return seatsPerSection + (sectionIndex < remainingSeats ? 1 : 0);
+  };
   
   const renderTrapezoidalSection = (
     innerStartX, innerStartY, innerEndX, innerEndY,
     outerStartX, outerStartY, outerEndX, outerEndY,
-    sectionNumber, sideIndex
+    sectionNumber, sideIndex, sectionSeats
   ) => {
     // Create path for trapezoidal section
     const pathData = `
@@ -37,7 +44,7 @@ const LowerTierSeating = ({
           strokeWidth={1}
           className="section-area"
           data-section={`${sideIndex}-${sectionNumber}`}
-          data-seats={seatsPerSection}
+          data-seats={sectionSeats}
         />
         {/* Section number */}
         <text
@@ -62,7 +69,7 @@ const LowerTierSeating = ({
           dominantBaseline="middle"
           className="section-capacity"
         >
-          {seatsPerSection} seats
+          {sectionSeats} seats
         </text>
       </g>
     );
@@ -74,6 +81,8 @@ const LowerTierSeating = ({
     const courtsideSeatingDepth = 10 * scale; // Courtside seating is 10 feet deep
     const totalAreaWidth = courtLength + (2 * bufferSize); // Buffer zone width
     const totalAreaHeight = courtWidth + (2 * bufferSize); // Total height of court+buffer area
+    
+    let sectionIndex = 0; // Track section index for seat distribution
     
     // North sections (101-105) - Split into 5 sections with proportional outer edge
     // Use original expansion or luxury box expansion to match the outer edge width with luxury boxes
@@ -101,7 +110,8 @@ const LowerTierSeating = ({
           north_innerStartX, north_innerStartY, north_innerEndX, north_innerEndY,
           north_outerStartX, north_outerStartY, north_outerEndX, north_outerEndY,
           101 + i, // Section numbers 101-105
-          0 // North side
+          0, // North side
+          getSectionSeats(sectionIndex++)
         )
       );
     }
@@ -132,7 +142,8 @@ const LowerTierSeating = ({
           south_innerStartX, south_innerStartY, south_innerEndX, south_innerEndY,
           south_outerStartX, south_outerStartY, south_outerEndX, south_outerEndY,
           201 + i, // Section numbers 201-205
-          1 // South side
+          1, // South side
+          getSectionSeats(sectionIndex++)
         )
       );
     }
@@ -167,7 +178,8 @@ const LowerTierSeating = ({
           west_innerStartX, west_innerStartY, west_innerEndX, west_innerEndY,
           west_outerStartX, west_outerStartY, west_outerEndX, west_outerEndY,
           301 + i, // Section numbers 301-303
-          2 // West side
+          2, // West side
+          getSectionSeats(sectionIndex++)
         )
       );
     }
@@ -194,7 +206,8 @@ const LowerTierSeating = ({
           east_innerStartX, east_innerStartY, east_innerEndX, east_innerEndY,
           east_outerStartX, east_outerStartY, east_outerEndX, east_outerEndY,
           401 + i, // Section numbers 401-403
-          3 // East side
+          3, // East side
+          getSectionSeats(sectionIndex++)
         )
       );
     }

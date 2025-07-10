@@ -4,10 +4,10 @@ const CourtsideSeating = ({
   courtLength, 
   courtWidth, 
   scale, 
-  bufferSize = 0
+  bufferSize = 0,
+  maxSeats = 500
 }) => {
   const seatingDepth = 10 * scale; // 10 feet deep courtside seating
-  const maxSeats = 500; // Maximum courtside seats
   
   // Calculate seating areas for each side
   const courtsideGap = seatingDepth / 4; // Add a gap between buffer zone and courtside seating

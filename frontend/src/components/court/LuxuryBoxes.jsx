@@ -4,7 +4,8 @@ const LuxuryBoxes = ({
   courtLength, // Already in pixels (court length)
   courtWidth,  // Already in pixels (court width)
   scale,       // Conversion factor: feet to pixels (8 pixels per foot)
-  bufferSize = 0 // Already in pixels
+  bufferSize = 0, // Already in pixels
+  totalBoxes = 50 // Total number of luxury boxes (10-50)
 }) => {
   const boxDepth = 4 * scale; // 4 feet deep luxury boxes (reduced from 8 feet)
   const seatingDepth = 10 * scale; // 10 feet courtside seating depth
@@ -15,17 +16,20 @@ const LuxuryBoxes = ({
   // Calculate total area dimensions
   const totalAreaWidth = courtLength + (2 * bufferSize);
   
-  // Force exactly 25 boxes per row and calculate the required width to match lower-tier outer edge
-  const maxBoxesPerRow = 25; // Exactly 25 boxes per row (50 total)
+  // Calculate box distribution - distribute totalBoxes across north and south rows
+  const northBoxCount = Math.ceil(totalBoxes / 2);
+  const southBoxCount = Math.floor(totalBoxes / 2);
+  const maxBoxesPerRow = Math.max(northBoxCount, southBoxCount);
+  
+  // Calculate box width based on the row with more boxes
   const lowerTierOuterWidth = totalAreaWidth + (2 * northSouthExpansion); // Match lower-tier outer edge
-  const boxWidth = lowerTierOuterWidth / maxBoxesPerRow; // Calculate exact box width to fit 25 boxes
-  const boxesPerRow = maxBoxesPerRow; // Always 25 boxes
+  const boxWidth = lowerTierOuterWidth / maxBoxesPerRow; // Calculate box width to fit the larger row
   const startOffset = 0; // No offset needed since we're using the full width
 
-  const renderLuxuryBoxRow = (yPosition, rowName, startBoxNumber) => {
+  const renderLuxuryBoxRow = (yPosition, rowName, startBoxNumber, boxCount) => {
     const boxes = [];
     
-    for (let i = 0; i < boxesPerRow; i++) {
+    for (let i = 0; i < boxCount; i++) {
       const boxX = seatingDepth - northSouthExpansion + startOffset + (i * boxWidth);
       const boxY = yPosition;
       
@@ -89,10 +93,10 @@ const LuxuryBoxes = ({
   return (
     <g className="luxury-boxes">
       {/* North luxury boxes row */}
-      {renderLuxuryBoxRow(northBoxesY, 'north', 1)}
+      {renderLuxuryBoxRow(northBoxesY, 'north', 1, northBoxCount)}
       
       {/* South luxury boxes row */}
-      {renderLuxuryBoxRow(southBoxesY, 'south', boxesPerRow + 1)}
+      {renderLuxuryBoxRow(southBoxesY, 'south', northBoxCount + 1, southBoxCount)}
     </g>
   );
 };
