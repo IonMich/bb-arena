@@ -7,9 +7,44 @@ const LowerTierSeating = ({
   bufferSize = 0, // Already in pixels
   luxuryBoxExpansion = 0, // Additional expansion for luxury boxes alignment
   seatsPerSection = 500, // Base seats per section
-  remainingSeats = 0 // Additional seats to distribute
+  remainingSeats = 0, // Additional seats to distribute
+  attendanceData = null // Attendance data for coloring
 }) => {
   const sectionDepth = 20 * scale; // 20 feet converted to pixels (increased from 8 feet)
+  
+  // Function to get attendance-based color for lower tier seating
+  const getAttendanceColor = () => {
+    if (!attendanceData?.lower_tier) {
+      return "#4A5568"; // Default color
+    }
+    
+    const totalCapacity = seatsPerSection * 16; // 16 sections total
+    const totalAttendance = attendanceData.lower_tier;
+    const utilizationRate = Math.min(totalAttendance / totalCapacity, 1); // Cap at 100%
+    
+    // Color interpolation between grey (empty) and blue (full)
+    const greyColor = { r: 128, g: 128, b: 128 }; // #808080
+    const blueColor = { r: 30, g: 144, b: 255 }; // #1E90FF
+    
+    const r = Math.round(greyColor.r + (blueColor.r - greyColor.r) * utilizationRate);
+    const g = Math.round(greyColor.g + (blueColor.g - greyColor.g) * utilizationRate);
+    const b = Math.round(greyColor.b + (blueColor.b - greyColor.b) * utilizationRate);
+    
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+  
+  // Function to get attendance display text
+  const getAttendanceDisplay = () => {
+    if (!attendanceData?.lower_tier) {
+      return null;
+    }
+    const totalCapacity = seatsPerSection * 16;
+    const utilizationRate = (attendanceData.lower_tier / totalCapacity * 100).toFixed(1);
+    return `${attendanceData.lower_tier}/${totalCapacity} (${utilizationRate}%)`;
+  };
+  
+  const sectionColor = getAttendanceColor();
+  const attendanceDisplay = getAttendanceDisplay();
   
   // Function to calculate seats for each section
   const getSectionSeats = (sectionIndex) => {
@@ -39,7 +74,7 @@ const LowerTierSeating = ({
       <g key={`section-${sideIndex}-${sectionNumber}`} className="lower-tier-section">
         <path
           d={pathData}
-          fill="#4A5568"
+          fill={sectionColor}
           stroke="#2D3748"
           strokeWidth={1}
           className="section-area"
@@ -59,7 +94,7 @@ const LowerTierSeating = ({
         >
           {sectionNumber}
         </text>
-        {/* Seat count */}
+        {/* Seat count or attendance display */}
         <text
           x={centerX}
           y={centerY + 8}
@@ -69,7 +104,7 @@ const LowerTierSeating = ({
           dominantBaseline="middle"
           className="section-capacity"
         >
-          {sectionSeats} seats
+          {attendanceDisplay || `${sectionSeats} seats`}
         </text>
       </g>
     );

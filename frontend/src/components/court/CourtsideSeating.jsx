@@ -5,9 +5,43 @@ const CourtsideSeating = ({
   courtWidth, 
   scale, 
   bufferSize = 0,
-  maxSeats = 500
+  maxSeats = 500,
+  attendanceData = null
 }) => {
   const seatingDepth = 10 * scale; // 10 feet deep courtside seating
+  
+  // Function to calculate attendance-based color
+  const getAttendanceColor = () => {
+    if (!attendanceData?.courtside) {
+      return "#8B4513"; // Default brown color
+    }
+    
+    const totalCapacity = maxSeats;
+    const totalAttendance = attendanceData.courtside;
+    const utilizationRate = Math.min(totalAttendance / totalCapacity, 1); // Cap at 100%
+    
+    // Color interpolation between grey (empty) and blue (full)
+    const greyColor = { r: 128, g: 128, b: 128 }; // #808080
+    const blueColor = { r: 30, g: 144, b: 255 }; // #1E90FF
+    
+    const r = Math.round(greyColor.r + (blueColor.r - greyColor.r) * utilizationRate);
+    const g = Math.round(greyColor.g + (blueColor.g - greyColor.g) * utilizationRate);
+    const b = Math.round(greyColor.b + (blueColor.b - greyColor.b) * utilizationRate);
+    
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+  
+  // Function to get attendance info for display
+  const getAttendanceDisplay = () => {
+    if (!attendanceData?.courtside) {
+      return `${maxSeats} seats`;
+    }
+    const utilizationRate = (attendanceData.courtside / maxSeats * 100).toFixed(1);
+    return `${attendanceData.courtside}/${maxSeats} (${utilizationRate}%)`;
+  };
+  
+  const sectionColor = getAttendanceColor();
+  const attendanceDisplay = getAttendanceDisplay();
   
   // Calculate seating areas for each side
   const courtsideGap = seatingDepth / 4; // Add a gap between buffer zone and courtside seating
@@ -40,7 +74,7 @@ const CourtsideSeating = ({
           y={southSeatingY}
           width={southSeatingWidth}
           height={southSeatingHeight}
-          fill="#8B4513"
+          fill={sectionColor}
           stroke="#654321"
           strokeWidth={2}
           className="courtside-section"
@@ -68,7 +102,7 @@ const CourtsideSeating = ({
           dominantBaseline="middle"
           className="section-capacity"
         >
-          {seatsPerSection + Math.floor(remainingSeats / 2)} seats
+          {attendanceDisplay}
         </text>
       </g>
       
@@ -79,7 +113,7 @@ const CourtsideSeating = ({
           y={eastSeatingY}
           width={eastSeatingWidth}
           height={eastSeatingHeight}
-          fill="#8B4513"
+          fill={sectionColor}
           stroke="#654321"
           strokeWidth={2}
           className="courtside-section"
@@ -120,7 +154,7 @@ const CourtsideSeating = ({
           y={westSeatingY}
           width={westSeatingWidth}
           height={westSeatingHeight}
-          fill="#8B4513"
+          fill={sectionColor}
           stroke="#654321"
           strokeWidth={2}
           className="courtside-section"

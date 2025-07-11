@@ -46,33 +46,31 @@ class ArenaSnapshot:
 
 @dataclass
 class PriceSnapshot:
-    """Represents ticket prices at a specific time."""
+    """Represents ticket prices at a specific time from arena API."""
 
     id: int | None = None
     team_id: str | None = None
-    bleachers_price: float | None = None
-    lower_tier_price: float | None = None
-    courtside_price: float | None = None
-    luxury_boxes_price: float | None = None
+    bleachers_price: int | None = None
+    lower_tier_price: int | None = None
+    courtside_price: int | None = None
+    luxury_boxes_price: int | None = None
     created_at: datetime | None = None
-    game_id: str | None = None  # If associated with a specific game
 
     @classmethod
     def from_api_data(
         cls,
         arena_data: dict[str, Any],
         team_id: str | None = None,
-        game_id: str | None = None,
     ) -> "PriceSnapshot":
         """Create PriceSnapshot from API arena data."""
+        prices = arena_data.get("prices", {})
         return cls(
             team_id=team_id,
-            bleachers_price=arena_data["prices"].get("bleachers"),
-            lower_tier_price=arena_data["prices"].get("lower_tier"),
-            courtside_price=arena_data["prices"].get("courtside"),
-            luxury_boxes_price=arena_data["prices"].get("luxury_boxes"),
+            bleachers_price=int(prices["bleachers"]) if prices.get("bleachers") is not None else None,
+            lower_tier_price=int(prices["lower_tier"]) if prices.get("lower_tier") is not None else None,
+            courtside_price=int(prices["courtside"]) if prices.get("courtside") is not None else None,
+            luxury_boxes_price=int(prices["luxury_boxes"]) if prices.get("luxury_boxes") is not None else None,
             created_at=datetime.now(),
-            game_id=game_id,
         )
 
 
@@ -82,10 +80,9 @@ class GameRecord:
 
     game_id: str  # From API
     id: int | None = None
-    team_id: str | None = None
+    home_team_id: int | None = None  # Home team ID 
+    away_team_id: int | None = None  # Away team ID
     date: datetime | None = None
-    opponent: str | None = None
-    is_home: bool = False
     game_type: str | None = None
     season: int | None = None
     division: str | None = None
@@ -101,26 +98,35 @@ class GameRecord:
     luxury_boxes_attendance: int | None = None
     total_attendance: int | None = None
 
-    # Revenue data
-    ticket_revenue: float | None = None
+    # Revenue data (in whole dollars)
+    ticket_revenue: int | None = None
 
-    # Pricing at the time of the game (if available)
-    bleachers_price: float | None = None
-    lower_tier_price: float | None = None
-    courtside_price: float | None = None
-    luxury_boxes_price: float | None = None
+    # Pricing at the time of the game (in whole dollars)
+    bleachers_price: int | None = None
+    lower_tier_price: int | None = None
+    courtside_price: int | None = None
+    luxury_boxes_price: int | None = None
 
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
     @classmethod
     def from_api_data(
-        cls, game_data: dict[str, Any], team_id: str | None = None
+        cls, game_data: dict[str, Any], home_team_id: int | None = None, away_team_id: int | None = None
     ) -> "GameRecord":
-        """Create GameRecord from API game data."""
+        """Create GameRecord from API game data.
+        
+        Args:
+            game_data: Game data from the API
+            home_team_id: ID of the home team (required)
+            away_team_id: ID of the away team (required)
+        """
         # Validate input
         if not game_data or not isinstance(game_data, dict):
             raise ValueError("game_data must be a non-empty dictionary")
+        
+        if home_team_id is None or away_team_id is None:
+            raise ValueError("Both home_team_id and away_team_id are required")
         
         # Parse date
         game_date = None
@@ -139,12 +145,28 @@ class GameRecord:
             attendance_sum = sum(v for v in attendance_data.values() if isinstance(v, int | float))
             total_attendance = int(attendance_sum) if attendance_sum else None
 
+        # Convert revenue to integer dollars (from float or string)
+        ticket_revenue = None
+        if game_data.get("ticket_revenue") is not None:
+            try:
+                ticket_revenue = int(float(game_data["ticket_revenue"]))
+            except (ValueError, TypeError):
+                pass
+
+        # Convert price fields to integer dollars
+        def to_int_dollars(value) -> int | None:
+            if value is None:
+                return None
+            try:
+                return int(float(value))
+            except (ValueError, TypeError):
+                return None
+
         return cls(
             game_id=game_data.get("id", ""),
-            team_id=team_id,
+            home_team_id=home_team_id,
+            away_team_id=away_team_id,
             date=game_date,
-            opponent=game_data.get("opponent"),
-            is_home=game_data.get("home", False),
             game_type=game_data.get("type"),
             season=game_data.get("season"),
             division=game_data.get("division"),
@@ -157,6 +179,49 @@ class GameRecord:
             courtside_attendance=attendance_data.get("courtside") if isinstance(attendance_data, dict) else None,
             luxury_boxes_attendance=attendance_data.get("luxury_boxes") if isinstance(attendance_data, dict) else None,
             total_attendance=total_attendance,
-            ticket_revenue=game_data.get("ticket_revenue"),
+            ticket_revenue=ticket_revenue,
+            bleachers_price=to_int_dollars(game_data.get("bleachers_price")),
+            lower_tier_price=to_int_dollars(game_data.get("lower_tier_price")),
+            courtside_price=to_int_dollars(game_data.get("courtside_price")),
+            luxury_boxes_price=to_int_dollars(game_data.get("luxury_boxes_price")),
+            created_at=datetime.now(),
+        )
+
+
+@dataclass
+class Season:
+    """Represents a BuzzerBeater season with start and end dates."""
+    
+    id: int | None = None
+    season_number: int | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    created_at: datetime | None = None
+    
+    @classmethod
+    def from_api_data(cls, season_data: dict[str, Any]) -> "Season":
+        """Create Season from API season data."""
+        
+        start_date = None
+        end_date = None
+        
+        if season_data.get("start"):
+            try:
+                # Parse ISO format dates from BBAPI
+                start_date = datetime.fromisoformat(season_data["start"].replace('Z', '+00:00'))
+            except (ValueError, TypeError):
+                pass
+                
+        if season_data.get("end"):
+            try:
+                # Parse ISO format dates from BBAPI
+                end_date = datetime.fromisoformat(season_data["end"].replace('Z', '+00:00'))
+            except (ValueError, TypeError):
+                pass
+        
+        return cls(
+            season_number=season_data.get("number"),
+            start_date=start_date,
+            end_date=end_date,
             created_at=datetime.now(),
         )

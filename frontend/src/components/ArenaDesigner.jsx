@@ -9,7 +9,12 @@ import CourtsideSeating from './court/CourtsideSeating';
 import LowerTierSeating from './court/LowerTierSeating';
 import LuxuryBoxes from './court/LuxuryBoxes';
 
-const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
+const ArenaDesigner = ({ 
+  initialSeatCounts, 
+  readonly = false, 
+  attendanceData = null, 
+  knownCapacities = null 
+}) => {
   // State for seat counts
   const [seatCounts, setSeatCounts] = useState(
     initialSeatCounts || {
@@ -61,13 +66,6 @@ const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
   const lowerTierDepth = LOWER_TIER_SEATING_WIDTH * SCALE;
   const luxuryBoxDepth = LUXURY_BOX_DEPTH * SCALE;
   const luxuryBoxGap = LUXURY_BOX_GAP * SCALE;
-  
-  // Calculate courtside seating layout (using only 3 sides)
-  const seatSpacing = 1.5 * SCALE; // 1.5 feet between seats
-  const seatsPerRow = Math.floor((courtLength - (2 * SCALE)) / seatSpacing);
-  const seatsPerSideRow = Math.floor((courtWidth - (2 * SCALE)) / seatSpacing);
-  const totalSeatsPerSide = seatsPerRow + seatsPerSideRow + seatsPerSideRow; // south + east + west
-  const calculatedRows = Math.ceil(seatCounts.courtside / totalSeatsPerSide);
   
   // Total SVG dimensions including buffer, courtside seating, lower tier seating, luxury boxes, and gaps
   const totalWidth = courtLength + (2 * bufferSize) + (2 * seatingDepth) + (2 * lowerTierDepth);
@@ -185,6 +183,7 @@ const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
               scale={SCALE}
               bufferSize={bufferSize}
               totalBoxes={seatCounts.luxuryBoxCount}
+              attendanceData={attendanceData}
             />
           </g>
           
@@ -198,6 +197,7 @@ const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
               luxuryBoxExpansion={0}
               seatsPerSection={seatsPerLowerTierSection}
               remainingSeats={remainingSeats}
+              attendanceData={attendanceData}
             />
           </g>
           
@@ -209,6 +209,8 @@ const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
               scale={SCALE}
               bufferSize={bufferSize}
               maxSeats={seatCounts.courtside}
+              attendanceData={attendanceData}
+              knownCapacity={knownCapacities?.courtside}
             />
           </g>
           
@@ -257,17 +259,6 @@ const ArenaDesigner = ({ initialSeatCounts, readonly = false }) => {
           </g>
         </svg>
           </div>
-      
-      <div className="court-info">
-        <p>Court Dimensions: {NBA_LENGTH}' x {NBA_WIDTH}' (NBA Standard)</p>
-        <p>Buffer Zone: {BUFFER_ZONE}' around court</p>
-        <p>Luxury Boxes: {totalLuxuryTickets} tickets ({Math.ceil(seatCounts.luxuryBoxCount/2)} North + {Math.floor(seatCounts.luxuryBoxCount/2)} South) - 1 ticket per box</p>
-        <p>Courtside Seating: {seatCounts.courtside} seats, {calculatedRows} rows (3 sides: {seatsPerRow}+{seatsPerSideRow}+{seatsPerSideRow} seats per row)</p>
-        <p>Lower-Tier Seating: 16 sections (101-105 North, 201-205 South, 301-303 West, 401-403 East) = {seatCounts.lowerTierTotal.toLocaleString()} total seats (~{seatsPerLowerTierSection} per section)</p>
-        <p><strong>Total Capacity: {totalCapacity.toLocaleString()}</strong></p>
-        <p>Scale: 1 foot = {SCALE} pixels</p>
-        <p>Line Thickness: 2 inches</p>
-      </div>
         </div>
       </div>
     </div>

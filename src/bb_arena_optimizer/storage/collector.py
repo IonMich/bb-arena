@@ -105,8 +105,16 @@ class DataCollectionService:
                     if not game_id:
                         logger.warning("Skipping game with no ID")
                         continue
-                    # Create game record
-                    game_record = GameRecord.from_api_data(game_data, actual_team_id)
+                    # Create game record - determine home/away team
+                    is_home = game_data.get("home", False)
+                    if is_home:
+                        home_team_id = int(actual_team_id) if actual_team_id else 0
+                        away_team_id = 0  # Will need to be determined later or from opponent data
+                    else:
+                        home_team_id = 0  # Will need to be determined later or from opponent data  
+                        away_team_id = int(actual_team_id) if actual_team_id else 0
+                    
+                    game_record = GameRecord.from_api_data(game_data, home_team_id, away_team_id)
 
                     # Save to database
                     self.db_manager.save_game_record(game_record)
@@ -252,8 +260,17 @@ class DataCollectionService:
             True if stored successfully, False otherwise
         """
         try:
-            # Create and save game record
-            game_record = GameRecord.from_api_data(game_data, team_id)
+            # Create and save game record - determine home/away team  
+            is_home = game_data.get("home", False)
+            team_id_int = int(team_id) if team_id else 0
+            if is_home:
+                home_team_id = team_id_int
+                away_team_id = 0  # Will need to be determined later
+            else:
+                home_team_id = 0  # Will need to be determined later
+                away_team_id = team_id_int
+                
+            game_record = GameRecord.from_api_data(game_data, home_team_id, away_team_id)
 
             # Add pricing information to the game record
             game_record.bleachers_price = current_prices.get("bleachers")
@@ -263,9 +280,9 @@ class DataCollectionService:
 
             game_id = self.db_manager.save_game_record(game_record)
 
-            # Also create a price snapshot linked to this game
+            # Also create a price snapshot (arena-level pricing, not game-specific)
             price_snapshot = PriceSnapshot.from_api_data(
-                {"prices": current_prices}, team_id=team_id, game_id=game_record.game_id
+                {"prices": current_prices}, team_id=team_id
             )
             price_id = self.db_manager.save_price_snapshot(price_snapshot)
 

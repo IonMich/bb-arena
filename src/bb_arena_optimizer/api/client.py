@@ -219,6 +219,83 @@ class BuzzerBeaterAPI:
 
         return self._parse_standings_data(root)
 
+    def get_seasons(self) -> dict[str, Any]:
+        """Get all seasons from the BuzzerBeater API.
+
+        Returns:
+            dict: Seasons data with list of seasons including start/end dates
+
+        Raises:
+            Exception: If not authenticated or request fails
+        """
+        if not self._authenticated:
+            raise Exception("Not authenticated. Call login() first.")
+
+        try:
+            url = f"{self.BASE_URL}/seasons.aspx"
+            response = self.session.get(url)
+            response.raise_for_status()
+
+            # Log the raw response for debugging
+            logger.info(f"Raw seasons response: {response.text[:500]}...")
+
+            # Parse XML response
+            root = ET.fromstring(response.content)
+
+            # Check for errors
+            error = root.find(".//error")
+            if error is not None:
+                raise Exception(f"API Error: {error.get('message')}")
+
+            seasons_data: dict[str, Any] = {"seasons": []}
+
+            # Parse season elements - try different possible paths
+            season_elements = root.findall(".//season")
+            if not season_elements:
+                # Try alternative paths
+                season_elements = root.findall("season")
+            if not season_elements:
+                season_elements = root.findall(".//bbapi/season")
+            
+            logger.info(f"Found {len(season_elements)} season elements in XML")
+
+            # Parse season elements
+            for season_elem in season_elements:
+                # The XML uses 'id' for season number, not 'number'
+                season_number = season_elem.get("id")
+                
+                # The XML uses child elements for dates, not attributes
+                start_elem = season_elem.find("./start")
+                finish_elem = season_elem.find("./finish")
+                
+                start_date = start_elem.text if start_elem is not None else None
+                end_date = finish_elem.text if finish_elem is not None else None
+                
+                # Log what we're parsing
+                logger.info(f"Parsing season: id={season_number}, start={start_date}, end={end_date}")
+                
+                season_number_int = int(season_number) if season_number and season_number.isdigit() else None
+                
+                season_info = {
+                    "number": season_number_int,
+                    "start": start_date,
+                    "end": end_date,
+                }
+                
+                # Only add valid seasons
+                if season_number_int is not None and season_number_int > 0:
+                    seasons_data["seasons"].append(season_info)
+
+            logger.info(f"Retrieved {len(seasons_data['seasons'])} valid seasons")
+            return seasons_data
+
+        except requests.RequestException as e:
+            logger.error(f"Failed to fetch seasons: {e}")
+            raise Exception(f"Failed to fetch seasons: {e}")
+        except ET.ParseError as e:
+            logger.error(f"Failed to parse seasons XML: {e}")
+            raise Exception(f"Failed to parse seasons XML: {e}")
+
     def _parse_arena_data(self, root: ET.Element) -> dict[str, Any]:
         """Parse arena XML data into a structured format."""
         arena_data: dict[str, Any] = {
@@ -261,7 +338,8 @@ class BuzzerBeaterAPI:
                     # Current price is in the 'price' attribute
                     price_str = seat_elem.get("price")
                     if price_str:
-                        arena_data["prices"][internal_name] = float(price_str)
+                        # Convert to integer (BuzzerBeater ticket prices are always whole dollars)
+                        arena_data["prices"][internal_name] = int(float(price_str))
 
         # Parse expansion information if available
         expansion_elem = root.find(".//expansion")
@@ -437,19 +515,66 @@ class BuzzerBeaterAPI:
         return team_data
 
     def _parse_boxscore_data(self, root: ET.Element) -> dict[str, Any]:
-        """Parse boxscore XML data including attendance."""
+        """Parse boxscore XML data including attendance, season, type, and date."""
         boxscore_data: dict[str, Any] = {
             "game_id": None,
             "attendance": {},
             "revenue": None,
             "scores": {},
             "teams": {},
+            "season": None,
+            "type": None,
+            "date": None,
         }
 
         # Get basic game info
         match_elem = root.find(".//match")
         if match_elem is not None:
             boxscore_data["game_id"] = match_elem.get("id")
+            
+            # Try to extract season from match element
+            season_attr = match_elem.get("season")
+            if season_attr:
+                try:
+                    boxscore_data["season"] = int(season_attr)
+                except ValueError:
+                    pass
+            
+            # Try to extract game type from match element
+            game_type = match_elem.get("type") or match_elem.get("gameType") or match_elem.get("matchType")
+            if game_type:
+                boxscore_data["type"] = game_type.strip()
+            
+            # Try to extract date from match element - prioritize startTime
+            date_attr = match_elem.get("startTime") or match_elem.get("date") or match_elem.get("gameDate") or match_elem.get("matchDate")
+            if date_attr:
+                boxscore_data["date"] = date_attr.strip()
+
+        # Look for startTime element (game date/time)
+        start_time_elem = root.find(".//startTime")
+        if start_time_elem is not None and start_time_elem.text:
+            boxscore_data["date"] = start_time_elem.text.strip()
+        
+        # Also try to find season/type/date from other possible locations in the XML
+        
+        # Look for season in various possible locations
+        season_elem = root.find(".//season") or root.find(".//seasonNumber")
+        if season_elem is not None and season_elem.text:
+            try:
+                boxscore_data["season"] = int(season_elem.text.strip())
+            except ValueError:
+                pass
+        
+        # Look for game type in various possible locations
+        type_elem = root.find(".//gameType") or root.find(".//matchType") or root.find(".//type")
+        if type_elem is not None and type_elem.text:
+            boxscore_data["type"] = type_elem.text.strip()
+        
+        # Look for date in various possible locations if not already found
+        if not boxscore_data["date"]:
+            date_elem = root.find(".//gameDate") or root.find(".//matchDate") or root.find(".//date")
+            if date_elem is not None and date_elem.text:
+                boxscore_data["date"] = date_elem.text.strip()
 
         # Look for attendance data
         attendance_elem = root.find(".//attendance")
@@ -478,11 +603,19 @@ class BuzzerBeaterAPI:
             except ValueError:
                 pass
 
-        # Get team scores
+        # Get team scores and IDs
         home_team = root.find(".//homeTeam")
         away_team = root.find(".//awayTeam")
         
         if home_team is not None:
+            # Extract home team ID
+            home_team_id = home_team.get("id")
+            if home_team_id:
+                try:
+                    boxscore_data["home_team_id"] = int(home_team_id)
+                except ValueError:
+                    pass
+            
             score_elem = home_team.find(".//score")
             if score_elem is not None and score_elem.text:
                 try:
@@ -491,6 +624,14 @@ class BuzzerBeaterAPI:
                     pass
 
         if away_team is not None:
+            # Extract away team ID  
+            away_team_id = away_team.get("id")
+            if away_team_id:
+                try:
+                    boxscore_data["away_team_id"] = int(away_team_id)
+                except ValueError:
+                    pass
+            
             score_elem = away_team.find(".//score")
             if score_elem is not None and score_elem.text:
                 try:

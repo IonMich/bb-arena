@@ -4,7 +4,7 @@ import ArenaDetailView from './ArenaDetailView';
 import BBArenaCollector from './BBArenaCollector';
 import './ArenaViewer.css';
 
-const ArenaViewer = () => {
+const ArenaViewer = ({ appData = null }) => {
   const [arenas, setArenas] = useState([]);
   const [selectedArena, setSelectedArena] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,6 +12,7 @@ const ArenaViewer = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'court'
+  const [isCollectorModalOpen, setIsCollectorModalOpen] = useState(false);
   
   const itemsPerPage = 20;
 
@@ -61,6 +62,7 @@ const ArenaViewer = () => {
       <ArenaDetailView 
         selectedArena={selectedArena}
         onBackToList={handleBackToList}
+        appData={appData}
       />
     );
   }
@@ -68,12 +70,45 @@ const ArenaViewer = () => {
   return (
     <div className="arena-viewer">
       <div className="arena-list-header">
-        <h2>Saved Arenas from Database</h2>
-        <p>Total arenas: {formatNumber(totalCount)}</p>
+        <div className="header-content">
+          <div className="header-text">
+            <h2>Saved Arenas from Database</h2>
+            <p>Total arenas: {formatNumber(totalCount)}</p>
+          </div>
+          <button 
+            className="collect-data-button"
+            onClick={() => setIsCollectorModalOpen(true)}
+          >
+            {/* plus icon square aspect */}
+            <span className="plus-icon" style={{ fontSize: '24px', lineHeight: '24px' }}>+</span>
+          </button>
+        </div>
       </div>
 
-      {/* BuzzerBeater Arena Collector */}
-      <BBArenaCollector onDataCollected={fetchArenas} />
+      {/* Modal for BuzzerBeater Arena Collector */}
+      {isCollectorModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsCollectorModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🏀 Collect Arena Data from BuzzerBeater</h3>
+              <button 
+                className="modal-close-button"
+                onClick={() => setIsCollectorModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <BBArenaCollector 
+                onDataCollected={() => {
+                  fetchArenas();
+                  setIsCollectorModalOpen(false);
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="loading">Loading arenas...</div>
@@ -101,7 +136,6 @@ const ArenaViewer = () => {
                   <h3>{arena.arena_name || `Arena ${arena.id}`}</h3>
                   <div className="team-info">
                     <span className="team-id">Team: {arena.team_id}</span>
-                    <span className="latest-indicator">Latest Snapshot</span>
                   </div>
                 </div>
                 

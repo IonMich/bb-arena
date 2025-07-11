@@ -5,13 +5,47 @@ const LuxuryBoxes = ({
   courtWidth,  // Already in pixels (court width)
   scale,       // Conversion factor: feet to pixels (8 pixels per foot)
   bufferSize = 0, // Already in pixels
-  totalBoxes = 50 // Total number of luxury boxes (10-50)
+  totalBoxes = 50, // Total number of luxury boxes (10-50)
+  attendanceData = null // Attendance data for coloring
 }) => {
   const boxDepth = 4 * scale; // 4 feet deep luxury boxes (reduced from 8 feet)
   const seatingDepth = 10 * scale; // 10 feet courtside seating depth
   const lowerTierDepth = 20 * scale; // 20 feet lower tier depth
   const northSouthExpansion = 12 * scale; // Matching the lower tier expansion
   const gapFromLowerTier = 4 * scale; // 4 feet gap between lower-tier and luxury boxes
+  
+  // Function to get attendance-based color for luxury boxes
+  const getAttendanceColor = () => {
+    if (!attendanceData?.luxury_boxes) {
+      return "#1A202C"; // Default color
+    }
+    
+    const totalCapacity = totalBoxes;
+    const totalAttendance = attendanceData.luxury_boxes;
+    const utilizationRate = Math.min(totalAttendance / totalCapacity, 1); // Cap at 100%
+    
+    // Color interpolation between grey (empty) and blue (full)
+    const greyColor = { r: 128, g: 128, b: 128 }; // #808080
+    const blueColor = { r: 30, g: 144, b: 255 }; // #1E90FF
+    
+    const r = Math.round(greyColor.r + (blueColor.r - greyColor.r) * utilizationRate);
+    const g = Math.round(greyColor.g + (blueColor.g - greyColor.g) * utilizationRate);
+    const b = Math.round(greyColor.b + (blueColor.b - greyColor.b) * utilizationRate);
+    
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+  
+  // Function to get attendance display text
+  const getAttendanceDisplay = () => {
+    if (!attendanceData?.luxury_boxes) {
+      return null;
+    }
+    const utilizationRate = (attendanceData.luxury_boxes / totalBoxes * 100).toFixed(1);
+    return `${attendanceData.luxury_boxes}/${totalBoxes} (${utilizationRate}%)`;
+  };
+  
+  const boxColor = getAttendanceColor();
+  const attendanceDisplay = getAttendanceDisplay();
   
   // Calculate total area dimensions
   const totalAreaWidth = courtLength + (2 * bufferSize);
@@ -41,7 +75,7 @@ const LuxuryBoxes = ({
             y={boxY}
             width={boxWidth}
             height={boxDepth}
-            fill="#1A202C"
+            fill={boxColor}
             stroke="#2D3748"
             strokeWidth={2}
             className="luxury-box-area"
@@ -64,7 +98,7 @@ const LuxuryBoxes = ({
           {/* Box number */}
           <text
             x={boxX + (boxWidth / 2)}
-            y={boxY + (boxDepth / 2)}
+            y={boxY + (boxDepth / 2) - 5}
             fontSize="10"
             fill="#F7FAFC"
             textAnchor="middle"
@@ -74,6 +108,21 @@ const LuxuryBoxes = ({
           >
             {String(startBoxNumber + i).padStart(3, '0')}
           </text>
+          
+          {/* Attendance display */}
+          {attendanceDisplay && (
+            <text
+              x={boxX + (boxWidth / 2)}
+              y={boxY + (boxDepth / 2) + 8}
+              fontSize="6"
+              fill="#CBD5E0"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="box-attendance"
+            >
+              {attendanceDisplay}
+            </text>
+          )}
         </g>
       );
     }

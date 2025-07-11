@@ -1,0 +1,416 @@
+/* Game Attendance Sidebar Styles */
+.game-attendance-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  background-color: white;
+  border-left: 1px solid #ddd;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.game-attendance-sidebar.expanded {
+  width: 350px;
+}
+
+.game-attendance-sidebar.collapsed {
+  width: 40px;
+}
+
+.sidebar-header {
+  background-color: #1976d2;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 50px;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-content {
+  padding: 20px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+/* Season Selector */
+.season-selector {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.season-selector label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.season-slider {
+  width: 100%;
+  height: 8px;
+  background: #ddd;
+  border-radius: 5px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.season-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #1976d2;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.season-slider::-webkit-slider-thumb:hover {
+  background: #1565c0;
+}
+
+.season-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #1976d2;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.season-slider::-moz-range-thumb:hover {
+  background: #1565c0;
+}
+
+.season-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+  margin-top: 4px;
+}
+
+.season-selector input {
+  padding: 8px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.season-slider {
+  width: 100% !important;
+  margin: 10px 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.season-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.season-selector input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.field-help {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  font-weight: normal;
+  margin-top: 4px;
+}
+
+/* Games List */
+.games-list {
+  margin-top: 15px;
+}
+
+.games-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.games-count {
+  font-weight: bold;
+  color: #333;
+}
+
+.no-games {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.game-item {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.game-item:hover {
+  background-color: #f5f5f5;
+  border-color: #1976d2;
+}
+
+.game-item.selected {
+  background-color: #e3f2fd;
+  border-color: #1976d2;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+.game-item.upcoming {
+  border-left: 4px solid #ff9800;
+}
+
+.game-item.loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 14px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.game-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.date {
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+}
+
+.time {
+  font-size: 12px;
+  color: #666;
+}
+
+.game-info {
+  margin-bottom: 4px;
+}
+
+.opponent {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.game-type {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.game-id {
+  font-size: 10px;
+  color: #999;
+  font-family: monospace;
+  margin-top: 2px;
+}
+
+.upcoming-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #ff9800;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.attendance-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 14px;
+}
+
+/* Game item stored state */
+.game-item.stored {
+  border-left: 4px solid #38b2ac;
+  background-color: #e6fffa;
+}
+
+.stored-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 14px;
+  color: #38b2ac;
+}
+
+/* Selected Game Info */
+.selected-game-info {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.selected-game-info h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.game-details p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.attendance-data {
+  margin-top: 10px;
+}
+
+.attendance-data ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.attendance-data li {
+  margin: 3px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.attendance-error {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  color: #856404;
+  margin-top: 10px;
+}
+
+/* Loading and Error States */
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.error {
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  padding: 10px;
+  color: #d32f2f;
+  font-size: 13px;
+  margin: 10px 0;
+}
+
+/* Collect All Button */
+.collect-all-button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.collect-all-button:hover:not(:disabled) {
+  background-color: #1565c0;
+}
+
+.collect-all-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .game-attendance-sidebar.expanded {
+    width: 100%;
+    position: fixed;
+    z-index: 2000;
+  }
+  
+  .game-attendance-sidebar.collapsed {
+    width: 100%;
+    height: 60px;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+  
+  .sidebar-content {
+    padding: 15px;
+  }
+}

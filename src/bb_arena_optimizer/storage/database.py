@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .models import ArenaSnapshot, GameRecord, PriceSnapshot
+from .models import ArenaSnapshot, GameRecord, PriceSnapshot, Season
 
 logger = logging.getLogger(__name__)
 
@@ -51,26 +51,24 @@ class DatabaseManager:
                 CREATE TABLE IF NOT EXISTS price_snapshots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     team_id TEXT,
-                    bleachers_price REAL,
-                    lower_tier_price REAL,
-                    courtside_price REAL,
-                    luxury_boxes_price REAL,
-                    game_id TEXT,
+                    bleachers_price INTEGER,
+                    lower_tier_price INTEGER,
+                    courtside_price INTEGER,
+                    luxury_boxes_price INTEGER,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
 
-            # Create games table
+            # Create games table (updated schema)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS games (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     game_id TEXT UNIQUE NOT NULL,
-                    team_id TEXT,
-                    date TIMESTAMP,
-                    opponent TEXT,
-                    is_home BOOLEAN DEFAULT FALSE,
-                    game_type TEXT,
-                    season INTEGER,
+                    home_team_id INTEGER NOT NULL,
+                    away_team_id INTEGER NOT NULL,
+                    date TIMESTAMP NOT NULL,
+                    game_type TEXT NOT NULL,
+                    season INTEGER NOT NULL,
                     division TEXT,
                     country TEXT,
                     cup_round TEXT,
@@ -81,13 +79,24 @@ class DatabaseManager:
                     courtside_attendance INTEGER,
                     luxury_boxes_attendance INTEGER,
                     total_attendance INTEGER,
-                    ticket_revenue REAL,
-                    bleachers_price REAL,
-                    lower_tier_price REAL,
-                    courtside_price REAL,
-                    luxury_boxes_price REAL,
+                    ticket_revenue INTEGER,
+                    bleachers_price INTEGER,
+                    lower_tier_price INTEGER,
+                    courtside_price INTEGER,
+                    luxury_boxes_price INTEGER,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Create seasons table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS seasons (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    season_number INTEGER UNIQUE,
+                    start_date TIMESTAMP,
+                    end_date TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
 
@@ -102,14 +111,17 @@ class DatabaseManager:
                 "CREATE INDEX IF NOT EXISTS idx_price_snapshots_team_id ON price_snapshots(team_id)"
             )
             conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_price_snapshots_game_id ON price_snapshots(game_id)"
+                "CREATE INDEX IF NOT EXISTS idx_games_home_team ON games(home_team_id)"
             )
             conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_games_team_id ON games(team_id)"
+                "CREATE INDEX IF NOT EXISTS idx_games_away_team ON games(away_team_id)"
             )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_games_date ON games(date)")
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_games_game_id ON games(game_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_seasons_number ON seasons(season_number)"
             )
 
             conn.commit()
@@ -208,8 +220,8 @@ class DatabaseManager:
                 """
                 INSERT INTO price_snapshots (
                     team_id, bleachers_price, lower_tier_price, courtside_price,
-                    luxury_boxes_price, game_id, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    luxury_boxes_price, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?)
             """,
                 (
                     price_snapshot.team_id,
@@ -217,7 +229,6 @@ class DatabaseManager:
                     price_snapshot.lower_tier_price,
                     price_snapshot.courtside_price,
                     price_snapshot.luxury_boxes_price,
-                    price_snapshot.game_id,
                     price_snapshot.created_at,
                 ),
             )
@@ -226,6 +237,45 @@ class DatabaseManager:
             if row_id is None:
                 raise ValueError("Failed to insert price snapshot")
             return row_id
+
+    def _validate_game_record(self, game_record: GameRecord) -> None:
+        """Validate game record data before saving to database.
+        
+        Args:
+            game_record: GameRecord to validate
+            
+        Raises:
+            ValueError: If required fields are missing or invalid
+        """
+        errors = []
+        
+        # Check required string fields
+        if not game_record.game_id or not isinstance(game_record.game_id, str):
+            errors.append("game_id must be a non-empty string")
+            
+        # Check required integer fields
+        if not isinstance(game_record.home_team_id, int) or game_record.home_team_id <= 0:
+            errors.append("home_team_id must be a positive integer")
+            
+        if not isinstance(game_record.away_team_id, int) or game_record.away_team_id <= 0:
+            errors.append("away_team_id must be a positive integer")
+            
+        # Check that home and away teams are different
+        if game_record.home_team_id == game_record.away_team_id:
+            errors.append("home_team_id and away_team_id must be different")
+            
+        # Check required fields for database schema
+        if not game_record.game_type:
+            errors.append("game_type is required")
+            
+        if not isinstance(game_record.season, int) or game_record.season <= 0:
+            errors.append("season must be a positive integer")
+            
+        if not game_record.date:
+            errors.append("date is required")
+            
+        if errors:
+            raise ValueError(f"Invalid game record data: {'; '.join(errors)}")
 
     def save_game_record(self, game_record: GameRecord) -> int:
         """Save or update game record in database.
@@ -236,25 +286,31 @@ class DatabaseManager:
         Returns:
             Database ID of the saved record
         """
+        # Validate game record data
+        self._validate_game_record(game_record)
+        
         with sqlite3.connect(self.db_path) as conn:
-            # Try to update existing record first
+            # Try to update existing record first - use dynamic placeholders for robustness
+            update_columns = [
+                "home_team_id", "away_team_id", "date", "game_type",
+                "season", "division", "country", "cup_round",
+                "score_home", "score_away", "bleachers_attendance",
+                "lower_tier_attendance", "courtside_attendance",
+                "luxury_boxes_attendance", "total_attendance",
+                "ticket_revenue", "bleachers_price", "lower_tier_price",
+                "courtside_price", "luxury_boxes_price", "updated_at"
+            ]
+            update_set = ", ".join([f"{col} = ?" for col in update_columns])
+            
             cursor = conn.execute(
-                """
-                UPDATE games SET
-                    team_id = ?, date = ?, opponent = ?, is_home = ?, game_type = ?,
-                    season = ?, division = ?, country = ?, cup_round = ?,
-                    score_home = ?, score_away = ?, bleachers_attendance = ?,
-                    lower_tier_attendance = ?, courtside_attendance = ?,
-                    luxury_boxes_attendance = ?, total_attendance = ?,
-                    ticket_revenue = ?, bleachers_price = ?, lower_tier_price = ?,
-                    courtside_price = ?, luxury_boxes_price = ?, updated_at = ?
+                f"""
+                UPDATE games SET {update_set}
                 WHERE game_id = ?
             """,
                 (
-                    game_record.team_id,
+                    game_record.home_team_id,
+                    game_record.away_team_id,
                     game_record.date,
-                    game_record.opponent,
-                    game_record.is_home,
                     game_record.game_type,
                     game_record.season,
                     game_record.division,
@@ -278,25 +334,29 @@ class DatabaseManager:
             )
 
             if cursor.rowcount == 0:
-                # Insert new record
+                # Insert new record - use dynamic placeholders to prevent column/value mismatch
+                columns = [
+                    "game_id", "home_team_id", "away_team_id", "date", "game_type",
+                    "season", "division", "country", "cup_round",
+                    "score_home", "score_away", "bleachers_attendance",
+                    "lower_tier_attendance", "courtside_attendance",
+                    "luxury_boxes_attendance", "total_attendance", "ticket_revenue",
+                    "bleachers_price", "lower_tier_price", "courtside_price",
+                    "luxury_boxes_price", "created_at", "updated_at"
+                ]
+                placeholders = ", ".join(["?"] * len(columns))
+                columns_str = ", ".join(columns)
+                
                 cursor = conn.execute(
-                    """
-                    INSERT INTO games (
-                        game_id, team_id, date, opponent, is_home, game_type,
-                        season, division, country, cup_round,
-                        score_home, score_away, bleachers_attendance,
-                        lower_tier_attendance, courtside_attendance,
-                        luxury_boxes_attendance, total_attendance, ticket_revenue,
-                        bleachers_price, lower_tier_price, courtside_price,
-                        luxury_boxes_price, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    f"""
+                    INSERT INTO games ({columns_str}) 
+                    VALUES ({placeholders})
                 """,
                     (
                         game_record.game_id,
-                        game_record.team_id,
+                        game_record.home_team_id,
+                        game_record.away_team_id,
                         game_record.date,
-                        game_record.opponent,
-                        game_record.is_home,
                         game_record.game_type,
                         game_record.season,
                         game_record.division,
@@ -381,8 +441,8 @@ class DatabaseManager:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
 
-            query = "SELECT * FROM games WHERE team_id = ? ORDER BY date DESC"
-            params: list[str | int] = [team_id]
+            query = "SELECT * FROM games WHERE home_team_id = ? OR away_team_id = ? ORDER BY date DESC"
+            params: list[str | int] = [team_id, team_id]
 
             if limit:
                 query += " LIMIT ?"
@@ -392,43 +452,94 @@ class DatabaseManager:
 
             games = []
             for row in cursor.fetchall():
-                games.append(
-                    GameRecord(
-                        game_id=row["game_id"],
-                        id=row["id"],
-                        team_id=row["team_id"],
-                        date=datetime.fromisoformat(row["date"])
-                        if row["date"]
-                        else None,
-                        opponent=row["opponent"],
-                        is_home=bool(row["is_home"]),
-                        game_type=row["game_type"],
-                        season=row["season"],
-                        division=row["division"],
-                        country=row["country"],
-                        cup_round=row["cup_round"],
-                        score_home=row["score_home"],
-                        score_away=row["score_away"],
-                        bleachers_attendance=row["bleachers_attendance"],
-                        lower_tier_attendance=row["lower_tier_attendance"],
-                        courtside_attendance=row["courtside_attendance"],
-                        luxury_boxes_attendance=row["luxury_boxes_attendance"],
-                        total_attendance=row["total_attendance"],
-                        ticket_revenue=row["ticket_revenue"],
-                        bleachers_price=row["bleachers_price"],
-                        lower_tier_price=row["lower_tier_price"],
-                        courtside_price=row["courtside_price"],
-                        luxury_boxes_price=row["luxury_boxes_price"],
-                        created_at=datetime.fromisoformat(row["created_at"])
-                        if row["created_at"]
-                        else None,
-                        updated_at=datetime.fromisoformat(row["updated_at"])
-                        if row["updated_at"]
-                        else None,
+                    games.append(
+                        GameRecord(
+                            game_id=row["game_id"],
+                            id=row["id"],
+                            home_team_id=row["home_team_id"],
+                            away_team_id=row["away_team_id"],
+                            date=datetime.fromisoformat(row["date"])
+                            if row["date"]
+                            else None,
+                            game_type=row["game_type"],
+                            season=row["season"],
+                            division=row["division"],
+                            country=row["country"],
+                            cup_round=row["cup_round"],
+                            score_home=row["score_home"],
+                            score_away=row["score_away"],
+                            bleachers_attendance=row["bleachers_attendance"],
+                            lower_tier_attendance=row["lower_tier_attendance"],
+                            courtside_attendance=row["courtside_attendance"],
+                            luxury_boxes_attendance=row["luxury_boxes_attendance"],
+                            total_attendance=row["total_attendance"],
+                            ticket_revenue=row["ticket_revenue"],
+                            bleachers_price=row["bleachers_price"],
+                            lower_tier_price=row["lower_tier_price"],
+                            courtside_price=row["courtside_price"],
+                            luxury_boxes_price=row["luxury_boxes_price"],
+                            created_at=datetime.fromisoformat(row["created_at"])
+                            if row["created_at"]
+                            else None,
+                            updated_at=datetime.fromisoformat(row["updated_at"])
+                            if row["updated_at"]
+                            else None,
+                        )
                     )
-                )
 
             return games
+
+    def get_game_by_id(self, game_id: str) -> GameRecord | None:
+        """Get a specific game by its game_id.
+
+        Args:
+            game_id: Game ID to query
+
+        Returns:
+            GameRecord instance if found, None otherwise
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+
+            query = "SELECT * FROM games WHERE game_id = ?"
+            cursor = conn.execute(query, [game_id])
+            row = cursor.fetchone()
+
+            if row:
+                return GameRecord(
+                    game_id=row["game_id"],
+                    id=row["id"],
+                    home_team_id=row["home_team_id"],
+                    away_team_id=row["away_team_id"],
+                    date=datetime.fromisoformat(row["date"])
+                    if row["date"]
+                    else None,
+                    game_type=row["game_type"],
+                    season=row["season"],
+                    division=row["division"],
+                    country=row["country"],
+                    cup_round=row["cup_round"],
+                    score_home=row["score_home"],
+                    score_away=row["score_away"],
+                    bleachers_attendance=row["bleachers_attendance"],
+                    lower_tier_attendance=row["lower_tier_attendance"],
+                    courtside_attendance=row["courtside_attendance"],
+                    luxury_boxes_attendance=row["luxury_boxes_attendance"],
+                    total_attendance=row["total_attendance"],
+                    ticket_revenue=row["ticket_revenue"],
+                    bleachers_price=row["bleachers_price"],
+                    lower_tier_price=row["lower_tier_price"],
+                    courtside_price=row["courtside_price"],
+                    luxury_boxes_price=row["luxury_boxes_price"],
+                    created_at=datetime.fromisoformat(row["created_at"])
+                    if row["created_at"]
+                    else None,
+                    updated_at=datetime.fromisoformat(row["updated_at"])
+                    if row["updated_at"]
+                    else None,
+                )
+
+            return None
 
     def get_price_history(
         self, team_id: str, limit: int | None = None
@@ -464,7 +575,6 @@ class DatabaseManager:
                         lower_tier_price=row["lower_tier_price"],
                         courtside_price=row["courtside_price"],
                         luxury_boxes_price=row["luxury_boxes_price"],
-                        game_id=row["game_id"],
                         created_at=datetime.fromisoformat(row["created_at"])
                         if row["created_at"]
                         else None,
@@ -494,7 +604,11 @@ class DatabaseManager:
 
             # Count unique teams
             cursor = conn.execute(
-                "SELECT COUNT(DISTINCT team_id) FROM games WHERE team_id IS NOT NULL"
+                """SELECT COUNT(DISTINCT team_id) FROM (
+                    SELECT home_team_id as team_id FROM games WHERE home_team_id IS NOT NULL
+                    UNION
+                    SELECT away_team_id as team_id FROM games WHERE away_team_id IS NOT NULL
+                )"""
             )
             stats["unique_teams"] = cursor.fetchone()[0]
 
@@ -562,7 +676,8 @@ class DatabaseManager:
         """
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM arena_snapshots")
-            return cursor.fetchone()[0]
+            result = cursor.fetchone()
+            return int(result[0]) if result else 0
 
     def get_arena_snapshot_by_id(self, arena_id: int) -> ArenaSnapshot | None:
         """Get a specific arena snapshot by ID.
@@ -787,3 +902,163 @@ class DatabaseManager:
             )
             result = cursor.fetchone()
             return result[0] if result else 0
+
+    # Season management methods
+    
+    def save_seasons(self, seasons: list[Season]) -> None:
+        """Save multiple seasons to database.
+        
+        Args:
+            seasons: List of Season objects to save
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            for season in seasons:
+                conn.execute("""
+                    INSERT OR REPLACE INTO seasons 
+                    (season_number, start_date, end_date, created_at)
+                    VALUES (?, ?, ?, ?)
+                """, (
+                    season.season_number,
+                    season.start_date.isoformat() if season.start_date else None,
+                    season.end_date.isoformat() if season.end_date else None,
+                    season.created_at.isoformat() if season.created_at else datetime.now().isoformat()
+                ))
+            conn.commit()
+            logger.info(f"Saved {len(seasons)} seasons to database")
+    
+    def get_all_seasons(self) -> list[Season]:
+        """Get all seasons from database.
+        
+        Returns:
+            List of Season objects ordered by season number
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT season_number, start_date, end_date, created_at
+                FROM seasons 
+                ORDER BY season_number
+            """)
+            
+            seasons = []
+            for row in cursor.fetchall():
+                seasons.append(Season(
+                    id=row[0],  # season_number is now the primary key/id
+                    season_number=row[0],
+                    start_date=datetime.fromisoformat(row[1]) if row[1] else None,
+                    end_date=datetime.fromisoformat(row[2]) if row[2] else None,
+                    created_at=datetime.fromisoformat(row[3]) if row[3] else None,
+                ))
+            
+            return seasons
+    
+    def get_current_season(self) -> Season | None:
+        """Get the current season based on today's date.
+        
+        Returns:
+            Current Season object or None if no season found
+        """
+        now = datetime.now()
+        
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT season_number, start_date, end_date, created_at
+                FROM seasons 
+                WHERE start_date <= ? AND (end_date IS NULL OR end_date >= ?)
+                ORDER BY season_number DESC
+                LIMIT 1
+            """, (now.isoformat(), now.isoformat()))
+            
+            row = cursor.fetchone()
+            if row:
+                return Season(
+                    id=row[0],  # season_number is now the primary key/id
+                    season_number=row[0],
+                    start_date=datetime.fromisoformat(row[1]) if row[1] else None,
+                    end_date=datetime.fromisoformat(row[2]) if row[2] else None,
+                    created_at=datetime.fromisoformat(row[3]) if row[3] else None,
+                )
+            
+            return None
+    
+    def get_latest_season(self) -> Season | None:
+        """Get the latest season by number.
+        
+        Returns:
+            Latest Season object or None if no seasons found
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT season_number, start_date, end_date, created_at
+                FROM seasons 
+                ORDER BY season_number DESC
+                LIMIT 1
+            """)
+            
+            row = cursor.fetchone()
+            if row:
+                return Season(
+                    id=row[0],  # season_number is now the primary key/id
+                    season_number=row[0],
+                    start_date=datetime.fromisoformat(row[1]) if row[1] else None,
+                    end_date=datetime.fromisoformat(row[2]) if row[2] else None,
+                    created_at=datetime.fromisoformat(row[3]) if row[3] else None,
+                )
+            
+            return None
+    
+    def should_update_seasons(self) -> bool:
+        """Check if seasons should be updated from API.
+        
+        Returns:
+            True if seasons should be updated
+        """
+        latest_season = self.get_latest_season()
+        if not latest_season:
+            return True
+            
+        now = datetime.now()
+        
+        # If the latest season has an end date and it has passed, we might need new seasons
+        if latest_season.end_date:
+            # Make sure both datetimes are comparable (handle timezone issues)
+            end_date = latest_season.end_date
+            if end_date.tzinfo is not None:
+                end_date = end_date.replace(tzinfo=None)
+            if end_date < now:
+                return True
+            
+        # If the latest season doesn't have an end date, check if it's been running too long
+        # by comparing to historical season durations
+        if not latest_season.end_date and latest_season.start_date:
+            start_date = latest_season.start_date
+            if start_date.tzinfo is not None:
+                start_date = start_date.replace(tzinfo=None)
+            current_season_duration = (now - start_date).days
+            
+            # Get the maximum duration of all completed seasons as our threshold
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT MAX(
+                        JULIANDAY(end_date) - JULIANDAY(start_date)
+                    ) as max_duration_days
+                    FROM seasons 
+                    WHERE start_date IS NOT NULL 
+                    AND end_date IS NOT NULL
+                """)
+                result = cursor.fetchone()
+                max_historical_duration = result[0] if result and result[0] else 180  # fallback to 180 days
+                
+            # If current season has been running longer than any historical season, update
+            if current_season_duration > max_historical_duration:
+                return True
+                
+        # Check if we haven't updated seasons in a while (every 7 days)
+        if latest_season.created_at:
+            created_at = latest_season.created_at
+            if created_at.tzinfo is not None:
+                created_at = created_at.replace(tzinfo=None)
+            days_since_update = (now - created_at).days
+            if days_since_update > 7:
+                return True
+            
+        return False
