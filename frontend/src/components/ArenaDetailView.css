@@ -8,12 +8,24 @@
 
 .arena-detail-content {
   position: relative;
-  margin-right: 370px; /* Leave space for the sidebar */
+}
+
+.court-wrapper {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 @media (max-width: 768px) {
+  .arena-detail-view {
+    margin-right: 0 !important; /* On mobile, sidebar should overlay, not push */
+  }
+  
   .arena-detail-content {
-    margin-right: 0;
     margin-top: 20px;
   }
 }

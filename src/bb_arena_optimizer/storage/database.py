@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .models import ArenaSnapshot, GameRecord, PriceSnapshot, Season
+from .models import ArenaSnapshot, GameRecord, PriceSnapshot, Season, TeamInfo
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +100,28 @@ class DatabaseManager:
                 )
             """)
 
+            # Create team_info table for caching team information
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS team_info (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    bb_team_id TEXT,
+                    bb_username TEXT,
+                    team_name TEXT,
+                    short_name TEXT,
+                    owner TEXT,
+                    league_id TEXT,
+                    league_name TEXT,
+                    league_level TEXT,
+                    country_id TEXT,
+                    country_name TEXT,
+                    rival_id TEXT,
+                    rival_name TEXT,
+                    last_synced TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(bb_username)
+                )
+            """)
+
             # Create indexes for better query performance
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_arena_snapshots_team_id ON arena_snapshots(team_id)"
@@ -122,6 +144,12 @@ class DatabaseManager:
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_seasons_number ON seasons(season_number)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_team_info_username ON team_info(bb_username)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_team_info_team_id ON team_info(bb_team_id)"
             )
 
             conn.commit()
@@ -1119,3 +1147,86 @@ class DatabaseManager:
                     'courtside': 0,
                     'luxury_boxes': 0
                 }
+    
+    # Team Info Management Methods
+    
+    def save_team_info(self, team_info: TeamInfo) -> None:
+        """Save or update team information in the database.
+        
+        Args:
+            team_info: TeamInfo object to save
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            # Use INSERT OR REPLACE to handle updates
+            conn.execute("""
+                INSERT OR REPLACE INTO team_info (
+                    bb_team_id, bb_username, team_name, short_name, owner,
+                    league_id, league_name, league_level, country_id, country_name,
+                    rival_id, rival_name, last_synced, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                         COALESCE((SELECT created_at FROM team_info WHERE bb_username = ?), ?))
+            """, (
+                team_info.bb_team_id, team_info.bb_username, team_info.team_name,
+                team_info.short_name, team_info.owner, team_info.league_id,
+                team_info.league_name, team_info.league_level, team_info.country_id,
+                team_info.country_name, team_info.rival_id, team_info.rival_name,
+                team_info.last_synced, team_info.bb_username, team_info.created_at
+            ))
+            conn.commit()
+            logger.info(f"Saved team info for user {team_info.bb_username}")
+
+    def get_team_info_by_username(self, username: str) -> TeamInfo | None:
+        """Get cached team information by BuzzerBeater username.
+        
+        Args:
+            username: BuzzerBeater username
+            
+        Returns:
+            TeamInfo object if found, None otherwise
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("""
+                SELECT id, bb_team_id, bb_username, team_name, short_name, owner,
+                       league_id, league_name, league_level, country_id, country_name,
+                       rival_id, rival_name, last_synced, created_at
+                FROM team_info 
+                WHERE bb_username = ?
+            """, (username,))
+            
+            row = cursor.fetchone()
+            if row:
+                return TeamInfo(
+                    id=row[0],
+                    bb_team_id=row[1],
+                    bb_username=row[2],
+                    team_name=row[3],
+                    short_name=row[4],
+                    owner=row[5],
+                    league_id=row[6],
+                    league_name=row[7],
+                    league_level=row[8],
+                    country_id=row[9],
+                    country_name=row[10],
+                    rival_id=row[11],
+                    rival_name=row[12],
+                    last_synced=datetime.fromisoformat(row[13]) if row[13] else None,
+                    created_at=datetime.fromisoformat(row[14]) if row[14] else None
+                )
+            return None
+
+    def should_sync_team_info(self, username: str, hours_threshold: int = 24) -> bool:
+        """Check if team info should be synced based on last sync time.
+        
+        Args:
+            username: BuzzerBeater username
+            hours_threshold: Minimum hours between syncs
+            
+        Returns:
+            True if sync is needed
+        """
+        team_info = self.get_team_info_by_username(username)
+        if not team_info or not team_info.last_synced:
+            return True
+            
+        time_since_sync = datetime.now() - team_info.last_synced
+        return time_since_sync.total_seconds() > (hours_threshold * 3600)

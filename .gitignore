@@ -79,6 +79,8 @@ data/processed/*
 
 # Database files
 *.db
+*.db-wal
+*.db-shm
 bb_arena_data.db
 
 # Logs

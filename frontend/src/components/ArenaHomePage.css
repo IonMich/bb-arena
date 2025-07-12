@@ -1,0 +1,217 @@
+.arena-home-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 40px);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.arena-home-page.sidebar-expanded {
+  /* Calculate available width and center within it */
+  max-width: calc(100vw - 350px - 40px);
+  width: min(1200px, calc(100vw - 350px - 40px));
+  margin-left: calc((100vw - 350px - min(1200px, calc(100vw - 350px - 40px))) / 2);
+  margin-right: calc((100vw - 350px - min(1200px, calc(100vw - 350px - 40px))) / 2 + 350px);
+}
+
+.arena-home-page.sidebar-collapsed {
+  /* Calculate available width and center within it */
+  max-width: calc(100vw - 40px - 40px);
+  width: min(1200px, calc(100vw - 40px - 40px));
+  margin-left: calc((100vw - 40px - min(1200px, calc(100vw - 40px - 40px))) / 2);
+  margin-right: calc((100vw - 40px - min(1200px, calc(100vw - 40px - 40px))) / 2 + 40px);
+}
+
+.arena-home-header {
+  margin-bottom: 30px;
+}
+
+.team-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.team-main-info h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.team-name-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.team-short-name {
+  font-size: 1.2rem;
+  font-weight: 400;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.team-details {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.team-details span {
+  font-size: 1rem;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+/* Responsive behavior for team info */
+@media (max-width: 768px) {
+  .arena-home-page {
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: calc(100vw - 40px) !important;
+  }
+  
+  .arena-home-page.sidebar-expanded,
+  .arena-home-page.sidebar-collapsed {
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: calc(100vw - 40px) !important;
+  }
+  
+  .team-name-line {
+    gap: 8px;
+  }
+  
+  .team-details {
+    gap: 12px;
+    flex-basis: 100%;
+  }
+  
+  .team-main-info h1 {
+    font-size: 1.5rem;
+  }
+  
+  .team-short-name {
+    font-size: 1rem;
+  }
+  
+  .team-details span {
+    font-size: 0.9rem;
+  }
+}
+
+.sync-button {
+  background: transparent;
+  border: none;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 4px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.sync-button:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.sync-button:disabled {
+  cursor: not-allowed;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.sync-button.syncing {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.arena-detail-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.arena-home-error {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.arena-home-error h2 {
+  color: #e74c3c;
+  margin-bottom: 20px;
+}
+
+.arena-home-error p {
+  color: #555;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.arena-home-error ul {
+  text-align: left;
+  color: #666;
+  line-height: 1.6;
+}
+
+.arena-home-error li {
+  margin-bottom: 8px;
+}
+
+.arena-home-no-data {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.arena-home-no-data h2 {
+  color: #f39c12;
+  margin-bottom: 20px;
+}
+
+.arena-home-no-data p {
+  color: #555;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.arena-home-no-data strong {
+  color: #2c3e50;
+}
+
+.arena-home-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  padding: 40px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

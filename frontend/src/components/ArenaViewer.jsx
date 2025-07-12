@@ -13,6 +13,7 @@ const ArenaViewer = ({ appData = null }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'court'
   const [isCollectorModalOpen, setIsCollectorModalOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   
   const itemsPerPage = 20;
 
@@ -59,11 +60,14 @@ const ArenaViewer = ({ appData = null }) => {
 
   if (viewMode === 'court' && selectedArena) {
     return (
-      <ArenaDetailView 
-        selectedArena={selectedArena}
-        onBackToList={handleBackToList}
-        appData={appData}
-      />
+      <div className={`arena-standalone-view ${sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+        <ArenaDetailView 
+          selectedArena={selectedArena}
+          onBackToList={handleBackToList}
+          appData={appData}
+          onSidebarExpandedChange={setSidebarExpanded}
+        />
+      </div>
     );
   }
 

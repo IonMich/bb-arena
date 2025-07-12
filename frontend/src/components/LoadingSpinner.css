@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
+  width: 100%;
+  background-color: #fff;
 }
 
 .loading-spinner-small {
@@ -16,7 +18,8 @@
 
 .loading-spinner-large {
   padding: 40px;
-  min-height: 200px;
+  min-height: calc(100vh - 100px);
+  margin-top: 50px;
 }
 
 .loading-spinner .spinner {

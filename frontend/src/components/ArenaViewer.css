@@ -1,4 +1,16 @@
 /* Arena Viewer Styles */
+.arena-standalone-view {
+  transition: margin-right 0.3s ease;
+}
+
+.arena-standalone-view.sidebar-expanded {
+  margin-right: 350px;
+}
+
+.arena-standalone-view.sidebar-collapsed {
+  margin-right: 40px;
+}
+
 .arena-viewer {
   padding: 20px;
   background-color: #f5f5f5;
@@ -392,5 +404,9 @@
   .collect-data-button {
     padding: 10px 20px;
     font-size: 14px;
+  }
+  
+  .arena-standalone-view {
+    margin-right: 0 !important; /* On mobile, sidebar should overlay, not push */
   }
 }

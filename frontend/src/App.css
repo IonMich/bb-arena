@@ -12,6 +12,12 @@ html, body {
 
 #root {
   width: 100%;
+  background-color: #fff;
+}
+
+.App {
+  background-color: #fff;
+  min-height: 100vh;
 }
 
 /* Navigation Styles */

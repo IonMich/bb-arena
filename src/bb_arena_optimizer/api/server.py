@@ -760,6 +760,104 @@ async def get_user_team_info():
         raise HTTPException(status_code=500, detail=f"Failed to fetch team info: {str(e)}")
 
 
+@app.get("/api/bb/team-info/cached")
+async def get_cached_team_info():
+    """Get cached team information from database."""
+    username = os.getenv("BB_USERNAME")
+    
+    if not username:
+        raise HTTPException(status_code=500, detail="BB_USERNAME not configured")
+    
+    try:
+        team_info = db_manager.get_team_info_by_username(username)
+        
+        if team_info is None:
+            raise HTTPException(status_code=404, detail="No cached team info found. Please sync first.")
+        
+        # Convert to dict format matching the API response
+        return {
+            "id": team_info.bb_team_id,
+            "name": team_info.team_name,
+            "short_name": team_info.short_name,
+            "owner": team_info.owner,
+            "league_id": team_info.league_id,
+            "league": team_info.league_name,
+            "league_level": team_info.league_level,
+            "country_id": team_info.country_id,
+            "country": team_info.country_name,
+            "rival_id": team_info.rival_id,
+            "rival": team_info.rival_name,
+            "last_synced": team_info.last_synced.isoformat() if team_info.last_synced else None,
+            "from_cache": True
+        }
+            
+    except Exception as e:
+        logger.error(f"Error fetching cached team info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch cached team info: {str(e)}")
+
+
+@app.post("/api/bb/team-info/sync")
+async def sync_team_info():
+    """Sync team information from BuzzerBeater API and cache it."""
+    username = os.getenv("BB_USERNAME")
+    security_code = os.getenv("BB_SECURITY_CODE")
+    
+    if not username or not security_code:
+        raise HTTPException(status_code=500, detail="API credentials not configured")
+    
+    try:
+        with BuzzerBeaterAPI(username, security_code) as api:
+            team_data = api.get_team_info()
+            
+            if team_data is None:
+                raise HTTPException(status_code=404, detail="Failed to fetch team information from BB API")
+            
+            # Save to database
+            from ..storage.models import TeamInfo
+            team_info = TeamInfo.from_api_data(team_data, username)
+            db_manager.save_team_info(team_info)
+            
+            # Return the same format as the direct API call but with cache info
+            response_data = team_data.copy()
+            response_data["last_synced"] = team_info.last_synced.isoformat() if team_info.last_synced else None
+            response_data["from_cache"] = False
+            
+            return response_data
+            
+    except Exception as e:
+        logger.error(f"Error syncing team info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync team info: {str(e)}")
+
+
+@app.get("/api/bb/team-info/smart")
+async def get_smart_team_info():
+    """Get team info intelligently - from cache if recent, otherwise sync from API."""
+    username = os.getenv("BB_USERNAME")
+    
+    if not username:
+        raise HTTPException(status_code=500, detail="BB_USERNAME not configured")
+    
+    try:
+        # Check if we should sync (no cache or cache is old)
+        should_sync = db_manager.should_sync_team_info(username, hours_threshold=24)
+        
+        if should_sync:
+            logger.info(f"Team info cache is stale for {username}, syncing from API")
+            # Sync from API (this will also cache the result)
+            return await sync_team_info()
+        else:
+            logger.info(f"Using cached team info for {username}")
+            # Use cached data
+            return await get_cached_team_info()
+            
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404 from cached data)
+        raise
+    except Exception as e:
+        logger.error(f"Error getting smart team info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get team info: {str(e)}")
+
+
 @app.get("/api/bb/standings")
 async def get_league_standings(leagueid: int, season: int | None = None):
     """Get league standings which includes team information."""

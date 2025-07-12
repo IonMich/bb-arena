@@ -8,7 +8,8 @@ const GameAttendanceSidebar = ({
   onGameSelect, 
   selectedGame, 
   onStoredGamesUpdate,
-  appData 
+  appData,
+  onExpandedChange
 }) => {
   const [games, setGames] = useState([]);
   const [storedGames, setStoredGames] = useState(new Set());
@@ -35,6 +36,13 @@ const GameAttendanceSidebar = ({
       setDebouncedSeason(currentSeason);
     }
   }, [currentSeason, season]);
+
+  // Notify parent of expanded state changes
+  useEffect(() => {
+    if (onExpandedChange) {
+      onExpandedChange(expanded);
+    }
+  }, [expanded, onExpandedChange]);
 
   // Debounce season changes to avoid excessive API calls
   useEffect(() => {

@@ -1,18 +1,45 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { arenaService } from '../services/arenaService';
-import ArenaDesigner from './ArenaDesigner';
+// import ArenaDesigner from './ArenaDesigner'; // Temporarily disabled - moved to ArenaDesignerIntegration.jsx
 import GameAttendanceSidebar from './GameAttendanceSidebar';
 import './ArenaDetailView.css';
 
-const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
+const ArenaDetailView = ({ 
+  selectedArena, 
+  arena,
+  onBackToList, 
+  showBackButton = true,
+  title,
+  appData = null,
+  onSidebarExpandedChange
+}) => {
   const [arenaHistory, setArenaHistory] = useState([]);
-  const [selectedSnapshot, setSelectedSnapshot] = useState(selectedArena);
+  const [selectedSnapshot, setSelectedSnapshot] = useState(arena || selectedArena);
   const [selectedGame, setSelectedGame] = useState(null);
   const [storedGamesCount, setStoredGamesCount] = useState(null); // null means loading
   const [storedGamesBreakdown, setStoredGamesBreakdown] = useState({});
   const [showStoredGamesPopover, setShowStoredGamesPopover] = useState(false);
   const [prefixMaxAttendance, setPrefixMaxAttendance] = useState(null);
   const [error, setError] = useState(null);
+
+  // Handle sidebar state changes for parent callback
+  const handleSidebarExpandedChange = (expanded) => {
+    if (onSidebarExpandedChange) {
+      onSidebarExpandedChange(expanded);
+    }
+  };
+
+  // Use either arena or selectedArena prop
+  const currentArena = arena || selectedArena;
+
+  // Update selected snapshot when arena prop changes
+  useEffect(() => {
+    if (arena) {
+      setSelectedSnapshot(arena);
+    } else if (selectedArena) {
+      setSelectedSnapshot(selectedArena);
+    }
+  }, [arena, selectedArena]);
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -29,11 +56,11 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
   }, [showStoredGamesPopover]);
 
   const fetchStoredGamesBreakdown = useCallback(async () => {
-    if (!selectedArena?.team_id) return;
+    if (!currentArena?.team_id) return;
     
     try {
       // Use the efficient backend endpoint that queries the database directly
-      const teamId = selectedArena.team_id;
+      const teamId = currentArena.team_id;
       const countData = await arenaService.getHomeGamesCountRobust(teamId);
       
       console.log(`Robust breakdown for team ${teamId}:`, countData.breakdown_by_season);
@@ -43,16 +70,16 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
       console.error('Error fetching stored games breakdown:', error);
       setStoredGamesBreakdown({});
     }
-  }, [selectedArena?.team_id]);
+  }, [currentArena?.team_id]);
 
   useEffect(() => {
     const fetchArenaHistory = async () => {
-      if (!selectedArena?.team_id) return;
+      if (!currentArena?.team_id) return;
       
       try {
         // Get arena history without loading state for better UX
         const [historyResponse] = await Promise.all([
-          arenaService.getTeamArenaHistory(selectedArena.team_id)
+          arenaService.getTeamArenaHistory(currentArena.team_id)
         ]);
         
         setArenaHistory(historyResponse.arenas);
@@ -68,7 +95,7 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
     };
 
     fetchArenaHistory();
-  }, [selectedArena, fetchStoredGamesBreakdown]);
+  }, [currentArena?.team_id, fetchStoredGamesBreakdown]);
 
   const areSnapshotsIdentical = (snapshot1, snapshot2) => {
     return (
@@ -181,13 +208,13 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
   // Fetch prefix max attendance when game is selected
   useEffect(() => {
     const fetchPrefixMaxAttendance = async () => {
-      if (!selectedGame?.date || !selectedArena?.team_id) {
+      if (!selectedGame?.date || !currentArena?.team_id) {
         setPrefixMaxAttendance(null);
         return;
       }
       
       try {
-        const data = await arenaService.getPrefixMaxAttendance(selectedArena.team_id, selectedGame.date);
+        const data = await arenaService.getPrefixMaxAttendance(currentArena.team_id, selectedGame.date);
         setPrefixMaxAttendance(data.prefix_max_attendance);
       } catch (error) {
         console.error('Error fetching prefix max attendance:', error);
@@ -196,10 +223,10 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
     };
 
     fetchPrefixMaxAttendance();
-  }, [selectedGame?.date, selectedArena?.team_id]);
+  }, [selectedGame?.date, currentArena?.team_id]);
 
   const updateStoredGamesCount = async () => {
-    if (!selectedArena?.team_id) return;
+    if (!currentArena?.team_id) return;
     
     try {
       // Just refresh the breakdown, which will update the count automatically
@@ -389,12 +416,14 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
   return (
     <div className="arena-detail-view">
       <div className="detail-header">
-        <button onClick={onBackToList} className="back-button">
-          ← Back to Arena List
-        </button>
+        {showBackButton && onBackToList && (
+          <button onClick={onBackToList} className="back-button">
+            ← Back to Arena List
+          </button>
+        )}
         
         <div className="arena-title">
-          <h2>{selectedSnapshot?.arena_name || `Arena ${selectedSnapshot?.id}`}</h2>
+          <h2>{title || selectedSnapshot?.arena_name || `Arena ${selectedSnapshot?.id}`}</h2>
           <div className="arena-meta">
             <span>Team ID: {selectedSnapshot?.team_id}</span>
             <span>Total Capacity: {formatNumber(selectedSnapshot?.total_capacity)}</span>
@@ -513,6 +542,7 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
             selectedGame={selectedGame}
             onStoredGamesUpdate={updateStoredGamesCount}
             appData={appData}
+            onExpandedChange={handleSidebarExpandedChange}
           />
           
           {/* Selected Game Info Panel */}
@@ -640,6 +670,7 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
             </div>
           )}
           
+          {/* ArenaDesigner temporarily disabled - preserved in ArenaDesignerIntegration.jsx for future use
           <ArenaDesigner 
             initialSeatCounts={{
               courtside: selectedSnapshot.courtside_capacity,
@@ -650,6 +681,7 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
             attendanceData={selectedGame?.attendance}
             knownCapacities={selectedGame ? getEffectiveCapacities() : null}
           />
+          */}
         </div>
       )}
     </div>

@@ -42,13 +42,57 @@ class ArenaService {
    */
   async getTeamArenas(teamId, limit = 50) {
     try {
-      const response = await fetch(`${API_BASE_URL}/arenas/team/${teamId}?limit=${limit}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_BASE_URL}/arenas/team/${teamId}?limit=${limit}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error(`Error fetching team ${teamId} arenas:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the user's current arena (latest arena for their team)
+   */
+  async getUserCurrentArena() {
+    try {
+      // First try to get cached team info (much faster)
+      let userTeam;
+      try {
+        userTeam = await this.getCachedTeamInfo();
+      } catch {
+        // If no cached info, fall back to smart team info (which will sync if needed)
+        console.log('No cached team info found, fetching from API...');
+        userTeam = await this.getUserTeamInfo();
+      }
+
+      if (!userTeam || !userTeam.id) {
+        throw new Error('User team information not available');
+      }
+
+      // Get the latest arena for this team (limit=1 to get most recent)
+      const teamArenas = await this.getTeamArenas(userTeam.id, 1);
+      
+      if (!teamArenas.arenas || teamArenas.arenas.length === 0) {
+        return null; // No arena found for this team
+      }
+
+      return {
+        arena: teamArenas.arenas[0],
+        userTeam: userTeam
+      };
+    } catch (error) {
+      console.error('Error fetching user current arena:', error);
       throw error;
     }
   }
@@ -193,17 +237,62 @@ class ArenaService {
   }
 
   /**
-   * Get user's team information
+   * Get user's team information (uses smart caching)
    */
   async getUserTeamInfo() {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bb/team-info`);
+      const response = await fetch(`${API_BASE_URL}/api/bb/team-info/smart`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return await response.json();
     } catch (error) {
       console.error('Error fetching user team info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get cached team information from database
+   */
+  async getCachedTeamInfo() {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${API_BASE_URL}/api/bb/team-info/cached`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching cached team info:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sync team information from BuzzerBeater API and cache it
+   */
+  async syncUserTeamInfo() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/team-info/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error syncing team info:', error);
       throw error;
     }
   }

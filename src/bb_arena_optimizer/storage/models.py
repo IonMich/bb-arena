@@ -229,3 +229,44 @@ class Season:
             end_date=end_date,
             created_at=datetime.now(),
         )
+
+
+@dataclass
+class TeamInfo:
+    """Represents cached team information from BuzzerBeater API."""
+    
+    id: int | None = None
+    bb_team_id: str | None = None  # BuzzerBeater team ID
+    bb_username: str | None = None  # BuzzerBeater username this info belongs to
+    team_name: str | None = None
+    short_name: str | None = None
+    owner: str | None = None
+    league_id: str | None = None
+    league_name: str | None = None
+    league_level: str | None = None
+    country_id: str | None = None
+    country_name: str | None = None
+    rival_id: str | None = None
+    rival_name: str | None = None
+    last_synced: datetime | None = None
+    created_at: datetime | None = None
+    
+    @classmethod
+    def from_api_data(cls, team_data: dict[str, Any], username: str) -> "TeamInfo":
+        """Create TeamInfo from API team data."""
+        return cls(
+            bb_team_id=team_data.get("id"),
+            bb_username=username,
+            team_name=team_data.get("name"),
+            short_name=team_data.get("short_name"),
+            owner=team_data.get("owner"),
+            league_id=team_data.get("league_id"),
+            league_name=team_data.get("league"),
+            league_level=team_data.get("league_level"),
+            country_id=team_data.get("country_id"),
+            country_name=team_data.get("country"),
+            rival_id=team_data.get("rival_id"),
+            rival_name=team_data.get("rival"),
+            last_synced=datetime.now(),
+            created_at=datetime.now(),
+        )
