@@ -11,7 +11,22 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
   const [storedGamesCount, setStoredGamesCount] = useState(null); // null means loading
   const [storedGamesBreakdown, setStoredGamesBreakdown] = useState({});
   const [showStoredGamesPopover, setShowStoredGamesPopover] = useState(false);
+  const [prefixMaxAttendance, setPrefixMaxAttendance] = useState(null);
   const [error, setError] = useState(null);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStoredGamesPopover && !event.target.closest('.stored-games-container')) {
+        setShowStoredGamesPopover(false);
+      }
+    };
+
+    if (showStoredGamesPopover) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showStoredGamesPopover]);
 
   const fetchStoredGamesBreakdown = useCallback(async () => {
     if (!selectedArena?.team_id) return;
@@ -163,6 +178,26 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
     }
   }, [selectedGame, snapshotGroups, selectedSnapshot?.id]);
 
+  // Fetch prefix max attendance when game is selected
+  useEffect(() => {
+    const fetchPrefixMaxAttendance = async () => {
+      if (!selectedGame?.date || !selectedArena?.team_id) {
+        setPrefixMaxAttendance(null);
+        return;
+      }
+      
+      try {
+        const data = await arenaService.getPrefixMaxAttendance(selectedArena.team_id, selectedGame.date);
+        setPrefixMaxAttendance(data.prefix_max_attendance);
+      } catch (error) {
+        console.error('Error fetching prefix max attendance:', error);
+        setPrefixMaxAttendance(null);
+      }
+    };
+
+    fetchPrefixMaxAttendance();
+  }, [selectedGame?.date, selectedArena?.team_id]);
+
   const updateStoredGamesCount = async () => {
     if (!selectedArena?.team_id) return;
     
@@ -243,25 +278,112 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
       }
     }
     
-    // If we don't have both before and after snapshots, use latest available
-    if (!beforeSnapshot && !afterSnapshot) {
+    // We can only consider a capacity "known" if we have snapshots both before and after
+    // the game date that show the same capacity, OR if we have a snapshot from exactly
+    // the game date or very close to it
+    if (!beforeSnapshot || !afterSnapshot) {
+      // If we only have snapshots from one side of the game date, 
+      // we cannot be certain about the exact capacities at game time
       return {
-        bleachers: selectedSnapshot?.bleachers_capacity,
-        lower_tier: selectedSnapshot?.lower_tier_capacity,
-        courtside: selectedSnapshot?.courtside_capacity,
-        luxury_boxes: selectedSnapshot?.luxury_boxes_capacity
+        bleachers: null,
+        lower_tier: null,
+        courtside: null,
+        luxury_boxes: null
       };
     }
     
-    const before = beforeSnapshot || afterSnapshot;
-    const after = afterSnapshot || beforeSnapshot;
-    
+    // Only return known capacities if they're identical before and after the game
     return {
-      bleachers: before.bleachers_capacity === after.bleachers_capacity ? before.bleachers_capacity : null,
-      lower_tier: before.lower_tier_capacity === after.lower_tier_capacity ? before.lower_tier_capacity : null,
-      courtside: before.courtside_capacity === after.courtside_capacity ? before.courtside_capacity : null,
-      luxury_boxes: before.luxury_boxes_capacity === after.luxury_boxes_capacity ? before.luxury_boxes_capacity : null
+      bleachers: beforeSnapshot.bleachers_capacity === afterSnapshot.bleachers_capacity ? beforeSnapshot.bleachers_capacity : null,
+      lower_tier: beforeSnapshot.lower_tier_capacity === afterSnapshot.lower_tier_capacity ? beforeSnapshot.lower_tier_capacity : null,
+      courtside: beforeSnapshot.courtside_capacity === afterSnapshot.courtside_capacity ? beforeSnapshot.courtside_capacity : null,
+      luxury_boxes: beforeSnapshot.luxury_boxes_capacity === afterSnapshot.luxury_boxes_capacity ? beforeSnapshot.luxury_boxes_capacity : null
     };
+  };
+
+  // Function to determine if a capacity is effectively "known" based on attendance and snapshots
+  const getEffectiveCapacities = () => {
+    const knownCapacities = getKnownCapacities();
+    const attendance = selectedGame?.attendance;
+    
+    if (!attendance || !selectedSnapshot) {
+      return knownCapacities;
+    }
+    
+    const result = { ...knownCapacities };
+    
+    // If attendance equals the capacity from our snapshot, and we only have snapshots after the game,
+    // then we can be certain this was the actual capacity (can't sell more seats than exist)
+    const checkAttendanceEqualsCapacity = (attendanceValue, snapshotCapacity, knownCapacity, prefixMax) => {
+      if (knownCapacity !== null) return knownCapacity; // Already known from history
+      if (attendanceValue === snapshotCapacity) return snapshotCapacity; // Attendance = capacity means it's known
+      
+      // Check if prefix max provides a tighter bound than current attendance
+      // If historical max > current attendance and historical max = snapshot capacity,
+      // then we know the capacity was at least the historical max
+      if (prefixMax && prefixMax > attendanceValue && prefixMax === snapshotCapacity) {
+        return snapshotCapacity; // Historical evidence confirms this capacity
+      }
+      
+      return null; // Still uncertain
+    };
+    
+    const prefixMax = prefixMaxAttendance || {};
+    
+    result.bleachers = checkAttendanceEqualsCapacity(
+      attendance.bleachers, 
+      selectedSnapshot.bleachers_capacity, 
+      knownCapacities.bleachers,
+      prefixMax.bleachers
+    );
+    result.courtside = checkAttendanceEqualsCapacity(
+      attendance.courtside, 
+      selectedSnapshot.courtside_capacity, 
+      knownCapacities.courtside,
+      prefixMax.courtside
+    );
+    result.lower_tier = checkAttendanceEqualsCapacity(
+      attendance.lower_tier, 
+      selectedSnapshot.lower_tier_capacity, 
+      knownCapacities.lower_tier,
+      prefixMax.lower_tier
+    );
+    result.luxury_boxes = checkAttendanceEqualsCapacity(
+      attendance.luxury_boxes, 
+      selectedSnapshot.luxury_boxes_capacity, 
+      knownCapacities.luxury_boxes,
+      prefixMax.luxury_boxes
+    );
+    
+    return result;
+  };
+
+  // Helper function to generate informative tooltips for uncertain capacities
+  const getCapacityTooltip = (sectionName, attendance, snapshotCapacity, prefixMax) => {
+    const parts = ['Capacity at game time uncertain'];
+    
+    // Add information about the upper bound
+    parts.push(`Upper bound: ≤${snapshotCapacity?.toLocaleString()} (from later arena snapshot)`);
+    
+    // Calculate the maximum (most restrictive) lower bound
+    const attendanceBound = attendance || 0;
+    const prefixMaxBound = prefixMax || 0;
+    const maxLowerBound = Math.max(attendanceBound, prefixMaxBound);
+    
+    if (maxLowerBound > 0) {
+      let boundSource = '';
+      if (attendanceBound === maxLowerBound && prefixMaxBound === maxLowerBound) {
+        boundSource = 'actual attendance and max previous attendance';
+      } else if (attendanceBound === maxLowerBound) {
+        boundSource = 'actual attendance at this game';
+      } else {
+        boundSource = 'max attendance in previous games';
+      }
+      
+      parts.push(`Lower bound: ≥${maxLowerBound.toLocaleString()} (from ${boundSource})`);
+    }
+    
+    return parts.join('\n');
   };
 
   return (
@@ -277,9 +399,11 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
             <span>Team ID: {selectedSnapshot?.team_id}</span>
             <span>Total Capacity: {formatNumber(selectedSnapshot?.total_capacity)}</span>
             <div 
-              className="stored-games-container"
-              onMouseEnter={() => setShowStoredGamesPopover(true)}
-              onMouseLeave={() => setShowStoredGamesPopover(false)}
+              className={`stored-games-container ${showStoredGamesPopover ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowStoredGamesPopover(!showStoredGamesPopover);
+              }}
             >
               <span>Stored Home Games: {storedGamesCount !== null ? storedGamesCount : '...'}</span>
               
@@ -410,60 +534,77 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
                   <div className="attendance-summary">
                     <h4>Attendance Summary</h4>
                     {(() => {
-                      const knownCapacities = getKnownCapacities();
+                      const effectiveCapacities = getEffectiveCapacities();
+                      const prefixMax = prefixMaxAttendance || {};
                       return (
                         <div className="attendance-grid">
                           <div className="attendance-item">
                             <span className="seat-type">Bleachers:</span>
                             <span className="seat-count">
                               {selectedGame.attendance.bleachers?.toLocaleString() || '0'}
-                              {knownCapacities.bleachers ? 
-                                ` / ${knownCapacities.bleachers.toLocaleString()}` :
-                                ` / ${selectedSnapshot?.bleachers_capacity?.toLocaleString() || '?'}`
-                              }
+                              {effectiveCapacities.bleachers ? 
+                                ` / ${effectiveCapacities.bleachers.toLocaleString()}` :
+                                ` / `}
+                              {!effectiveCapacities.bleachers && (
+                                <span 
+                                  className="capacity-estimate" 
+                                  title={getCapacityTooltip('Bleachers', selectedGame.attendance.bleachers, selectedSnapshot?.bleachers_capacity, prefixMax.bleachers)}
+                                >
+                                  ≤{selectedSnapshot?.bleachers_capacity?.toLocaleString() || '?'}
+                                </span>
+                              )}
                             </span>
-                            {!knownCapacities.bleachers && (
-                              <span className="capacity-uncertain">±</span>
-                            )}
                           </div>
                           <div className="attendance-item">
                             <span className="seat-type">Courtside:</span>
                             <span className="seat-count">
                               {selectedGame.attendance.courtside?.toLocaleString() || '0'}
-                              {knownCapacities.courtside ? 
-                                ` / ${knownCapacities.courtside.toLocaleString()}` :
-                                ` / ${selectedSnapshot?.courtside_capacity?.toLocaleString() || '?'}`
-                              }
+                              {effectiveCapacities.courtside ? 
+                                ` / ${effectiveCapacities.courtside.toLocaleString()}` :
+                                ` / `}
+                              {!effectiveCapacities.courtside && (
+                                <span 
+                                  className="capacity-estimate" 
+                                  title={getCapacityTooltip('Courtside', selectedGame.attendance.courtside, selectedSnapshot?.courtside_capacity, prefixMax.courtside)}
+                                >
+                                  ≤{selectedSnapshot?.courtside_capacity?.toLocaleString() || '?'}
+                                </span>
+                              )}
                             </span>
-                            {!knownCapacities.courtside && (
-                              <span className="capacity-uncertain">±</span>
-                            )}
                           </div>
                           <div className="attendance-item">
                             <span className="seat-type">Lower Tier:</span>
                             <span className="seat-count">
                               {selectedGame.attendance.lower_tier?.toLocaleString() || '0'}
-                              {knownCapacities.lower_tier ? 
-                                ` / ${knownCapacities.lower_tier.toLocaleString()}` :
-                                ` / ${selectedSnapshot?.lower_tier_capacity?.toLocaleString() || '?'}`
-                              }
+                              {effectiveCapacities.lower_tier ? 
+                                ` / ${effectiveCapacities.lower_tier.toLocaleString()}` :
+                                ` / `}
+                              {!effectiveCapacities.lower_tier && (
+                                <span 
+                                  className="capacity-estimate" 
+                                  title={getCapacityTooltip('Lower Tier', selectedGame.attendance.lower_tier, selectedSnapshot?.lower_tier_capacity, prefixMax.lower_tier)}
+                                >
+                                  ≤{selectedSnapshot?.lower_tier_capacity?.toLocaleString() || '?'}
+                                </span>
+                              )}
                             </span>
-                            {!knownCapacities.lower_tier && (
-                              <span className="capacity-uncertain">±</span>
-                            )}
                           </div>
                           <div className="attendance-item">
                             <span className="seat-type">Luxury Boxes:</span>
                             <span className="seat-count">
                               {selectedGame.attendance.luxury_boxes?.toLocaleString() || '0'}
-                              {knownCapacities.luxury_boxes ? 
-                                ` / ${knownCapacities.luxury_boxes.toLocaleString()}` :
-                                ` / ${selectedSnapshot?.luxury_boxes_capacity?.toLocaleString() || '?'}`
-                              }
+                              {effectiveCapacities.luxury_boxes ? 
+                                ` / ${effectiveCapacities.luxury_boxes.toLocaleString()}` :
+                                ` / `}
+                              {!effectiveCapacities.luxury_boxes && (
+                                <span 
+                                  className="capacity-estimate" 
+                                  title={getCapacityTooltip('Luxury Boxes', selectedGame.attendance.luxury_boxes, selectedSnapshot?.luxury_boxes_capacity, prefixMax.luxury_boxes)}
+                                >
+                                  ≤{selectedSnapshot?.luxury_boxes_capacity?.toLocaleString() || '?'}
+                                </span>
+                              )}
                             </span>
-                            {!knownCapacities.luxury_boxes && (
-                              <span className="capacity-uncertain">±</span>
-                            )}
                           </div>
                           <div className="attendance-item total">
                             <span className="seat-type">Total:</span>
@@ -472,10 +613,10 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
                                 (selectedGame.attendance.courtside || 0) + 
                                 (selectedGame.attendance.lower_tier || 0) + 
                                 (selectedGame.attendance.luxury_boxes || 0)).toLocaleString()}
-                              {` / ${((knownCapacities.bleachers || selectedSnapshot?.bleachers_capacity || 0) +
-                                     (knownCapacities.courtside || selectedSnapshot?.courtside_capacity || 0) +
-                                     (knownCapacities.lower_tier || selectedSnapshot?.lower_tier_capacity || 0) +
-                                     (knownCapacities.luxury_boxes || selectedSnapshot?.luxury_boxes_capacity || 0)).toLocaleString()}`}
+                              {` / ${((effectiveCapacities.bleachers || selectedSnapshot?.bleachers_capacity || 0) +
+                                     (effectiveCapacities.courtside || selectedSnapshot?.courtside_capacity || 0) +
+                                     (effectiveCapacities.lower_tier || selectedSnapshot?.lower_tier_capacity || 0) +
+                                     (effectiveCapacities.luxury_boxes || selectedSnapshot?.luxury_boxes_capacity || 0)).toLocaleString()}`}
                             </span>
                           </div>
                         </div>
@@ -507,7 +648,7 @@ const ArenaDetailView = ({ selectedArena, onBackToList, appData = null }) => {
             }}
             readonly={true}
             attendanceData={selectedGame?.attendance}
-            knownCapacities={selectedGame ? getKnownCapacities() : null}
+            knownCapacities={selectedGame ? getEffectiveCapacities() : null}
           />
         </div>
       )}

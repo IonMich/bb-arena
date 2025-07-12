@@ -296,7 +296,7 @@ class DatabaseManager:
                 "season", "division", "country", "cup_round",
                 "score_home", "score_away", "bleachers_attendance",
                 "lower_tier_attendance", "courtside_attendance",
-                "luxury_boxes_attendance", "total_attendance",
+                "luxury_boxes_attendance", "total_attendance", "neutral_arena",
                 "ticket_revenue", "bleachers_price", "lower_tier_price",
                 "courtside_price", "luxury_boxes_price", "updated_at"
             ]
@@ -323,6 +323,7 @@ class DatabaseManager:
                     game_record.courtside_attendance,
                     game_record.luxury_boxes_attendance,
                     game_record.total_attendance,
+                    game_record.neutral_arena,
                     game_record.ticket_revenue,
                     game_record.bleachers_price,
                     game_record.lower_tier_price,
@@ -340,9 +341,9 @@ class DatabaseManager:
                     "season", "division", "country", "cup_round",
                     "score_home", "score_away", "bleachers_attendance",
                     "lower_tier_attendance", "courtside_attendance",
-                    "luxury_boxes_attendance", "total_attendance", "ticket_revenue",
-                    "bleachers_price", "lower_tier_price", "courtside_price",
-                    "luxury_boxes_price", "created_at", "updated_at"
+                    "luxury_boxes_attendance", "total_attendance", "neutral_arena",
+                    "ticket_revenue", "bleachers_price", "lower_tier_price", 
+                    "courtside_price", "luxury_boxes_price", "created_at", "updated_at"
                 ]
                 placeholders = ", ".join(["?"] * len(columns))
                 columns_str = ", ".join(columns)
@@ -369,6 +370,7 @@ class DatabaseManager:
                         game_record.courtside_attendance,
                         game_record.luxury_boxes_attendance,
                         game_record.total_attendance,
+                        game_record.neutral_arena,
                         game_record.ticket_revenue,
                         game_record.bleachers_price,
                         game_record.lower_tier_price,
@@ -441,7 +443,7 @@ class DatabaseManager:
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
 
-            query = "SELECT * FROM games WHERE home_team_id = ? OR away_team_id = ? ORDER BY date DESC"
+            query = "SELECT * FROM games WHERE (home_team_id = ? OR away_team_id = ?) AND neutral_arena = FALSE ORDER BY date DESC"
             params: list[str | int] = [team_id, team_id]
 
             if limit:
@@ -473,6 +475,7 @@ class DatabaseManager:
                             courtside_attendance=row["courtside_attendance"],
                             luxury_boxes_attendance=row["luxury_boxes_attendance"],
                             total_attendance=row["total_attendance"],
+                            neutral_arena=bool(row["neutral_arena"]),
                             ticket_revenue=row["ticket_revenue"],
                             bleachers_price=row["bleachers_price"],
                             lower_tier_price=row["lower_tier_price"],
@@ -526,6 +529,7 @@ class DatabaseManager:
                     courtside_attendance=row["courtside_attendance"],
                     luxury_boxes_attendance=row["luxury_boxes_attendance"],
                     total_attendance=row["total_attendance"],
+                    neutral_arena=bool(row["neutral_arena"]),
                     ticket_revenue=row["ticket_revenue"],
                     bleachers_price=row["bleachers_price"],
                     lower_tier_price=row["lower_tier_price"],
@@ -1062,3 +1066,56 @@ class DatabaseManager:
                 return True
             
         return False
+
+    def get_prefix_max_attendance(self, team_id: str, up_to_date: str) -> dict[str, int]:
+        """Get the maximum attendance for each section from all home games up to a specific date.
+        
+        This provides lower bounds for arena capacity based on historical attendance data.
+        
+        Args:
+            team_id: Team ID to query
+            up_to_date: ISO format date string - only consider games before this date
+            
+        Returns:
+            Dictionary with max attendance for each section: {
+                'bleachers': max_bleachers_attendance,
+                'lower_tier': max_lower_tier_attendance, 
+                'courtside': max_courtside_attendance,
+                'luxury_boxes': max_luxury_boxes_attendance
+            }
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            query = """
+                SELECT 
+                    MAX(bleachers_attendance) as max_bleachers,
+                    MAX(lower_tier_attendance) as max_lower_tier,
+                    MAX(courtside_attendance) as max_courtside,
+                    MAX(luxury_boxes_attendance) as max_luxury_boxes
+                FROM games 
+                WHERE home_team_id = ? 
+                AND date < ?
+                AND neutral_arena = FALSE
+                AND bleachers_attendance IS NOT NULL
+                AND lower_tier_attendance IS NOT NULL
+                AND courtside_attendance IS NOT NULL
+                AND luxury_boxes_attendance IS NOT NULL
+                ORDER BY date ASC
+            """
+            
+            cursor = conn.execute(query, [team_id, up_to_date])
+            row = cursor.fetchone()
+            
+            if row:
+                return {
+                    'bleachers': row[0] or 0,
+                    'lower_tier': row[1] or 0,
+                    'courtside': row[2] or 0,
+                    'luxury_boxes': row[3] or 0
+                }
+            else:
+                return {
+                    'bleachers': 0,
+                    'lower_tier': 0,
+                    'courtside': 0,
+                    'luxury_boxes': 0
+                }

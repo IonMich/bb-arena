@@ -402,8 +402,8 @@ class ArenaService {
         return 0;
       }
       
-      // Filter for home games only
-      const homeGames = scheduleData.games.filter(game => game.home);
+      // Filter for home games only (excluding BBM games which are played in neutral venues)
+      const homeGames = scheduleData.games.filter(game => game.home && game.type !== 'bbm');
       
       // Get all game IDs to check which ones are stored
       const gameIds = homeGames.map(game => game.id);
@@ -424,6 +424,23 @@ class ArenaService {
     } catch (error) {
       console.error(`Error getting arena stored home games count:`, error);
       return 0;
+    }
+  }
+
+  /**
+   * Get prefix max attendance for each section up to a specific date
+   * This provides historical lower bounds for arena capacity
+   */
+  async getPrefixMaxAttendance(teamId, upToDate) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/team/${teamId}/games/prefix-max-attendance?up_to_date=${encodeURIComponent(upToDate)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching prefix max attendance for team ${teamId}:`, error);
+      throw error;
     }
   }
 }

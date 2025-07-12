@@ -97,6 +97,9 @@ class GameRecord:
     courtside_attendance: int | None = None
     luxury_boxes_attendance: int | None = None
     total_attendance: int | None = None
+    
+    # Game venue information
+    neutral_arena: bool = False  # True if game is played at a neutral venue
 
     # Revenue data (in whole dollars)
     ticket_revenue: int | None = None
@@ -179,6 +182,7 @@ class GameRecord:
             courtside_attendance=attendance_data.get("courtside") if isinstance(attendance_data, dict) else None,
             luxury_boxes_attendance=attendance_data.get("luxury_boxes") if isinstance(attendance_data, dict) else None,
             total_attendance=total_attendance,
+            neutral_arena=game_data.get("type") == "bbm",  # BBM games are currently played at neutral venues
             ticket_revenue=ticket_revenue,
             bleachers_price=to_int_dollars(game_data.get("bleachers_price")),
             lower_tier_price=to_int_dollars(game_data.get("lower_tier_price")),

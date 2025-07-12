@@ -19,11 +19,13 @@ const GameAttendanceSidebar = ({
   const [collectingAll, setCollectingAll] = useState(false);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(true);
+  const [showSeasonMenu, setShowSeasonMenu] = useState(false);
+  const [extendedRange, setExtendedRange] = useState(false);
 
   // Get seasons data from appData or use fallbacks
   const seasonsData = appData?.seasons || { current: 69, min: 54, max: 69 };
   const currentSeason = seasonsData.current;
-  const minSeason = seasonsData.min;
+  const minSeason = extendedRange ? 5 : seasonsData.min;
   const maxSeason = seasonsData.max;
 
   // Initialize season to current season when appData is available
@@ -58,9 +60,9 @@ const GameAttendanceSidebar = ({
         // Fetch team schedule
         const scheduleData = await arenaService.getTeamSchedule(teamId, targetSeason);
         
-        // Filter for home games only and sort by date
+        // Filter for home games only (excluding BBM games which are played in neutral venues) and sort by date
         const homeGames = scheduleData.games
-          .filter(game => game.home)
+          .filter(game => game.home && game.type !== 'bbm')
           .sort((a, b) => new Date(a.date) - new Date(b.date));
         
         setGames(homeGames);
@@ -108,6 +110,39 @@ const GameAttendanceSidebar = ({
     setSeason(newSeason);
     // fetchTeamSchedule will be called automatically via useEffect
   };
+
+  const handleSeasonNavigation = (direction) => {
+    if (!season) return;
+    
+    const newSeason = direction === 'prev' ? season - 1 : season + 1;
+    
+    // Check bounds
+    if (newSeason < minSeason || newSeason > maxSeason) return;
+    
+    setSeason(newSeason);
+  };
+
+  const handleSeasonMenuToggle = (e) => {
+    e.stopPropagation();
+    setShowSeasonMenu(!showSeasonMenu);
+  };
+
+  const handleExtendRange = () => {
+    setExtendedRange(true);
+    setShowSeasonMenu(false);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowSeasonMenu(false);
+    };
+
+    if (showSeasonMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showSeasonMenu]);
 
   const handleGameClick = async (game) => {
     try {
@@ -279,7 +314,27 @@ const GameAttendanceSidebar = ({
         <div className="sidebar-content">
           <div className="season-selector">
             <label htmlFor="season-slider">
-              Season: {season || currentSeason || 'Loading...'}
+              <div className="season-header">
+                <span>Season: {season || currentSeason || 'Loading...'}</span>
+                <div className="season-nav-buttons">
+                  <button 
+                    className="season-nav-button"
+                    onClick={() => handleSeasonNavigation('prev')}
+                    disabled={!season || season <= minSeason}
+                    title="Previous season"
+                  >
+                    ‹
+                  </button>
+                  <button 
+                    className="season-nav-button"
+                    onClick={() => handleSeasonNavigation('next')}
+                    disabled={!season || season >= maxSeason}
+                    title="Next season"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
               <input
                 id="season-slider"
                 type="range"
@@ -294,7 +349,30 @@ const GameAttendanceSidebar = ({
                 <span>{maxSeason}</span>
               </div>
             </label>
-            <span className="field-help">Use slider to select season</span>
+            <div className="field-help-container">
+              <span className="field-help">Use slider to select season</span>
+              <div className="season-menu-container">
+                <button 
+                  className="season-menu-button"
+                  onClick={handleSeasonMenuToggle}
+                  title="Season options"
+                  hidden={extendedRange || minSeason <= 5}
+                >
+                  ⋯
+                </button>
+                {showSeasonMenu && (
+                  <div className="season-menu">
+                    <button 
+                      className="season-menu-item"
+                      onClick={handleExtendRange}
+                      disabled={extendedRange}
+                    >
+                      {extendedRange ? '✓ Extended' : 'Extend to Past'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {loading && (

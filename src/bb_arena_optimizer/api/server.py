@@ -584,7 +584,8 @@ async def get_team_stored_games(team_id: int, season: int | None = None, limit: 
                 "type": game.game_type,
                 "season": game.season,
                 "score_home": game.score_home,
-                "score_away": game.score_away
+                "score_away": game.score_away,
+                "neutral_arena": game.neutral_arena
             }
             
             # Add attendance if available
@@ -628,8 +629,8 @@ async def get_team_home_games_count(team_id: int, season: int | None = None):
     try:
         games = db_manager.get_games_for_team(str(team_id), limit=10000)  # High limit to get all games
         
-        # Filter for home games (games where the specified team is the home team)
-        home_games = [game for game in games if game.home_team_id == team_id]
+        # Filter for home games (games where the specified team is the home team, excluding neutral venue games)
+        home_games = [game for game in games if game.home_team_id == team_id and not game.neutral_arena]
         
         if season is not None:
             # Filter by specific season
@@ -938,6 +939,54 @@ async def collect_prices_from_bb(request: BBAPIRequest):
     except Exception as e:
         logger.error(f"Error collecting prices from BuzzerBeater API: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect price data: {str(e)}")
+
+
+@app.get("/api/bb/team/{team_id}/games/prefix-max-attendance")
+async def get_prefix_max_attendance(team_id: int, up_to_date: str):
+    """Get maximum attendance for each section from all home games up to a specific date.
+    
+    This provides historical lower bounds for arena capacity based on actual attendance data.
+    
+    Args:
+        team_id: Team ID to query
+        up_to_date: ISO format date string (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+    
+    Returns:
+        Dictionary with max attendance for each section and metadata
+    """
+    try:
+        # Validate date format
+        try:
+            datetime.fromisoformat(up_to_date.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)")
+        
+        prefix_max = db_manager.get_prefix_max_attendance(str(team_id), up_to_date)
+        
+        # Also get total count of games used for this calculation
+        games = db_manager.get_games_for_team(str(team_id), limit=10000)
+        home_games_before_date = [
+            game for game in games 
+            if str(game.home_team_id) == str(team_id) 
+            and game.date 
+            and game.date.isoformat() < up_to_date
+            and game.total_attendance is not None
+            and not game.neutral_arena
+        ]
+        
+        return {
+            "team_id": team_id,
+            "up_to_date": up_to_date,
+            "prefix_max_attendance": prefix_max,
+            "games_analyzed": len(home_games_before_date),
+            "description": f"Maximum attendance in each section from {len(home_games_before_date)} home games before {up_to_date}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching prefix max attendance for team {team_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch prefix max attendance: {str(e)}")
 
 
 if __name__ == "__main__":

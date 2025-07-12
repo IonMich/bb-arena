@@ -59,6 +59,7 @@
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .arena-meta span {
@@ -73,15 +74,21 @@
 .stored-games-container {
   position: relative;
   display: inline-block;
+  cursor: pointer;
 }
 
 .stored-games-container > span {
-  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .stored-games-container:hover > span {
   background-color: #e0e0e0;
+}
+
+.stored-games-container.active > span {
+  background-color: #d0d0d0;
 }
 
 .stored-games-popover {
@@ -95,10 +102,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 12px;
   min-width: 200px;
+  max-height: 300px;
+  overflow: hidden;
   z-index: 1001;
   font-weight: normal;
   font-size: 13px;
   animation: fadeInUp 0.2s ease-out;
+  pointer-events: auto;
 }
 
 @keyframes fadeInUp {
@@ -125,6 +135,29 @@
 
 .popover-content {
   margin-bottom: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for the popover */
+.popover-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popover-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.popover-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.popover-content::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
 
 .season-breakdown {
@@ -416,6 +449,11 @@
   font-weight: bold;
   font-size: 12px;
   opacity: 0.7;
+}
+
+.capacity-estimate {
+  color: #9f7aea;
+  cursor: help;
 }
 
 .attendance-item.total {
