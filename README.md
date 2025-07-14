@@ -5,6 +5,7 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
 ## Features
 
 - **API Integration**: Robust data collection from BuzzerBeater API with error handling
+- **Historical Pricing**: Web collection for historical ticket pricing data from team arena pages
 - **SQLite Storage**: Persistent storage of arena, pricing, and game data
 - **Data Validation**: Game ID verification to ensure data integrity
 - **Historical Analysis**: Track attendance patterns and revenue trends
@@ -46,6 +47,7 @@ bb-arena/
 ├── src/bb_arena_optimizer/     # Main package
 │   ├── api/                    # BuzzerBeater API client
 │   ├── models/                 # Data models (Arena, Game, etc.)
+│   ├── collecting/             # Web collection for historical data
 │   ├── storage/               # Database and data collection
 │   ├── examples/              # Usage examples and demos
 │   └── utils/                 # Logging and utilities
@@ -59,15 +61,31 @@ bb-arena/
 - **`inspect_database.py`** - View database contents and statistics  
 - **`basic_analysis.py`** - Analyze stored data and trends
 - **`complete_workflow.py`** - Full data collection and analysis workflow
+- **`historical_pricing_examples.py`** - Examples of historical pricing data collection
+
+## Scripts
+
+- **`collect_historical_pricing.py`** - Command-line tool for collecting historical pricing data
+- **`test_pricing_collector.py`** - Test the pricing collector with real data
 
 ## API Integration
 
-The system uses the BuzzerBeater API with verified endpoints:
+The system uses two main data sources:
+
+### BuzzerBeater API
 
 - `arena.aspx` - Arena configuration and seat pricing
 - `schedule.aspx` - Team schedule and game information  
 - `boxscore.aspx` - Game attendance and revenue data (with `matchid` parameter)
 - `team.aspx` - Team information and details
+
+### Historical Data Collection
+
+- `team/{teamid}/arena.aspx` - Last 10 official home games with historical pricing
+- Respectful collection with configurable delays
+- Automatic game matching and pricing data updates
+
+For detailed information on historical pricing collection, see [docs/historical_pricing.md](docs/historical_pricing.md).
 
 ## Data Integrity
 

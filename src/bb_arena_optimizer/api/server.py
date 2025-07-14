@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from ..storage.database import DatabaseManager
 from ..storage.models import ArenaSnapshot, GameRecord, PriceSnapshot, Season
 from ..api.client import BuzzerBeaterAPI
+from bb_arena_optimizer.collecting import HistoricalPricingService
 
 # Load environment variables
 load_dotenv()
@@ -597,6 +598,23 @@ async def get_team_stored_games(team_id: int, season: int | None = None, limit: 
                     "luxury_boxes": game.luxury_boxes_attendance
                 }
                 game_data["revenue"] = game.ticket_revenue
+            
+            # Add pricing if available
+            pricing_fields = [
+                ("bleachers_price", getattr(game, "bleachers_price", None)),
+                ("lower_tier_price", getattr(game, "lower_tier_price", None)),
+                ("courtside_price", getattr(game, "courtside_price", None)),
+                ("luxury_boxes_price", getattr(game, "luxury_boxes_price", None))
+            ]
+            
+            # Only include pricing if at least one price is available
+            if any(price is not None for _, price in pricing_fields):
+                game_data["pricing"] = {
+                    "bleachers": getattr(game, "bleachers_price", None),
+                    "lower_tier": getattr(game, "lower_tier_price", None),
+                    "courtside": getattr(game, "courtside_price", None),
+                    "luxury_boxes": getattr(game, "luxury_boxes_price", None)
+                }
                 
             games_data.append(game_data)
         
@@ -1086,6 +1104,47 @@ async def get_prefix_max_attendance(team_id: int, up_to_date: str):
         logger.error(f"Error fetching prefix max attendance for team {team_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch prefix max attendance: {str(e)}")
 
+@app.get("/api/historical-pricing/status/{team_id}")
+async def get_historical_pricing_status(team_id: str):
+    """Get status of historical pricing data for a team.
+    
+    Returns information about games with pricing data vs games without.
+    """
+    try:
+        # Get all games for the team
+        games = db_manager.get_games_for_team(team_id, limit=1000)
+        
+        total_games = len(games)
+        games_with_pricing = 0
+        games_without_pricing = 0
+        
+        for game in games:
+            has_any_pricing = any([
+                game.bleachers_price is not None,
+                game.lower_tier_price is not None,
+                game.courtside_price is not None,
+                game.luxury_boxes_price is not None
+            ])
+            
+            if has_any_pricing:
+                games_with_pricing += 1
+            else:
+                games_without_pricing += 1
+        
+        return {
+            "team_id": team_id,
+            "total_games": total_games,
+            "games_with_pricing": games_with_pricing,
+            "games_without_pricing": games_without_pricing,
+            "pricing_coverage": round(games_with_pricing / total_games * 100, 1) if total_games > 0 else 0
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting pricing status for team {team_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get pricing status: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn
