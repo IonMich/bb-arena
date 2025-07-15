@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { arenaService } from '../services/arenaService';
 import LoadingSpinner from './LoadingSpinner';
-import './GameAttendanceSidebar.css';
+import './GameDataSidebar.css';
 
-const GameAttendanceSidebar = ({ 
+const GameDataSidebar = ({ 
   teamId, 
   onGameSelect, 
   selectedGame, 
@@ -65,20 +65,45 @@ const GameAttendanceSidebar = ({
         const targetSeason = seasonNumber || currentSeason;
         if (!targetSeason) return; // Wait for current season to be loaded
         
-        // Fetch team schedule
-        const scheduleData = await arenaService.getTeamSchedule(teamId, targetSeason);
+        // Fetch both team schedule and stored games in parallel
+        const [scheduleData, storedGamesData] = await Promise.all([
+          arenaService.getTeamSchedule(teamId, targetSeason),
+          arenaService.getTeamStoredGames(teamId, targetSeason, 500)
+        ]);
         
         // Filter for home games only (excluding BBM games which are played in neutral venues) and sort by date
         const homeGames = scheduleData.games
           .filter(game => game.home && game.type !== 'bbm')
           .sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        setGames(homeGames);
+        // Create a map of stored games by ID for efficient lookup
+        const storedGamesMap = new Map();
+        const storedGameIds = new Set();
+        
+        storedGamesData.games.forEach(storedGame => {
+          storedGamesMap.set(storedGame.id, storedGame);
+          storedGameIds.add(storedGame.id);
+        });
+        
+        // Merge schedule data with stored game data (including revenue)
+        const enrichedGames = homeGames.map(game => {
+          const storedGame = storedGamesMap.get(game.id);
+          if (storedGame) {
+            // Merge schedule data with stored data, prioritizing stored data for attendance/revenue
+            return {
+              ...game,
+              revenue: storedGame.revenue,
+              attendance: storedGame.attendance,
+              pricing: storedGame.pricing
+            };
+          }
+          return game;
+        });
+        
+        setGames(enrichedGames);
         
         // Use the new accurate check-stored endpoint for precise stored status
         const allGameIds = homeGames.map(g => g.id);
-        console.log('Schedule game IDs:', allGameIds);
-        console.log('Total games in schedule:', homeGames.length);
         
         if (allGameIds.length > 0) {
           // Check all games at once with the accurate endpoint
@@ -167,7 +192,8 @@ const GameAttendanceSidebar = ({
       onGameSelect({
         ...game,
         attendance: boxscoreData.attendance,
-        revenue: boxscoreData.revenue
+        revenue: boxscoreData.revenue,
+        pricing: boxscoreData.pricing
       });
       
       // Update stored status if it changed
@@ -307,9 +333,9 @@ const GameAttendanceSidebar = ({
   };
 
   return (
-    <div className={`game-attendance-sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
+    <div className={`game-data-sidebar ${expanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <h3>🏀 Game Attendance</h3>
+        <h3>🏀 Game Data</h3>
         <button 
           className="toggle-button"
           onClick={() => setExpanded(!expanded)}
@@ -428,9 +454,41 @@ const GameAttendanceSidebar = ({
                       </div>
                       
                       <div className="game-info">
-                        <div className="opponent">vs {game.opponent}</div>
-                        <div className="game-type">{getGameTypeLabel(game.type)}</div>
-                        <div className="game-id">ID: {game.id}</div>
+                        <div className="game-main-row">
+                          <div className="game-details">
+                            <div className="opponent">vs {game.opponent}</div>
+                            <div className="game-type">{getGameTypeLabel(game.type)}</div>
+                            <div className="game-id">ID: {game.id}</div>
+                          </div>
+                          {(() => {
+                            // Calculate revenue if not directly available but we have pricing and attendance
+                            let displayRevenue = game.revenue;
+                            
+                            if (!displayRevenue && game.pricing && game.attendance) {
+                              displayRevenue = 0;
+                              if (game.pricing.bleachers && game.attendance.bleachers) {
+                                displayRevenue += game.pricing.bleachers * game.attendance.bleachers;
+                              }
+                              if (game.pricing.lower_tier && game.attendance.lower_tier) {
+                                displayRevenue += game.pricing.lower_tier * game.attendance.lower_tier;
+                              }
+                              if (game.pricing.courtside && game.attendance.courtside) {
+                                displayRevenue += game.pricing.courtside * game.attendance.courtside;
+                              }
+                              if (game.pricing.luxury_boxes && game.attendance.luxury_boxes) {
+                                displayRevenue += game.pricing.luxury_boxes * game.attendance.luxury_boxes;
+                              }
+                              // Only use calculated revenue if we actually have some components
+                              if (displayRevenue === 0) displayRevenue = null;
+                            }
+                            
+                            return displayRevenue ? (
+                              <div className="game-revenue">
+                                ${displayRevenue.toLocaleString()}
+                              </div>
+                            ) : null;
+                          })()}
+                        </div>
                       </div>
                       
                       {!isCompleted && (
@@ -466,4 +524,4 @@ const GameAttendanceSidebar = ({
   );
 };
 
-export default GameAttendanceSidebar;
+export default GameDataSidebar;

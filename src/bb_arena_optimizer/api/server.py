@@ -419,7 +419,7 @@ async def get_game_boxscore(game_id: str):
         
         if stored_game and stored_game.total_attendance is not None:
             # Return stored data if we have attendance info
-            return {
+            response_data = {
                 "attendance": {
                     "bleachers": stored_game.bleachers_attendance,
                     "lower_tier": stored_game.lower_tier_attendance,
@@ -428,6 +428,22 @@ async def get_game_boxscore(game_id: str):
                 },
                 "revenue": stored_game.ticket_revenue
             }
+            
+            # Include pricing info if available
+            pricing_data = {}
+            if stored_game.bleachers_price is not None:
+                pricing_data["bleachers"] = stored_game.bleachers_price
+            if stored_game.lower_tier_price is not None:
+                pricing_data["lower_tier"] = stored_game.lower_tier_price
+            if stored_game.courtside_price is not None:
+                pricing_data["courtside"] = stored_game.courtside_price
+            if stored_game.luxury_boxes_price is not None:
+                pricing_data["luxury_boxes"] = stored_game.luxury_boxes_price
+            
+            if pricing_data:
+                response_data["pricing"] = pricing_data
+            
+            return response_data
         
         # Fetch from API if not stored or missing attendance data
         with BuzzerBeaterAPI(username, security_code) as api:

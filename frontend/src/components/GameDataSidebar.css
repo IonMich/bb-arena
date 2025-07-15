@@ -1,5 +1,5 @@
-/* Game Attendance Sidebar Styles */
-.game-attendance-sidebar {
+/* Game Data Sidebar Styles */
+.game-data-sidebar {
   position: fixed;
   right: 0;
   top: 0;
@@ -12,11 +12,11 @@
   overflow: hidden;
 }
 
-.game-attendance-sidebar.expanded {
+.game-data-sidebar.expanded {
   width: 350px;
 }
 
-.game-attendance-sidebar.collapsed {
+.game-data-sidebar.collapsed {
   width: 40px;
 }
 
@@ -504,15 +504,46 @@
   cursor: not-allowed;
 }
 
+/* Game Revenue Display */
+.game-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.game-details {
+  flex: 1;
+  min-width: 0; /* Allow shrinking */
+}
+
+.game-revenue {
+  font-size: 11px;
+  color: #38a169;
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  text-align: right;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.game-item.selected .game-revenue {
+  color: rgba(56, 161, 105, 0.9);
+}
+
+.game-item:hover .game-revenue {
+  opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-  .game-attendance-sidebar.expanded {
+  .game-data-sidebar.expanded {
     width: 100%;
     position: fixed;
     z-index: 2000;
   }
   
-  .game-attendance-sidebar.collapsed {
+  .game-data-sidebar.collapsed {
     width: 100%;
     height: 60px;
     top: auto;

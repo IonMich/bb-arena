@@ -1,0 +1,123 @@
+/* Popover and tooltip styles */
+
+/* Stored Games Popover */
+.stored-games-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.stored-games-container > span {
+  padding: 6px 8px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.stored-games-container:hover > span {
+  background-color: #e0e0e0;
+}
+
+.stored-games-container.active > span {
+  background-color: #d0d0d0;
+}
+
+.stored-games-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  min-width: 200px;
+  max-height: 300px;
+  overflow: hidden;
+  z-index: 1001;
+  font-weight: normal;
+  font-size: 13px;
+  animation: fadeInUp 0.2s ease-out;
+  pointer-events: auto;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popover-header {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+}
+
+.popover-content {
+  margin-bottom: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for the popover */
+.popover-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popover-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.popover-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.popover-content::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.season-breakdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.season-breakdown:last-child {
+  border-bottom: none;
+}
+
+.season-label {
+  color: #555;
+  font-size: 12px;
+}
+
+.game-count {
+  color: #1976d2;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.popover-total {
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  font-weight: bold;
+  color: #1976d2;
+  text-align: center;
+  font-size: 12px;
+}

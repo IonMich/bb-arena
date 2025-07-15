@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { arenaService } from '../services/arenaService';
 // import ArenaDesigner from './ArenaDesigner'; // Temporarily disabled - moved to ArenaDesignerIntegration.jsx
-import GameAttendanceSidebar from './GameAttendanceSidebar';
-import './ArenaDetailView.css';
+import GameDataSidebar from './GameDataSidebar';
+import './ArenaDetailView/ArenaDetailView.css';
 
 const ArenaDetailView = ({ 
   selectedArena, 
@@ -536,7 +536,7 @@ const ArenaDetailView = ({
 
       {selectedSnapshot && (
         <div className="arena-detail-content">
-          <GameAttendanceSidebar 
+          <GameDataSidebar 
             teamId={selectedSnapshot.team_id}
             onGameSelect={setSelectedGame}
             selectedGame={selectedGame}
@@ -548,7 +548,7 @@ const ArenaDetailView = ({
           {/* Selected Game Info Panel */}
           {selectedGame && (
             <div className="selected-game-panel">
-              <h3>🏀 Game Attendance Visualization</h3>
+              <h3>🏀 Game Data Visualization</h3>
               <div className="game-info-grid">
                 <div className="game-basic-info">
                   <p><strong>Opponent:</strong> {selectedGame.opponent}</p>
@@ -561,103 +561,192 @@ const ArenaDetailView = ({
                 </div>
                 
                 {selectedGame.attendance && (
-                  <div className="attendance-summary">
-                    <h4>Attendance Summary</h4>
+                  <div className="game-data-summary">
+                    <h4>Game Data Summary</h4>
                     {(() => {
                       const effectiveCapacities = getEffectiveCapacities();
                       const prefixMax = prefixMaxAttendance || {};
+                      const pricing = selectedGame.pricing || {};
+                      
+                      // Calculate totals
+                      const totalAttendance = (selectedGame.attendance.bleachers || 0) +
+                                            (selectedGame.attendance.courtside || 0) + 
+                                            (selectedGame.attendance.lower_tier || 0) + 
+                                            (selectedGame.attendance.luxury_boxes || 0);
+                      
+                      const totalCapacity = (effectiveCapacities.bleachers || selectedSnapshot?.bleachers_capacity || 0) +
+                                          (effectiveCapacities.courtside || selectedSnapshot?.courtside_capacity || 0) +
+                                          (effectiveCapacities.lower_tier || selectedSnapshot?.lower_tier_capacity || 0) +
+                                          (effectiveCapacities.luxury_boxes || selectedSnapshot?.luxury_boxes_capacity || 0);
+                      
+                      // Calculate revenue breakdown if we have both attendance and pricing
+                      let totalRevenue = 0;
+                      const revenueBreakdown = {};
+                      if (pricing.bleachers && selectedGame.attendance.bleachers) {
+                        revenueBreakdown.bleachers = pricing.bleachers * selectedGame.attendance.bleachers;
+                        totalRevenue += revenueBreakdown.bleachers;
+                      }
+                      if (pricing.lower_tier && selectedGame.attendance.lower_tier) {
+                        revenueBreakdown.lower_tier = pricing.lower_tier * selectedGame.attendance.lower_tier;
+                        totalRevenue += revenueBreakdown.lower_tier;
+                      }
+                      if (pricing.courtside && selectedGame.attendance.courtside) {
+                        revenueBreakdown.courtside = pricing.courtside * selectedGame.attendance.courtside;
+                        totalRevenue += revenueBreakdown.courtside;
+                      }
+                      if (pricing.luxury_boxes && selectedGame.attendance.luxury_boxes) {
+                        revenueBreakdown.luxury_boxes = pricing.luxury_boxes * selectedGame.attendance.luxury_boxes;
+                        totalRevenue += revenueBreakdown.luxury_boxes;
+                      }
+                      
                       return (
-                        <div className="attendance-grid">
-                          <div className="attendance-item">
-                            <span className="seat-type">Bleachers:</span>
-                            <span className="seat-count">
-                              {selectedGame.attendance.bleachers?.toLocaleString() || '0'}
-                              {effectiveCapacities.bleachers ? 
-                                ` / ${effectiveCapacities.bleachers.toLocaleString()}` :
-                                ` / `}
-                              {!effectiveCapacities.bleachers && (
-                                <span 
-                                  className="capacity-estimate" 
-                                  title={getCapacityTooltip('Bleachers', selectedGame.attendance.bleachers, selectedSnapshot?.bleachers_capacity, prefixMax.bleachers)}
-                                >
-                                  ≤{selectedSnapshot?.bleachers_capacity?.toLocaleString() || '?'}
-                                </span>
+                        <div className="game-data-table">
+                          <table className="data-table">
+                            <thead>
+                              <tr>
+                                <th>Metric</th>
+                                <th>Bleachers</th>
+                                <th>Lower Tier</th>
+                                <th>Courtside</th>
+                                <th>Luxury Boxes</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {/* Pricing Row */}
+                              {Object.keys(pricing).length > 0 && (
+                                <tr className="pricing-row">
+                                  <td className="metric-label">Price</td>
+                                  <td className="price-cell">
+                                    {pricing.bleachers ? `$${pricing.bleachers}` : '-'}
+                                  </td>
+                                  <td className="price-cell">
+                                    {pricing.lower_tier ? `$${pricing.lower_tier}` : '-'}
+                                  </td>
+                                  <td className="price-cell">
+                                    {pricing.courtside ? `$${pricing.courtside}` : '-'}
+                                  </td>
+                                  <td className="price-cell">
+                                    {pricing.luxury_boxes ? `$${pricing.luxury_boxes}` : '-'}
+                                  </td>
+                                  <td className="price-cell total-cell">
+                                    -
+                                  </td>
+                                </tr>
                               )}
-                            </span>
-                          </div>
-                          <div className="attendance-item">
-                            <span className="seat-type">Courtside:</span>
-                            <span className="seat-count">
-                              {selectedGame.attendance.courtside?.toLocaleString() || '0'}
-                              {effectiveCapacities.courtside ? 
-                                ` / ${effectiveCapacities.courtside.toLocaleString()}` :
-                                ` / `}
-                              {!effectiveCapacities.courtside && (
-                                <span 
-                                  className="capacity-estimate" 
-                                  title={getCapacityTooltip('Courtside', selectedGame.attendance.courtside, selectedSnapshot?.courtside_capacity, prefixMax.courtside)}
-                                >
-                                  ≤{selectedSnapshot?.courtside_capacity?.toLocaleString() || '?'}
-                                </span>
+                              
+                              {/* Attendance Row */}
+                              <tr className="attendance-row">
+                                <td className="metric-label">Attendance</td>
+                                <td className="attendance-cell">
+                                  <div className="attendance-value">
+                                    {selectedGame.attendance.bleachers?.toLocaleString() || '0'}
+                                    {effectiveCapacities.bleachers ? 
+                                      ` / ${effectiveCapacities.bleachers.toLocaleString()}` :
+                                      ` / `}
+                                    {!effectiveCapacities.bleachers && (
+                                      <span 
+                                        className="capacity-estimate" 
+                                        title={getCapacityTooltip('Bleachers', selectedGame.attendance.bleachers, selectedSnapshot?.bleachers_capacity, prefixMax.bleachers)}
+                                      >
+                                        ≤{selectedSnapshot?.bleachers_capacity?.toLocaleString() || '?'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="attendance-cell">
+                                  <div className="attendance-value">
+                                    {selectedGame.attendance.lower_tier?.toLocaleString() || '0'}
+                                    {effectiveCapacities.lower_tier ? 
+                                      ` / ${effectiveCapacities.lower_tier.toLocaleString()}` :
+                                      ` / `}
+                                    {!effectiveCapacities.lower_tier && (
+                                      <span 
+                                        className="capacity-estimate" 
+                                        title={getCapacityTooltip('Lower Tier', selectedGame.attendance.lower_tier, selectedSnapshot?.lower_tier_capacity, prefixMax.lower_tier)}
+                                      >
+                                        ≤{selectedSnapshot?.lower_tier_capacity?.toLocaleString() || '?'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="attendance-cell">
+                                  <div className="attendance-value">
+                                    {selectedGame.attendance.courtside?.toLocaleString() || '0'}
+                                    {effectiveCapacities.courtside ? 
+                                      ` / ${effectiveCapacities.courtside.toLocaleString()}` :
+                                      ` / `}
+                                    {!effectiveCapacities.courtside && (
+                                      <span 
+                                        className="capacity-estimate" 
+                                        title={getCapacityTooltip('Courtside', selectedGame.attendance.courtside, selectedSnapshot?.courtside_capacity, prefixMax.courtside)}
+                                      >
+                                        ≤{selectedSnapshot?.courtside_capacity?.toLocaleString() || '?'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="attendance-cell">
+                                  <div className="attendance-value">
+                                    {selectedGame.attendance.luxury_boxes?.toLocaleString() || '0'}
+                                    {effectiveCapacities.luxury_boxes ? 
+                                      ` / ${effectiveCapacities.luxury_boxes.toLocaleString()}` :
+                                      ` / `}
+                                    {!effectiveCapacities.luxury_boxes && (
+                                      <span 
+                                        className="capacity-estimate" 
+                                        title={getCapacityTooltip('Luxury Boxes', selectedGame.attendance.luxury_boxes, selectedSnapshot?.luxury_boxes_capacity, prefixMax.luxury_boxes)}
+                                      >
+                                        ≤{selectedSnapshot?.luxury_boxes_capacity?.toLocaleString() || '?'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="attendance-cell total-cell">
+                                  <div className="attendance-value">
+                                    {totalAttendance.toLocaleString()} / {totalCapacity.toLocaleString()}
+                                  </div>
+                                </td>
+                              </tr>
+                              
+                              {/* Revenue Row */}
+                              {(Object.keys(revenueBreakdown).length > 0 || selectedGame.revenue) && (
+                                <tr className="revenue-row">
+                                  <td className="metric-label">Revenue</td>
+                                  <td className="revenue-cell">
+                                    {revenueBreakdown.bleachers ? `$${revenueBreakdown.bleachers.toLocaleString()}` : '-'}
+                                  </td>
+                                  <td className="revenue-cell">
+                                    {revenueBreakdown.lower_tier ? `$${revenueBreakdown.lower_tier.toLocaleString()}` : '-'}
+                                  </td>
+                                  <td className="revenue-cell">
+                                    {revenueBreakdown.courtside ? `$${revenueBreakdown.courtside.toLocaleString()}` : '-'}
+                                  </td>
+                                  <td className="revenue-cell">
+                                    {revenueBreakdown.luxury_boxes ? `$${revenueBreakdown.luxury_boxes.toLocaleString()}` : '-'}
+                                  </td>
+                                  <td className="revenue-cell total-cell">
+                                    {selectedGame.revenue ? 
+                                      `$${selectedGame.revenue.toLocaleString()}` : 
+                                      (totalRevenue > 0 ? `$${totalRevenue.toLocaleString()}` : '-')}
+                                  </td>
+                                </tr>
                               )}
-                            </span>
-                          </div>
-                          <div className="attendance-item">
-                            <span className="seat-type">Lower Tier:</span>
-                            <span className="seat-count">
-                              {selectedGame.attendance.lower_tier?.toLocaleString() || '0'}
-                              {effectiveCapacities.lower_tier ? 
-                                ` / ${effectiveCapacities.lower_tier.toLocaleString()}` :
-                                ` / `}
-                              {!effectiveCapacities.lower_tier && (
-                                <span 
-                                  className="capacity-estimate" 
-                                  title={getCapacityTooltip('Lower Tier', selectedGame.attendance.lower_tier, selectedSnapshot?.lower_tier_capacity, prefixMax.lower_tier)}
-                                >
-                                  ≤{selectedSnapshot?.lower_tier_capacity?.toLocaleString() || '?'}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <div className="attendance-item">
-                            <span className="seat-type">Luxury Boxes:</span>
-                            <span className="seat-count">
-                              {selectedGame.attendance.luxury_boxes?.toLocaleString() || '0'}
-                              {effectiveCapacities.luxury_boxes ? 
-                                ` / ${effectiveCapacities.luxury_boxes.toLocaleString()}` :
-                                ` / `}
-                              {!effectiveCapacities.luxury_boxes && (
-                                <span 
-                                  className="capacity-estimate" 
-                                  title={getCapacityTooltip('Luxury Boxes', selectedGame.attendance.luxury_boxes, selectedSnapshot?.luxury_boxes_capacity, prefixMax.luxury_boxes)}
-                                >
-                                  ≤{selectedSnapshot?.luxury_boxes_capacity?.toLocaleString() || '?'}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <div className="attendance-item total">
-                            <span className="seat-type">Total:</span>
-                            <span className="seat-count">
-                              {((selectedGame.attendance.bleachers || 0) +
-                                (selectedGame.attendance.courtside || 0) + 
-                                (selectedGame.attendance.lower_tier || 0) + 
-                                (selectedGame.attendance.luxury_boxes || 0)).toLocaleString()}
-                              {` / ${((effectiveCapacities.bleachers || selectedSnapshot?.bleachers_capacity || 0) +
-                                     (effectiveCapacities.courtside || selectedSnapshot?.courtside_capacity || 0) +
-                                     (effectiveCapacities.lower_tier || selectedSnapshot?.lower_tier_capacity || 0) +
-                                     (effectiveCapacities.luxury_boxes || selectedSnapshot?.luxury_boxes_capacity || 0)).toLocaleString()}`}
-                            </span>
-                          </div>
+                            </tbody>
+                          </table>
+                          
+                          {/* Revenue Note */}
+                          {selectedGame.revenue && selectedGame.type !== 'league.rs' && (
+                            <div className="revenue-note">
+                              <span className="info-icon">ℹ️</span>
+                              <span className="note-text">
+                                Revenue calculation only applies to regular season home league games
+                              </span>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
-                  </div>
-                )}
-                
-                {selectedGame.revenue && (
-                  <div className="revenue-info">
-                    <p><strong>Revenue:</strong> ${selectedGame.revenue.toLocaleString()}</p>
                   </div>
                 )}
                 

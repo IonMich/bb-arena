@@ -1,0 +1,51 @@
+/* Main Arena Detail View Styles */
+@import './styles/layout.css';
+@import './styles/header.css';
+@import './styles/popover.css';
+@import './styles/snapshot.css';
+@import './styles/game-data.css';
+@import './styles/responsive.css';
+
+/* Core layout styles */
+.arena-detail-view {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  position: relative;
+}
+
+.arena-detail-content {
+  position: relative;
+}
+
+.court-wrapper {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Loading and Error States */
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.error {
+  text-align: center;
+  padding: 20px;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  color: #d32f2f;
+  margin-bottom: 20px;
+}

@@ -1,0 +1,61 @@
+/* Responsive design for all components */
+
+@media (max-width: 768px) {
+  .arena-detail-view {
+    padding: 10px;
+  }
+  
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+  }
+  
+  .arena-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .snapshot-timeline {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .timeline-item {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .snapshot-selector {
+    padding: 15px;
+  }
+  
+  .game-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Responsive table for mobile */
+  .data-table {
+    font-size: 12px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 6px 8px;
+  }
+  
+  .data-table th {
+    font-size: 11px;
+  }
+  
+  .metric-label {
+    font-size: 12px;
+  }
+  
+  .price-cell,
+  .attendance-cell,
+  .revenue-cell {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,12 @@
+/* Layout and positioning styles */
+
+/* Mobile layout adjustments */
+@media (max-width: 768px) {
+  .arena-detail-view {
+    margin-right: 0 !important; /* On mobile, sidebar should overlay, not push */
+  }
+  
+  .arena-detail-content {
+    margin-top: 20px;
+  }
+}

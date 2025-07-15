@@ -1,0 +1,174 @@
+/* Snapshot selector and timeline styles */
+
+/* Snapshot Selector */
+.snapshot-selector {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.snapshot-selector h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.snapshot-controls {
+  margin-bottom: 20px;
+}
+
+.snapshot-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: bold;
+  color: #333;
+  max-width: 300px;
+}
+
+.snapshot-controls select {
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.snapshot-controls select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+/* Timeline */
+.snapshot-timeline {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.timeline-item {
+  flex-shrink: 0;
+  background-color: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  position: relative;
+}
+
+.timeline-item:hover {
+  background-color: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.timeline-item.selected {
+  background-color: #1976d2;
+  border-color: #1565c0;
+  color: white;
+}
+
+.timeline-item.changed {
+  border-left: 4px solid #ff9800;
+}
+
+.timeline-date {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.timeline-capacity {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.change-indicator {
+  font-size: 16px;
+}
+
+.latest-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.timeline-item.selected .latest-badge {
+  background-color: #fff;
+  color: #1976d2;
+}
+
+/* Snapshot Info and Auto-Selection Notices */
+.snapshot-info {
+  background-color: #e8f5e8;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 20px;
+}
+
+.single-config-notice {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auto-selection-notice {
+  background-color: #e3f2fd;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+  color: #1565c0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 3px solid #2196f3;
+}
+
+.info-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.snapshot-count {
+  font-size: 11px;
+  color: #666;
+  margin-left: 5px;
+  font-weight: normal;
+}
+
+/* Enhanced timeline styling for grouped snapshots */
+.timeline-item .timeline-date {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.timeline-item .timeline-capacity {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
