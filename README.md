@@ -28,13 +28,21 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
    # BB_SECURITY_CODE=your_security_code
    ```
 
-3. **Collect Data**:
+3. **Start the API Server**:
+
+   ```bash
+   python run_server.py
+   ```
+
+   The server will automatically populate the level 1 leagues database on first startup for accurate league level detection.
+
+4. **Collect Data**:
 
    ```bash
    uv run python -m bb_arena_optimizer.examples.data_collection_demo
    ```
 
-4. **Inspect Database**:
+5. **Inspect Database**:
 
    ```bash
    uv run python -m bb_arena_optimizer.examples.inspect_database
