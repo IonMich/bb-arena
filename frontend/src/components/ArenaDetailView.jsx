@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { arenaService } from '../services/arenaService';
 // import ArenaDesigner from './ArenaDesigner'; // Temporarily disabled - moved to ArenaDesignerIntegration.jsx
 import GameDataSidebar from './GameDataSidebar';
@@ -21,6 +21,14 @@ const ArenaDetailView = ({
   const [showStoredGamesPopover, setShowStoredGamesPopover] = useState(false);
   const [prefixMaxAttendance, setPrefixMaxAttendance] = useState(null);
   const [error, setError] = useState(null);
+  const [isCollecting, setIsCollecting] = useState(false);
+  const [collectionResult, setCollectionResult] = useState(null);
+  const [teamLeagueHistory, setTeamLeagueHistory] = useState(null);
+  const [currentLeagueInfo, setCurrentLeagueInfo] = useState(null);
+  const [selectedSeason, setSelectedSeason] = useState(null);
+  const [isCollectingLeagueData, setIsCollectingLeagueData] = useState(false);
+  const [leagueCollectionResult, setLeagueCollectionResult] = useState(null);
+  const [gameDataRefreshKey, setGameDataRefreshKey] = useState(0);
 
   // Handle sidebar state changes for parent callback
   const handleSidebarExpandedChange = (expanded) => {
@@ -96,6 +104,147 @@ const ArenaDetailView = ({
 
     fetchArenaHistory();
   }, [currentArena?.team_id, fetchStoredGamesBreakdown]);
+
+  // Fetch current league info from team_info (for current season display)
+  useEffect(() => {
+    const fetchCurrentLeagueInfo = async () => {
+      if (!currentArena?.team_id) return;
+      
+      try {
+        const leagueInfo = await arenaService.getTeamCurrentLeague(currentArena.team_id);
+        setCurrentLeagueInfo(leagueInfo);
+      } catch (error) {
+        console.warn('[ArenaDetailView] Could not fetch current league info:', error);
+        setCurrentLeagueInfo(null);
+      }
+    };
+
+    fetchCurrentLeagueInfo();
+  }, [currentArena?.team_id]);
+
+  // Fetch team league history when team changes or when viewing non-current seasons
+  useEffect(() => {
+    const fetchTeamLeagueHistory = async () => {
+      if (!currentArena?.team_id) return;
+      
+      const currentSeasonNumber = appData?.seasons?.current || 69;
+      
+      // Check if we have any games that are NOT from the current season
+      // OR if we have a selected game from a previous season (user navigating history)
+      const hasNonCurrentSeasonGames = currentArena?.games?.some(game => {
+        const gameSeasonNumber = Math.floor(game.season);
+        return gameSeasonNumber !== currentSeasonNumber;
+      });
+      
+      const viewingNonCurrentSeason = selectedGame && Math.floor(selectedGame.season) !== currentSeasonNumber;
+      const sidebarViewingNonCurrentSeason = selectedSeason && selectedSeason !== currentSeasonNumber;
+      
+      if (!hasNonCurrentSeasonGames && !viewingNonCurrentSeason && !sidebarViewingNonCurrentSeason) {
+        console.log(`[ArenaDetailView] Team ${currentArena.team_id} only has current season ${currentSeasonNumber} games and not viewing historical seasons - skipping historical league data fetch`);
+        setTeamLeagueHistory(null);
+        return;
+      }
+      
+      console.log(`[ArenaDetailView] Team ${currentArena.team_id} has games from past seasons or viewing non-current season (selectedGame: ${selectedGame?.season}, selectedSeason: ${selectedSeason}) - fetching historical league data...`);
+      
+      try {
+        const leagueHistory = await arenaService.getTeamLeagueHistory(currentArena.team_id, false);
+        console.log(`[ArenaDetailView] Historical league data for team ${currentArena.team_id}:`, leagueHistory);
+        setTeamLeagueHistory(leagueHistory);
+      } catch (error) {
+        console.warn('[ArenaDetailView] Could not fetch team league history:', error);
+        setTeamLeagueHistory(null);
+      }
+    };
+
+    fetchTeamLeagueHistory();
+  }, [currentArena?.team_id, currentArena?.games, appData?.seasons, selectedGame, selectedSeason]);
+
+  // Get league name for a specific season (memoized to prevent excessive calls)
+  const getLeagueNameForSeason = useMemo(() => {
+    const currentSeasonNumber = appData?.seasons?.current || 69;
+    
+    return (seasonNumber) => {
+      if (!seasonNumber) return null;
+      
+      // For current season, get league name from team_info directly
+      if (seasonNumber === currentSeasonNumber && currentLeagueInfo?.league_name) {
+        return currentLeagueInfo.league_name;
+      }
+      
+      // For past seasons, check historical data
+      if (!teamLeagueHistory?.history) return null;
+      const seasonEntry = teamLeagueHistory.history.find(entry => entry.season === seasonNumber);
+      return seasonEntry?.league_name || null;
+    };
+  }, [appData?.seasons, currentLeagueInfo?.league_name, teamLeagueHistory?.history]);
+
+  // Handle season changes from GameDataSidebar
+  const handleSeasonChange = useCallback((newSeason) => {
+    setSelectedSeason(newSeason);
+  }, []);
+
+  // Handle league history updates from GameDataSidebar
+  const handleLeagueHistoryUpdate = useCallback(async () => {
+    if (!currentArena?.team_id) return;
+    
+    try {
+      const updatedHistory = await arenaService.getTeamLeagueHistory(currentArena.team_id, false);
+      console.log('[ArenaDetailView] Refreshed league history after collection:', updatedHistory);
+      setTeamLeagueHistory(updatedHistory);
+    } catch (error) {
+      console.warn('[ArenaDetailView] Failed to refresh league history:', error);
+    }
+  }, [currentArena?.team_id]);
+
+  // Format game type with league information
+  const getGameTypeLabel = (type, seasonNumber = null) => {
+    // For league games, try to include the league name
+    if (type?.startsWith('league.')) {
+      let baseLabel;
+      
+      switch (type) {
+        case 'league.rs':
+          baseLabel = 'League';
+          break;
+        case 'league.rs.tv':
+          baseLabel = 'League (TV)';
+          break;
+        case 'league.relegation':
+          baseLabel = 'Relegation';
+          break;
+        case 'league.quarterfinal':
+          baseLabel = 'Quarterfinal';
+          break;
+        case 'league.semifinal':
+          baseLabel = 'Semifinal';
+          break;
+        case 'league.final':
+          baseLabel = 'Final';
+          break;
+        case 'league.playoffs':
+          baseLabel = 'Playoffs';
+          break;
+        default:
+          baseLabel = 'League';
+      }
+      
+      // Try to get league name for the specified season or current season
+      const currentSeason = seasonNumber || appData?.seasons?.current;
+      const leagueName = getLeagueNameForSeason(currentSeason);
+      if (leagueName) {
+        return `${baseLabel} - ${leagueName}`;
+      }
+      
+      return baseLabel;
+    }
+    
+    switch (type) {
+      case 'cup': return 'Cup';
+      case 'scrimmage': return 'Scrimmage';
+      default: return type;
+    }
+  };
 
   const areSnapshotsIdentical = (snapshot1, snapshot2) => {
     return (
@@ -413,6 +562,84 @@ const ArenaDetailView = ({
     return parts.join('\n');
   };
 
+  // Handle enhanced data collection for the current team
+  const handleDataCollection = async () => {
+    if (!currentArena?.team_id || isCollecting) return;
+    
+    setIsCollecting(true);
+    setCollectionResult(null);
+    setError(null);
+    
+    try {
+      console.log(`Starting enhanced data collection for team ${currentArena.team_id}`);
+      
+      // Call the enhanced pricing collection endpoint
+      const response = await arenaService.collectTeamPricingData(currentArena.team_id);
+      
+      if (response.success) {
+        setCollectionResult(response);
+        
+        // Update stored games count after successful collection
+        await updateStoredGamesCount();
+        
+        // Trigger refresh of game data in sidebar to show updated pricing
+        setGameDataRefreshKey(prev => prev + 1);
+        
+        console.log('Enhanced data collection completed:', response);
+      } else {
+        setError(`Collection failed: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error during data collection:', err);
+      setError(`Collection failed: ${err.message || 'Network error'}`);
+    } finally {
+      setIsCollecting(false);
+      
+      // Clear result after 10 seconds
+      setTimeout(() => {
+        setCollectionResult(null);
+      }, 10000);
+    }
+  };
+
+  // Handle team league data collection
+  const handleLeagueDataCollection = async () => {
+    if (!currentArena?.team_id || isCollectingLeagueData) return;
+    
+    setIsCollectingLeagueData(true);
+    setLeagueCollectionResult(null);
+    setError(null);
+    
+    try {
+      console.log(`Starting league data collection for team ${currentArena.team_id}`);
+      
+      // Call the team league history collection endpoint
+      const response = await arenaService.collectTeamLeagueHistory(currentArena.team_id);
+      
+      if (response.success) {
+        setLeagueCollectionResult(response);
+        
+        // Refetch team league history after successful collection
+        const updatedHistory = await arenaService.getTeamLeagueHistory(currentArena.team_id, false);
+        setTeamLeagueHistory(updatedHistory);
+        
+        console.log('League data collection completed:', response);
+      } else {
+        setError(`League data collection failed: ${response.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error during league data collection:', err);
+      setError(`League data collection failed: ${err.message || 'Network error'}`);
+    } finally {
+      setIsCollectingLeagueData(false);
+      
+      // Clear result after 8 seconds
+      setTimeout(() => {
+        setLeagueCollectionResult(null);
+      }, 8000);
+    }
+  };
+
   return (
     <div className="arena-detail-view">
       <div className="detail-header">
@@ -456,6 +683,48 @@ const ArenaDetailView = ({
               )}
             </div>
             <span>Current View: {formatDate(selectedSnapshot?.created_at)}</span>
+            
+            {/* Enhanced Data Collection Button */}
+            <button 
+              onClick={handleDataCollection}
+              disabled={isCollecting}
+              className={`collection-button ${isCollecting ? 'collecting' : ''}`}
+              title="Collect pricing data for friendly games and additional matches"
+            >
+              {isCollecting ? (
+                <>⏳ Collecting...</>
+              ) : (
+                <>📊 Collect Pricing Data</>
+              )}
+            </button>
+            
+            {/* Team League Data Collection Button */}
+            <button 
+              onClick={handleLeagueDataCollection}
+              disabled={isCollectingLeagueData}
+              className={`collection-button ${isCollectingLeagueData ? 'collecting' : ''}`}
+              title="Collect team league history from BuzzerBeater webpage"
+            >
+              {isCollectingLeagueData ? (
+                <>⏳ Collecting...</>
+              ) : (
+                <>🏆 Refresh Team Data</>
+              )}
+            </button>
+            
+            {/* Collection Result Display */}
+            {collectionResult && (
+              <div className={`collection-result ${collectionResult.success ? 'success' : 'error'}`}>
+                {collectionResult.success ? '✅' : '❌'} {collectionResult.message}
+              </div>
+            )}
+            
+            {/* League Collection Result Display */}
+            {leagueCollectionResult && (
+              <div className={`collection-result ${leagueCollectionResult.success ? 'success' : 'error'}`}>
+                {leagueCollectionResult.success ? '✅' : '❌'} {leagueCollectionResult.message}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -543,12 +812,17 @@ const ArenaDetailView = ({
             onStoredGamesUpdate={updateStoredGamesCount}
             appData={appData}
             onExpandedChange={handleSidebarExpandedChange}
+            teamLeagueHistory={teamLeagueHistory}
+            currentLeagueInfo={currentLeagueInfo}
+            onLeagueHistoryUpdate={handleLeagueHistoryUpdate}
+            onSeasonChange={handleSeasonChange}
+            refreshKey={gameDataRefreshKey}
           />
           
           {/* Selected Game Info Panel */}
           {selectedGame && (
             <div className="selected-game-panel">
-              <h3>🏀 Game Data Visualization</h3>
+              <h3>🏀 Selected Game Details</h3>
               <div className="game-info-grid">
                 <div className="game-basic-info">
                   <p><strong>Opponent:</strong> {selectedGame.opponent}</p>
@@ -557,7 +831,7 @@ const ArenaDetailView = ({
                     month: 'long',
                     day: 'numeric'
                   })}</p>
-                  <p><strong>Type:</strong> {selectedGame.type?.replace('league.', '').replace('rs', 'Regular Season') || 'Unknown'}</p>
+                  <p><strong>Type:</strong> {getGameTypeLabel(selectedGame.type, selectedGame.season)}</p>
                 </div>
                 
                 {selectedGame.attendance && (

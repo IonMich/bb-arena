@@ -146,15 +146,6 @@ const BBArenaCollector = ({ onDataCollected }) => {
       )}
 
       <div className="collector-info">
-        <h4>ℹ️ How to use:</h4>
-        <ol>
-          <li>Enter your league ID (you can find this in your BuzzerBeater league page URL)</li>
-          <li>Optionally enter a season number (leave empty for current season)</li>
-          <li>Click "Collect Arena Data" to automatically fetch arena data for all teams in the league</li>
-          <li>The system will first get the league standings to find all teams, then collect arena data for each team</li>
-          <li>The arena data will be saved to the database and appear in your saved arenas list</li>
-        </ol>
-        
         <div className="note">
           <strong>Note:</strong> Make sure your BuzzerBeater credentials are configured in the server environment. The system will automatically discover all teams in the league - no need to manually enter team IDs!
         </div>

@@ -28,6 +28,7 @@ class GamePricingData:
     is_price_change: bool = False
     price_change_note: Optional[str] = None
     table_row_index: Optional[int] = None  # To preserve original table order
+    is_additional_game: bool = False  # True if found in database but not on arena webpage
 
 
 @dataclass
@@ -40,6 +41,7 @@ class CollectionResult:
     error_message: Optional[str] = None
     last_10_games_found: int = 0
     price_changes_found: int = 0
+    additional_games_found: int = 0  # Games found in database but not on webpage (e.g., friendlies)
 
 
 class TeamArenaCollector:
@@ -513,10 +515,25 @@ class TeamArenaCollector:
         try:
             # Extract data from cells based on column mapping
             row_data = {}
+            game_id = None  # Initialize game_id
+            
             for col_name, col_index in column_map.items():
                 if col_index < len(cells):
-                    cell_text = cells[col_index].get_text().strip()
+                    cell = cells[col_index]
+                    cell_text = cell.get_text().strip()
                     row_data[col_name] = cell_text
+                    
+                    # Check if this is the date column and extract game ID from match link
+                    if col_name == 'date':
+                        # Look for match link in this cell
+                        match_link = cell.find('a', href=True)
+                        if match_link and match_link['href']:
+                            href = match_link['href']
+                            # Extract game ID from /match/GAME_ID/boxscore.aspx pattern
+                            match_id_match = re.search(r'/match/(\d+)/', href)
+                            if match_id_match:
+                                game_id = match_id_match.group(1)
+                                logger.debug(f"Extracted game ID {game_id} from href: {href}")
             
             # Check if this is a price update or game
             opponent = row_data.get('opponent', '')
@@ -530,6 +547,9 @@ class TeamArenaCollector:
             
             # Create GamePricingData object
             game_data = GamePricingData(is_price_change=is_price_update, table_row_index=row_index)
+            
+            # Set the extracted game ID (will be None for price updates, which is correct)
+            game_data.game_id = game_id
             
             # Parse date
             if 'date' in row_data:
@@ -606,3 +626,147 @@ class TeamArenaCollector:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
+
+    def collect_team_arena_data_enhanced(self, team_id: str, db_manager=None) -> CollectionResult:
+        """Enhanced collection that includes friendly games from database within pricing periods.
+        
+        This method first collects from the arena webpage (which only shows official games),
+        then queries the database for any additional home games (including friendlies) that
+        fall within the temporal intervals where pricing can be determined.
+        
+        Args:
+            team_id: The BuzzerBeater team ID
+            db_manager: Database manager instance for querying stored games
+            
+        Returns:
+            CollectionResult with all relevant games including friendlies
+        """
+        # First, collect from the arena webpage (official games only)
+        webpage_result = self.collect_team_arena_data(team_id)
+        
+        if not webpage_result.success or not db_manager:
+            return webpage_result
+        
+        try:
+            # Analyze the collected data to find pricing periods
+            price_updates = [g for g in webpage_result.games_data if g.is_price_change]
+            official_games = [g for g in webpage_result.games_data if not g.is_price_change]
+            
+            # Determine the temporal range where we can assign pricing
+            min_date = None
+            max_date = None
+            
+            if price_updates:
+                # If we have price updates, we can assign pricing between updates
+                # and the newest price applies until "now"
+                price_dates = [p.date for p in price_updates if p.date]
+                if price_dates:
+                    # Normalize dates to be timezone-naive for comparison
+                    normalized_dates = []
+                    for date in price_dates:
+                        if date.tzinfo is not None:
+                            # Convert to naive datetime by removing timezone info
+                            normalized_dates.append(date.replace(tzinfo=None))
+                        else:
+                            normalized_dates.append(date)
+                    min_date = min(normalized_dates)
+                    # The newest price change applies until now
+                    from datetime import datetime
+                    max_date = datetime.now()
+            elif official_games:
+                # If NO price updates, current pricing applies from the earliest
+                # game shown on arena page until now (not before the arena page range)
+                game_dates = [g.date for g in official_games if g.date]
+                if game_dates:
+                    # Normalize dates to be timezone-naive for comparison
+                    normalized_dates = []
+                    for date in game_dates:
+                        if date.tzinfo is not None:
+                            # Convert to naive datetime by removing timezone info
+                            normalized_dates.append(date.replace(tzinfo=None))
+                        else:
+                            normalized_dates.append(date)
+                    min_date = min(normalized_dates)  # Earliest game on arena page
+                    from datetime import datetime
+                    max_date = datetime.now()  # Until now
+            
+            additional_games = []
+            
+            if min_date and max_date:
+                logger.info(f"Looking for additional home games for team {team_id} between {min_date} and {max_date}")
+                
+                # Query database for all home games in this period
+                stored_games = db_manager.get_games_for_team(team_id, limit=1000)
+                
+                # Find games that are:
+                # 1. Home games for this team
+                # 2. Within the pricing period (now much broader if no price changes)
+                # 3. Not already in the webpage collection
+                webpage_game_ids = {g.game_id for g in official_games if g.game_id}
+                
+                # For matching, we need to compare arena page games (no IDs) with stored games
+                # Create a set of (date, opponent) tuples from arena page games for matching
+                webpage_game_signatures = set()
+                for game in official_games:
+                    if game.date:
+                        normalized_date = game.date.replace(tzinfo=None) if game.date.tzinfo else game.date
+                        # Extract opponent team ID from opponent string if possible
+                        opponent_info = (normalized_date.date(), game.opponent)
+                        webpage_game_signatures.add(opponent_info)
+                
+                for stored_game in stored_games:
+                    # Check if this is a home game for the team
+                    is_home_game = stored_game.home_team_id == int(team_id) if team_id.isdigit() else False
+                    
+                    if (is_home_game and stored_game.date):
+                        # Normalize stored game date for comparison
+                        stored_date = stored_game.date
+                        if stored_date.tzinfo is not None:
+                            stored_date = stored_date.replace(tzinfo=None)
+                        
+                        # Check if game is in the pricing period
+                        if min_date <= stored_date <= max_date:
+                            # Check if this game is already represented on the arena page
+                            stored_signature = (stored_date.date(), f"Team {stored_game.away_team_id}")
+                            is_already_on_webpage = any(
+                                abs((stored_date.date() - webpage_date).days) <= 1  # Allow 1 day tolerance for timezone issues
+                                for webpage_date, _ in webpage_game_signatures
+                            )
+                            
+                            if not is_already_on_webpage and stored_game.game_id not in webpage_game_ids:
+                                # Create a GamePricingData object for this additional game
+                                additional_game = GamePricingData(
+                                    game_id=stored_game.game_id,
+                                    date=stored_game.date,
+                                    opponent=f"Team {stored_game.away_team_id}" if stored_game.away_team_id else "Unknown",
+                                    attendance=stored_game.total_attendance,
+                                    is_price_change=False,
+                                    is_additional_game=True
+                                )
+                                
+                                additional_games.append(additional_game)
+                                logger.debug(f"Found additional home game: {stored_game.game_id} vs Team {stored_game.away_team_id} on {stored_game.date}")
+            
+            # Combine all games
+            all_games = webpage_result.games_data + additional_games
+            
+            # Count totals
+            total_official_games = len(official_games)  # Games from arena webpage
+            total_additional_games = len(additional_games)  # Games from database only
+            total_price_changes = len([g for g in all_games if g.is_price_change])
+            
+            logger.info(f"Enhanced collection for team {team_id}: {total_official_games} official games, {total_additional_games} additional games (friendlies), {total_price_changes} price changes")
+            
+            return CollectionResult(
+                team_id=team_id,
+                success=True,
+                games_data=all_games,
+                last_10_games_found=total_official_games,
+                price_changes_found=total_price_changes,
+                additional_games_found=total_additional_games
+            )
+            
+        except Exception as e:
+            logger.error(f"Error during enhanced collection for team {team_id}: {e}")
+            # Return the original webpage result if enhancement fails
+            return webpage_result

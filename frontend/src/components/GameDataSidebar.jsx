@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { arenaService } from '../services/arenaService';
 import LoadingSpinner from './LoadingSpinner';
 import './GameDataSidebar.css';
@@ -9,7 +9,12 @@ const GameDataSidebar = ({
   selectedGame, 
   onStoredGamesUpdate,
   appData,
-  onExpandedChange
+  onExpandedChange,
+  teamLeagueHistory,
+  currentLeagueInfo,
+  onLeagueHistoryUpdate,
+  onSeasonChange,
+  refreshKey
 }) => {
   const [games, setGames] = useState([]);
   const [storedGames, setStoredGames] = useState(new Set());
@@ -22,11 +27,16 @@ const GameDataSidebar = ({
   const [expanded, setExpanded] = useState(true);
   const [showSeasonMenu, setShowSeasonMenu] = useState(false);
   const [extendedRange, setExtendedRange] = useState(false);
+  const [teamSeasonsData, setTeamSeasonsData] = useState(null);
 
   // Get seasons data from appData or use fallbacks
   const seasonsData = appData?.seasons || { current: 69, min: 54, max: 69 };
   const currentSeason = seasonsData.current;
-  const minSeason = extendedRange ? 5 : seasonsData.min;
+  
+  // Use team-specific minimum season if available, otherwise fall back to appData
+  const teamMinSeason = teamSeasonsData?.team_min_season;
+  const effectiveMinSeason = teamMinSeason || seasonsData.min;
+  const minSeason = extendedRange ? 5 : effectiveMinSeason;
   const maxSeason = seasonsData.max;
 
   // Initialize season to current season when appData is available
@@ -36,6 +46,23 @@ const GameDataSidebar = ({
       setDebouncedSeason(currentSeason);
     }
   }, [currentSeason, season]);
+
+  // Fetch team-specific seasons data when teamId changes
+  useEffect(() => {
+    const fetchTeamSeasons = async () => {
+      if (!teamId) return;
+      
+      try {
+        const teamSeasons = await arenaService.getSeasonsForTeam(teamId);
+        setTeamSeasonsData(teamSeasons);
+      } catch (error) {
+        console.warn('Could not fetch team-specific seasons, using fallback:', error);
+        // Keep teamSeasonsData as null to use fallback
+      }
+    };
+
+    fetchTeamSeasons();
+  }, [teamId]);
 
   // Notify parent of expanded state changes
   useEffect(() => {
@@ -53,94 +80,144 @@ const GameDataSidebar = ({
     return () => clearTimeout(timer);
   }, [season]);
 
-  useEffect(() => {
-    const fetchTeamSchedule = async (seasonNumber = null) => {
-      if (!teamId) return;
+  // Define fetchTeamSchedule as a useCallback so it can be used in multiple useEffects
+  const fetchTeamSchedule = useCallback(async (seasonNumber = null) => {
+    if (!teamId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Use current season if no specific season provided
-        const targetSeason = seasonNumber || currentSeason;
-        if (!targetSeason) return; // Wait for current season to be loaded
-        
-        // Fetch both team schedule and stored games in parallel
-        const [scheduleData, storedGamesData] = await Promise.all([
-          arenaService.getTeamSchedule(teamId, targetSeason),
-          arenaService.getTeamStoredGames(teamId, targetSeason, 500)
-        ]);
-        
-        // Filter for home games only (excluding BBM games which are played in neutral venues) and sort by date
-        const homeGames = scheduleData.games
-          .filter(game => game.home && game.type !== 'bbm')
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        // Create a map of stored games by ID for efficient lookup
-        const storedGamesMap = new Map();
-        const storedGameIds = new Set();
-        
-        storedGamesData.games.forEach(storedGame => {
-          storedGamesMap.set(storedGame.id, storedGame);
-          storedGameIds.add(storedGame.id);
-        });
-        
-        // Merge schedule data with stored game data (including revenue)
-        const enrichedGames = homeGames.map(game => {
-          const storedGame = storedGamesMap.get(game.id);
-          if (storedGame) {
-            // Merge schedule data with stored data, prioritizing stored data for attendance/revenue
-            return {
-              ...game,
-              revenue: storedGame.revenue,
-              attendance: storedGame.attendance,
-              pricing: storedGame.pricing
-            };
-          }
-          return game;
-        });
-        
-        setGames(enrichedGames);
-        
-        // Use the new accurate check-stored endpoint for precise stored status
-        const allGameIds = homeGames.map(g => g.id);
-        
-        if (allGameIds.length > 0) {
-          // Check all games at once with the accurate endpoint
-          const storedStatus = await arenaService.checkGamesStored(teamId, allGameIds);
-          const verifiedStoredIds = new Set();
-          
-          Object.entries(storedStatus).forEach(([gameId, isStored]) => {
-            if (isStored) {
-              verifiedStoredIds.add(gameId);
-            }
-          });
-          
-          console.log(`Accurate check found ${verifiedStoredIds.size} stored games out of ${allGameIds.length} total games`);
-          console.log('Stored game IDs:', Array.from(verifiedStoredIds));
-          
-          setStoredGames(verifiedStoredIds);
-        } else {
-          setStoredGames(new Set());
+      // Use current season if no specific season provided
+      const targetSeason = seasonNumber || currentSeason;
+      if (!targetSeason) return; // Wait for current season to be loaded
+      
+      // Fetch both team schedule and stored games in parallel
+      const [scheduleData, storedGamesData] = await Promise.all([
+        arenaService.getTeamSchedule(teamId, targetSeason),
+        arenaService.getTeamStoredGames(teamId, targetSeason, 500)
+      ]);
+      
+      // Filter for home games only (excluding BBM games which are played in neutral venues) and sort by date
+      const homeGames = scheduleData.games
+        .filter(game => game.home && game.type !== 'bbm')
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Create a map of stored games by ID for efficient lookup
+      const storedGamesMap = new Map();
+      const storedGameIds = new Set();
+      
+      storedGamesData.games.forEach(storedGame => {
+        storedGamesMap.set(storedGame.id, storedGame);
+        storedGameIds.add(storedGame.id);
+      });
+      
+      // Merge schedule data with stored game data (including revenue)
+      const enrichedGames = homeGames.map(game => {
+        const storedGame = storedGamesMap.get(game.id);
+        if (storedGame) {
+          // Merge schedule data with stored data, prioritizing stored data for attendance/revenue
+          return {
+            ...game,
+            calculated_revenue: storedGame.calculated_revenue,
+            attendance: storedGame.attendance,
+            pricing: storedGame.pricing
+          };
         }
+        return game;
+      });
+      
+      setGames(enrichedGames);
+      
+      // Use the new accurate check-stored endpoint for precise stored status
+      const allGameIds = homeGames.map(g => g.id);
+      
+      if (allGameIds.length > 0) {
+        // Check all games at once with the accurate endpoint
+        const storedStatus = await arenaService.checkGamesStored(teamId, allGameIds);
+        const verifiedStoredIds = new Set();
         
-      } catch (err) {
-        setError('Failed to fetch team schedule');
-        console.error('Error fetching schedule:', err);
-      } finally {
-        setLoading(false);
+        Object.entries(storedStatus).forEach(([gameId, isStored]) => {
+          if (isStored) {
+            verifiedStoredIds.add(gameId);
+          }
+        });
+        
+        console.log(`Accurate check found ${verifiedStoredIds.size} stored games out of ${allGameIds.length} total games`);
+        console.log('Stored game IDs:', Array.from(verifiedStoredIds));
+        
+        setStoredGames(verifiedStoredIds);
+      } else {
+        setStoredGames(new Set());
       }
-    };
+      
+      // Auto-collect league history for past seasons if missing (not for current season)
+      // Current season data comes from team_info table, not from team history webpage
+      if (targetSeason !== currentSeason) {
+        try {
+          // Always notify parent to ensure historical data is available for past seasons
+          if (onLeagueHistoryUpdate) {
+            // Trigger parent to fetch/refresh historical data for this season
+            onLeagueHistoryUpdate();
+          }
+          
+          // Check current league history state for the target season
+          const currentHistory = await arenaService.getTeamLeagueHistory(teamId, false);
+          const hasSeasonData = currentHistory?.history?.some(entry => entry.season === targetSeason);
+          
+          if (!hasSeasonData) {
+            console.log(`[GameDataSidebar] No historical league data found for team ${teamId} season ${targetSeason}, attempting to collect from team history webpage...`);
+            try {
+              const collectResult = await arenaService.collectTeamLeagueHistory(teamId);
+              console.log('[GameDataSidebar] Team league history collection result:', collectResult);
+              
+              // Notify parent component again if collection was successful
+              if (collectResult.success && onLeagueHistoryUpdate) {
+                onLeagueHistoryUpdate();
+              }
+            } catch (collectError) {
+              console.warn('[GameDataSidebar] Failed to auto-collect team league history:', collectError);
+              // Don't show error to user for automatic collection - it's best effort
+            }
+          }
+        } catch (historyCheckError) {
+          console.warn('[GameDataSidebar] Failed to check league history for auto-collection:', historyCheckError);
+        }
+      } else {
+        // Skip auto-collection for current season - use team_info data instead
+      }
+      
+    } catch (err) {
+      setError('Failed to fetch team schedule');
+      console.error('Error fetching schedule:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [teamId, currentSeason, onLeagueHistoryUpdate]);
 
+  useEffect(() => {
     // Only fetch if we have teamId and a debounced season
     if (teamId && debouncedSeason) {
       fetchTeamSchedule(debouncedSeason);
     }
-  }, [teamId, debouncedSeason, currentSeason]);
+  }, [teamId, debouncedSeason, fetchTeamSchedule]);
+
+  // Refresh game data when refreshKey changes (e.g., after pricing collection)
+  useEffect(() => {
+    if (refreshKey > 0 && teamId && debouncedSeason) {
+      console.log('Refreshing game data due to external trigger (refreshKey:', refreshKey, ')');
+      fetchTeamSchedule(debouncedSeason);
+    }
+  }, [refreshKey, teamId, debouncedSeason, fetchTeamSchedule]);
 
   const handleSeasonChange = (e) => {
     const newSeason = parseInt(e.target.value);
     setSeason(newSeason);
+    
+    // Notify parent component about season change
+    if (onSeasonChange) {
+      onSeasonChange(newSeason);
+    }
     // fetchTeamSchedule will be called automatically via useEffect
   };
 
@@ -153,6 +230,11 @@ const GameDataSidebar = ({
     if (newSeason < minSeason || newSeason > maxSeason) return;
     
     setSeason(newSeason);
+    
+    // Notify parent component about season change
+    if (onSeasonChange) {
+      onSeasonChange(newSeason);
+    }
   };
 
   const handleSeasonMenuToggle = (e) => {
@@ -192,8 +274,9 @@ const GameDataSidebar = ({
       onGameSelect({
         ...game,
         attendance: boxscoreData.attendance,
-        revenue: boxscoreData.revenue,
-        pricing: boxscoreData.pricing
+        calculated_revenue: boxscoreData.calculated_revenue,
+        pricing: boxscoreData.pricing,
+        season: season || currentSeason // Add season context
       });
       
       // Update stored status if it changed
@@ -213,7 +296,8 @@ const GameDataSidebar = ({
       onGameSelect({
         ...game,
         attendance: null,
-        error: 'Failed to load attendance data'
+        error: 'Failed to load attendance data',
+        season: season || currentSeason // Add season context
       });
     } finally {
       setLoadingGame(null);
@@ -303,6 +387,23 @@ const GameDataSidebar = ({
     return { buttonText, isDisabled, title, remainingToCollect, storedCount, totalGames };
   };
 
+  // Get league name for a specific season (memoized to prevent excessive calls)
+  const getLeagueNameForSeason = useMemo(() => {
+    return (seasonNumber) => {
+      if (!seasonNumber) return null;
+      
+      // For current season, get league name from team_info directly
+      if (seasonNumber === currentSeason && currentLeagueInfo?.league_name) {
+        return currentLeagueInfo.league_name;
+      }
+      
+      // For past seasons, check historical data
+      if (!teamLeagueHistory?.history) return null;
+      const seasonEntry = teamLeagueHistory.history.find(entry => entry.season === seasonNumber);
+      return seasonEntry?.league_name || null;
+    };
+  }, [currentSeason, currentLeagueInfo?.league_name, teamLeagueHistory?.history]);
+
   const collectButtonInfo = getCollectButtonInfo();
 
   const formatDate = (dateString) => {
@@ -323,9 +424,46 @@ const GameDataSidebar = ({
   };
 
   const getGameTypeLabel = (type) => {
+    // For league games, try to include the league name
+    if (type?.startsWith('league.')) {
+      let baseLabel;
+      
+      switch (type) {
+        case 'league.rs':
+          baseLabel = 'League';
+          break;
+        case 'league.rs.tv':
+          baseLabel = 'League (TV)';
+          break;
+        case 'league.relegation':
+          baseLabel = 'Relegation';
+          break;
+        case 'league.quarterfinal':
+          baseLabel = 'Quarterfinal';
+          break;
+        case 'league.semifinal':
+          baseLabel = 'Semifinal';
+          break;
+        case 'league.final':
+          baseLabel = 'Final';
+          break;
+        case 'league.playoffs':
+          baseLabel = 'Playoffs';
+          break;
+        default:
+          baseLabel = 'League';
+      }
+      
+      // Use the league name from the current season context (since all games in this view are from the same season)
+      const currentLeagueName = getLeagueNameForSeason(season || currentSeason);
+      if (currentLeagueName) {
+        return `${baseLabel} - ${currentLeagueName}`;
+      }
+      
+      return baseLabel;
+    }
+    
     switch (type) {
-      case 'league.rs': return 'League';
-      case 'league.playoffs': return 'Playoffs';
       case 'cup': return 'Cup';
       case 'scrimmage': return 'Scrimmage';
       default: return type;
@@ -349,7 +487,13 @@ const GameDataSidebar = ({
           <div className="season-selector">
             <label htmlFor="season-slider">
               <div className="season-header">
-                <span>Season: {season || currentSeason || 'Loading...'}</span>
+                <span>
+                  Season: {season || currentSeason || 'Loading...'}
+                  {(() => {
+                    const leagueName = getLeagueNameForSeason(season || currentSeason);
+                    return leagueName ? ` - ${leagueName}` : '';
+                  })()}
+                </span>
                 <div className="season-nav-buttons">
                   <button 
                     className="season-nav-button"
@@ -461,8 +605,8 @@ const GameDataSidebar = ({
                             <div className="game-id">ID: {game.id}</div>
                           </div>
                           {(() => {
-                            // Calculate revenue if not directly available but we have pricing and attendance
-                            let displayRevenue = game.revenue;
+                            // Use calculated_revenue from server, or calculate client-side if needed
+                            let displayRevenue = game.calculated_revenue;
                             
                             if (!displayRevenue && game.pricing && game.attendance) {
                               displayRevenue = 0;

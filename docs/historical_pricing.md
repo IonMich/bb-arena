@@ -60,6 +60,31 @@ This functionality complements the existing API-based data collection:
 2. **Use collection for historical context**: Use this collector to backfill pricing data for existing games
 3. **Combine for comprehensive analysis**: The database now contains both attendance and the actual prices charged
 
+## Enhanced Collection Features
+
+The collector now supports enhanced collection that includes friendly games and other matches not shown on the arena webpage:
+
+### Standard Collection
+
+- Collects from the team's arena webpage
+- Shows "Last 10 official games" only  
+- Excludes friendly games and some tournament games
+
+### Enhanced Collection Mode
+
+- Collects from arena webpage PLUS database queries
+- Finds additional home games (friendlies) within pricing periods
+- Provides comprehensive coverage of all applicable games
+
+```python
+# Enhanced collection includes friendlies
+with TeamArenaCollector() as collector:
+    result = collector.collect_team_arena_data_enhanced(team_id, db_manager)
+    
+print(f"Official games: {result.last_10_games_found}")
+print(f"Additional games (friendlies): {result.additional_games_found}")
+```
+
 ## Configuration
 
 ### Request Delays
@@ -97,6 +122,7 @@ class GamePricingData:
     luxury_boxes_price: Optional[int] = None
     is_price_change: bool = False
     price_change_note: Optional[str] = None
+    is_additional_game: bool = False  # True if found in database but not on arena webpage
 ```
 
 ### Results

@@ -296,6 +296,397 @@ class BuzzerBeaterAPI:
             logger.error(f"Failed to parse seasons XML: {e}")
             raise Exception(f"Failed to parse seasons XML: {e}")
 
+    def get_country_level_1_league(self, country_id: int) -> dict[str, Any] | None:
+        """Get level 1 league for a specific country.
+
+        Args:
+            country_id: The country ID to get level 1 league for
+
+        Returns:
+            Dictionary with level 1 league data or None if error
+        """
+        params = {"countryid": country_id, "level": 1}
+        root = self._make_request("leagues.aspx", params)
+
+        if root is None:
+            return None
+
+        return self._parse_leagues_data(root, country_id)
+
+    def get_all_country_level_1_leagues(self, max_country_id: int = 150) -> list[dict[str, Any]]:
+        """Get level 1 leagues for all countries (1 to max_country_id).
+
+        Args:
+            max_country_id: Maximum country ID to check (default 150)
+
+        Returns:
+            List of dictionaries with country and league data
+        """
+        level_1_leagues = []
+        
+        for country_id in range(1, max_country_id + 1):
+            try:
+                logger.info(f"Fetching level 1 league for country {country_id}")
+                league_data = self.get_country_level_1_league(country_id)
+                
+                if league_data:
+                    level_1_leagues.append({
+                        "country_id": country_id,
+                        "country_name": league_data.get("country_name"),
+                        "league_data": league_data
+                    })
+                    logger.info(f"Found level 1 league for country {country_id}: {league_data.get('league_name')}")
+                else:
+                    logger.debug(f"No level 1 league found for country {country_id}")
+                    
+            except Exception as e:
+                logger.warning(f"Error fetching level 1 league for country {country_id}: {e}")
+                continue
+        
+        logger.info(f"Successfully fetched level 1 leagues for {len(level_1_leagues)} countries")
+        return level_1_leagues
+
+    def get_countries(self) -> list[dict[str, Any]]:
+        """Get all countries from the BuzzerBeater API.
+        
+        Returns:
+            List of dictionaries with country data
+        """
+        root = self._make_request("countries.aspx", {})
+        
+        if root is None:
+            return []
+        
+        countries = []
+        country_elements = root.findall(".//country")
+        
+        for country_elem in country_elements:
+            country_id = country_elem.get("id")
+            country_name = country_elem.text.strip() if country_elem.text else None
+            divisions = country_elem.get("divisions")
+            first_season = country_elem.get("firstSeason")
+            users = country_elem.get("users")
+            
+            if country_id and country_name:
+                countries.append({
+                    "id": int(country_id),
+                    "name": country_name,
+                    "divisions": int(divisions) if divisions and divisions.isdigit() else 0,
+                    "first_season": int(first_season) if first_season else 0,
+                    "users": int(users) if users else 0
+                })
+        
+        logger.info(f"Found {len(countries)} countries")
+        return countries
+
+    def get_leagues(self, country_id: int, max_level: int = 10) -> list[dict[str, Any]]:
+        """Get all leagues for a specific country across multiple levels.
+        
+        Args:
+            country_id: The country ID to get leagues for
+            max_level: Maximum league level to check
+            
+        Returns:
+            List of dictionaries with league data
+        """
+        leagues = []
+        
+        for level in range(1, max_level + 1):
+            try:
+                params = {"countryid": country_id, "level": level}
+                root = self._make_request("leagues.aspx", params)
+                
+                if root is None:
+                    continue
+                
+                # Parse league data
+                league_elements = root.findall(".//league")
+                
+                if not league_elements:
+                    # No more leagues at this level
+                    break
+                
+                for league_elem in league_elements:
+                    league_data = {
+                        "id": int(league_elem.get("id")) if league_elem.get("id") else None,
+                        "name": league_elem.text.strip() if league_elem.text else None,
+                        "level": level
+                    }
+                    
+                    if league_data["id"] and league_data["name"]:
+                        leagues.append(league_data)
+                
+            except Exception as e:
+                logger.debug(f"Error fetching level {level} leagues for country {country_id}: {e}")
+                continue
+        
+        logger.debug(f"Found {len(leagues)} leagues for country {country_id}")
+        return leagues
+
+    def _parse_leagues_data(self, root: ET.Element, country_id: int) -> dict[str, Any] | None:
+        """Parse leagues XML data for level 1 league information."""
+        
+        # Look for league elements
+        league_elements = root.findall(".//league")
+        
+        if not league_elements:
+            return None
+        
+        # Get country name from the response
+        country_name = f"Country {country_id}"  # default
+        country_elem = root.find(".//country")
+        if country_elem is not None and country_elem.text:
+            country_name = country_elem.text.strip()
+        
+        # Build leagues list
+        leagues = []
+        for league_elem in league_elements:
+            league_id = league_elem.get("id")
+            league_name = league_elem.text.strip() if league_elem.text else None
+            
+            if league_id and league_name:
+                leagues.append({
+                    "id": league_id,
+                    "name": league_name,
+                    "country": country_name
+                })
+        
+        return {
+            "leagues": leagues,
+            "country_id": country_id,
+            "country_name": country_name
+        }
+
+    def get_team_history_from_webpage(self, team_id: int) -> list[dict[str, Any]]:
+        """Get team history by parsing the team history webpage.
+
+        Args:
+            team_id: The team ID to get history for
+
+        Returns:
+            List of dictionaries with team history data
+        """
+        import re
+        from bs4 import BeautifulSoup
+        
+        try:
+            url = f"https://buzzerbeater.com/team/{team_id}/history.aspx"
+            response = self.session.get(url)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Find the main container div
+            container_div = soup.find('div', id='containerDiv')
+            if not container_div:
+                logger.error("Could not find containerDiv")
+                return []
+            
+            # Find the div with class 'boxcontent' that contains the season history
+            history_div = None
+            for div in container_div.find_all('div', class_='boxcontent'):
+                div_text = div.get_text()
+                if 'season' in div_text.lower() and 'league' in div_text.lower():
+                    # Count season references to find the main history div
+                    season_count = len(re.findall(r'season \d+', div_text, re.IGNORECASE))
+                    if season_count > 10:  # The main history div should have many seasons
+                        history_div = div
+                        break
+            
+            if not history_div:
+                logger.error("Could not find history div with season content")
+                return []
+            
+            logger.info("Found history div with season content")
+            
+            history_entries = []
+            
+            # Use raw text parsing approach
+            container_text = history_div.get_text()
+            lines = container_text.split('\n')
+            
+            # Pattern to match season entries with league information
+            # Improved pattern that handles team names with commas and allows periods in league names
+            season_league_pattern = re.compile(
+                r'In season (\d+), (.+?)\s+(?:were|was|made|won|lost|played|finished).*?(?:in|from|of)\s+league\s+([^,]+?)(?:,|$)',
+                re.IGNORECASE
+            )
+            
+            # Get league IDs from the links
+            league_links = history_div.find_all('a', href=re.compile(r'/league/(\d+)'))
+            league_id_map = {}
+            
+            for link in league_links:
+                href = link.get('href')
+                league_name = link.get_text().strip()
+                league_id_match = re.search(r'/league/(\d+)', href)
+                if league_id_match:
+                    league_id = int(league_id_match.group(1))
+                    league_id_map[league_name] = league_id
+            
+            logger.info(f"Found {len(league_id_map)} league ID mappings")
+            
+            for line in lines:
+                line = line.strip()
+                match = season_league_pattern.search(line)
+                
+                if match:
+                    season = int(match.group(1))
+                    team_name = match.group(2).strip()
+                    league_name = match.group(3).strip()
+                    
+                    # Get league ID from our mapping - try exact match first, then partial match
+                    league_id = league_id_map.get(league_name)
+                    
+                    # If no exact match, try to find a partial match
+                    if league_id is None:
+                        for link_league_name, link_league_id in league_id_map.items():
+                            # Check if the parsed league name is a substring of the link text
+                            # or if the link text starts with the parsed league name
+                            if (league_name in link_league_name or 
+                                link_league_name.startswith(league_name) or
+                                # Also check the reverse - link text might be shorter
+                                league_name.startswith(link_league_name)):
+                                league_id = link_league_id
+                                logger.debug(f"Found partial match: '{league_name}' -> '{link_league_name}' (ID: {league_id})")
+                                break
+                    
+                    # Calculate league level using both league name and ID
+                    league_level = self._calculate_league_level(league_name, league_id)
+                    
+                    # Extract achievement from the text
+                    achievement = ""
+                    if "crowned champions" in line:
+                        achievement = "Champions"
+                    elif "semifinals of the playoffs" in line:
+                        achievement = "Semifinals"
+                    elif "made the playoffs" in line and "semifinals" not in line:
+                        achievement = "Playoffs"
+                    elif "relegation series to stay" in line:
+                        achievement = "Survived relegation"
+                    elif "relegated from" in line:
+                        achievement = "Relegated"
+                    elif "final" in line and "teams" in line:
+                        # Extract tournament achievement like "final 512 teams"
+                        final_match = re.search(r'final (\d+) teams', line)
+                        if final_match:
+                            achievement = f"Tournament Round of {final_match.group(1)}"
+                    
+                    entry = {
+                        'season': season,
+                        'team_name': team_name,
+                        'league_name': league_name,
+                        'league_id': league_id,
+                        'league_level': league_level,
+                        'achievement': achievement,
+                        'is_active_team': True,  # Will be determined later
+                    }
+                    
+                    history_entries.append(entry)
+            
+            # Sort by season (descending - most recent first)
+            history_entries.sort(key=lambda x: x['season'], reverse=True)
+            
+            # Determine active vs inactive teams
+            if history_entries:
+                current_team_name = history_entries[0]['team_name']
+                for entry in history_entries:
+                    entry['is_active_team'] = entry['team_name'] == current_team_name
+            
+            logger.info(f"Parsed {len(history_entries)} history entries for team {team_id}")
+            return history_entries
+            
+        except Exception as e:
+            logger.error(f"Error parsing team history for team {team_id}: {e}")
+            return []
+
+    def _calculate_league_level(self, league_name: str, league_id: int = None) -> int:
+        """
+        Calculate league level using three-tier approach:
+        1. First try database lookup if league_id exists (for any level)
+        2. Check if the league_id is in the level 1 league table
+        3. Finally try Roman numeral parsing
+        """
+        if not league_name:
+            return 0
+        
+        # Tier 1: Database lookup by league_id if available (for any level)
+        if league_id:
+            try:
+                import sqlite3
+                from pathlib import Path
+                
+                # Get database path
+                project_root = Path(__file__).parent.parent.parent.parent
+                db_path = project_root / "bb_arena_data.db"
+                
+                with sqlite3.connect(db_path) as conn:
+                    cursor = conn.cursor()
+                    
+                    # Direct lookup by league_id (if we somehow have league levels for other leagues)
+                    cursor.execute(
+                        "SELECT league_level FROM league_hierarchy WHERE league_id = ?", 
+                        (league_id,)
+                    )
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        logger.debug(f"Found league level {result[0]} for league_id {league_id} in database")
+                        return result[0]
+                    
+                    logger.debug(f"No database match found for league_id {league_id}")
+                    
+            except Exception as e:
+                logger.debug(f"Database lookup failed: {e}")
+        
+        # Tier 2: Check if this is a level 1 league using our authoritative level 1 database
+        if league_id:
+            try:
+                import sqlite3
+                from pathlib import Path
+                
+                # Get database path
+                project_root = Path(__file__).parent.parent.parent.parent
+                db_path = project_root / "bb_arena_data.db"
+                
+                with sqlite3.connect(db_path) as conn:
+                    cursor = conn.cursor()
+                    
+                    # Check if this league_id is a level 1 league
+                    cursor.execute(
+                        "SELECT 1 FROM league_hierarchy WHERE league_id = ? AND league_level = 1", 
+                        (league_id,)
+                    )
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        logger.debug(f"Confirmed league_id {league_id} is level 1 from authoritative database")
+                        return 1
+                    
+                    logger.debug(f"League_id {league_id} is not in level 1 database")
+                    
+            except Exception as e:
+                logger.debug(f"Level 1 database lookup failed: {e}")
+        
+        # Tier 3: Roman numeral parsing (fallback for non-level-1 leagues)
+        logger.debug(f"Falling back to Roman numeral parsing for '{league_name}'")
+        
+        # Roman numeral parsing
+        roman_to_int = {
+            'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+            'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10
+        }
+        
+        # Look for Roman numerals in the league name
+        for roman, level in roman_to_int.items():
+            if f' {roman}.' in league_name:
+                logger.debug(f"Parsed Roman numeral '{roman}' from '{league_name}' -> level {level}")
+                return level
+        
+        # If no pattern matches, assume level 1 (first division)
+        logger.debug(f"No pattern matched for '{league_name}', defaulting to level 1")
+        return 1
+
     def _parse_arena_data(self, root: ET.Element) -> dict[str, Any]:
         """Parse arena XML data into a structured format."""
         arena_data: dict[str, Any] = {
@@ -511,6 +902,11 @@ class BuzzerBeaterAPI:
             team_data["rival_id"] = rival_elem.get("id")
             if rival_elem.text:
                 team_data["rival"] = rival_elem.text.strip()
+        
+        # Get creation date
+        create_date_elem = team_elem.find("./createDate")
+        if create_date_elem is not None and create_date_elem.text:
+            team_data["create_date"] = create_date_elem.text.strip()
 
         return team_data
 

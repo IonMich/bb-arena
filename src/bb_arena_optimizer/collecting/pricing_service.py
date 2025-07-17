@@ -1,7 +1,7 @@
 """Service for updating games with historical pricing data from collection."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from ..collecting.team_arena_collector import GamePricingData, CollectionResult
@@ -47,6 +47,8 @@ class HistoricalPricingService:
         games_updated = 0
         games_not_found = 0
         price_changes_processed = 0
+        official_games_updated = 0
+        additional_games_updated = 0
         
         # Get all stored games for this team
         stored_games = self.db_manager.get_games_for_team(team_id, limit=1000)
@@ -84,10 +86,16 @@ class HistoricalPricingService:
                         updated = self._update_game_pricing(matched_game, pricing_data)
                         if updated:
                             games_updated += 1
-                            logger.debug(f"Updated pricing for game {matched_game.game_id}")
+                            if game_data.is_additional_game:
+                                additional_games_updated += 1
+                                logger.debug(f"Updated pricing for additional game {matched_game.game_id} (friendly/not on arena page)")
+                            else:
+                                official_games_updated += 1
+                                logger.debug(f"Updated pricing for official game {matched_game.game_id}")
                     else:
                         games_not_found += 1
-                        logger.debug(f"Could not find stored game matching collected data: {game_data.opponent} on {game_data.date}")
+                        game_type = "additional" if game_data.is_additional_game else "official"
+                        logger.debug(f"Could not find stored {game_type} game matching collected data: {game_data.opponent} on {game_data.date}")
             else:
                 logger.warning(f"No price snapshots found for team {team_id}, cannot determine pricing")
                 games_not_found = len(games)
@@ -101,21 +109,48 @@ class HistoricalPricingService:
                 self._process_price_change(team_id, price_change)
             
             # Categorize games relative to price update period
-            oldest_price_update = min(price_updates, key=lambda x: x.date or datetime.max)
-            newest_price_update = max(price_updates, key=lambda x: x.date or datetime.min)
+            oldest_price_update = min(price_updates, key=lambda x: self._normalize_datetime(x.date) or datetime.max)
+            newest_price_update = max(price_updates, key=lambda x: self._normalize_datetime(x.date) or datetime.min)
             
             games_before_updates = [g for g in games if g.date and oldest_price_update.date and 
-                                  g.date < oldest_price_update.date]
+                                  self._normalize_datetime(g.date) < self._normalize_datetime(oldest_price_update.date)]
             games_after_updates = [g for g in games if g.date and newest_price_update.date and 
-                                 g.date > newest_price_update.date]
+                                 self._normalize_datetime(g.date) > self._normalize_datetime(newest_price_update.date)]
             games_during_updates = [g for g in games if g not in games_before_updates and g not in games_after_updates]
             
             logger.debug(f"Games categorization: {len(games_before_updates)} before, {len(games_during_updates)} during, {len(games_after_updates)} after price updates")
             
-            # Skip games before and after updates (cannot determine correct pricing)
-            for game in games_before_updates + games_after_updates:
+            # Skip games before updates (cannot determine correct pricing)
+            for game in games_before_updates:
                 games_not_found += 1
-                logger.debug(f"Skipping game {game.opponent} on {game.date} (outside price update period)")
+                logger.debug(f"Skipping game {game.opponent} on {game.date} (before price update period)")
+            
+            # Process games after updates using the most recent price update
+            for game in games_after_updates:
+                matched_game = self._find_matching_stored_game(game, stored_games)
+                if matched_game:
+                    # Use the most recent (newest) price update for games after all updates
+                    latest_price = newest_price_update
+                    pricing_data = GamePricingData(
+                        bleachers_price=latest_price.bleachers_price,
+                        lower_tier_price=latest_price.lower_tier_price,
+                        courtside_price=latest_price.courtside_price,
+                        luxury_boxes_price=latest_price.luxury_boxes_price,
+                    )
+                    
+                    updated = self._update_game_pricing(matched_game, pricing_data)
+                    if updated:
+                        games_updated += 1
+                        if getattr(game, 'is_additional_game', False):
+                            additional_games_updated += 1
+                            logger.debug(f"Updated additional game {matched_game.game_id} with latest pricing from {latest_price.date}")
+                        else:
+                            official_games_updated += 1
+                            logger.debug(f"Updated official game {matched_game.game_id} with latest pricing from {latest_price.date}")
+                else:
+                    games_not_found += 1
+                    game_type = "additional" if getattr(game, 'is_additional_game', False) else "official"
+                    logger.debug(f"Could not find stored {game_type} game for {game.opponent} on {game.date}")
             
             # Process games during the price update period
             for game_data in games_during_updates:
@@ -126,11 +161,15 @@ class HistoricalPricingService:
                     # Table is in REVERSE chronological order (newer events have smaller row indices)
                     # So for same-day events, LARGER row index means EARLIER in time
                     applicable_price = None
-                    for price_update in sorted(price_updates, key=lambda x: (x.date or datetime.min, x.table_row_index or 0)):
+                    for price_update in sorted(price_updates, key=lambda x: (self._normalize_datetime(x.date) or datetime.min, x.table_row_index or 0)):
                         if price_update.date and game_data.date:
+                            # Normalize dates for comparison
+                            price_update_date = self._normalize_datetime(price_update.date)
+                            game_date = self._normalize_datetime(game_data.date)
+                            
                             # Price update must be before game date, OR same day but LATER in table (happened earlier)
-                            if (price_update.date < game_data.date or 
-                                (price_update.date.date() == game_data.date.date() and 
+                            if (price_update_date < game_date or 
+                                (price_update_date.date() == game_date.date() and 
                                  (price_update.table_row_index or 0) > (game_data.table_row_index or 0))):
                                 applicable_price = price_update
                     
@@ -147,20 +186,31 @@ class HistoricalPricingService:
                         updated = self._update_game_pricing(matched_game, pricing_data)
                         if updated:
                             games_updated += 1
-                            logger.debug(f"Updated pricing for game {matched_game.game_id} using {applicable_price.date} prices")
+                            if game_data.is_additional_game:
+                                additional_games_updated += 1
+                                logger.debug(f"Updated pricing for additional game {matched_game.game_id} using {applicable_price.date} prices")
+                            else:
+                                official_games_updated += 1
+                                logger.debug(f"Updated pricing for official game {matched_game.game_id} using {applicable_price.date} prices")
                     else:
                         games_not_found += 1
-                        logger.debug(f"No applicable price found for game {game_data.opponent} on {game_data.date}")
+                        game_type = "additional" if game_data.is_additional_game else "official"
+                        logger.debug(f"No applicable price found for {game_type} game {game_data.opponent} on {game_data.date}")
                 else:
                     games_not_found += 1
-                    logger.debug(f"Could not find stored game matching collected data: {game_data.opponent} on {game_data.date}")
+                    game_type = "additional" if game_data.is_additional_game else "official"
+                    logger.debug(f"Could not find stored {game_type} game matching collected data: {game_data.opponent} on {game_data.date}")
         
         result = {
             "success": True,
             "games_updated": games_updated,
+            "official_games_updated": official_games_updated,
+            "additional_games_updated": additional_games_updated,
             "games_not_found": games_not_found,
             "price_changes_processed": price_changes_processed,
-            "total_collected_games": len([g for g in collection_result.games_data if not g.is_price_change])
+            "total_collected_games": len([g for g in collection_result.games_data if not g.is_price_change]),
+            "official_games_collected": len([g for g in collection_result.games_data if not g.is_price_change and not g.is_additional_game]),
+            "additional_games_collected": len([g for g in collection_result.games_data if not g.is_price_change and g.is_additional_game])
         }
         
         logger.info(f"Pricing update complete for team {team_id}: {result}")
@@ -181,18 +231,23 @@ class HistoricalPricingService:
         
         # First try exact date match
         for game in stored_games:
-            if game.date and game.date.date() == collected_game.date.date():
-                return game
+            if game.date and collected_game.date:
+                # Normalize dates for comparison
+                game_date = self._normalize_datetime(game.date)
+                collected_date = self._normalize_datetime(collected_game.date)
+                if game_date.date() == collected_date.date():
+                    return game
         
         # If no exact match, try date within 1 day (in case of timezone issues)
         from datetime import timedelta
-        collected_date = collected_game.date.date()
-        
-        for game in stored_games:
-            if game.date:
-                game_date = game.date.date()
-                if abs((game_date - collected_date).days) <= 1:
-                    return game
+        if collected_game.date:
+            collected_date = self._normalize_datetime(collected_game.date).date()
+            
+            for game in stored_games:
+                if game.date:
+                    game_date = self._normalize_datetime(game.date).date()
+                    if abs((game_date - collected_date).days) <= 1:
+                        return game
         
         return None
     
@@ -266,9 +321,9 @@ class HistoricalPricingService:
         logger.info(f"Starting pricing data collection for team {team_id}")
         
         try:
-            # Collect the team's arena page
+            # Collect the team's arena page with enhanced collection for friendlies
             with TeamArenaCollector(request_delay=collector_delay) as collector:
-                collection_result = collector.collect_team_arena_data(team_id)
+                collection_result = collector.collect_team_arena_data_enhanced(team_id, self.db_manager)
             
             if not collection_result.success:
                 return {
@@ -286,7 +341,8 @@ class HistoricalPricingService:
                 "team_id": team_id,
                 "collection_result": {
                     "last_10_games_found": collection_result.last_10_games_found,
-                    "price_changes_found": collection_result.price_changes_found
+                    "price_changes_found": collection_result.price_changes_found,
+                    "additional_games_found": getattr(collection_result, 'additional_games_found', 0)
                 },
                 "update_result": update_result
             }
@@ -345,3 +401,19 @@ class HistoricalPricingService:
         
         logger.info(f"Completed pricing collection: {results['teams_successful']}/{len(team_ids)} teams successful")
         return results
+    
+    def _normalize_datetime(self, dt):
+        """Normalize datetime to be timezone-naive for comparison.
+        
+        Args:
+            dt: datetime object that might be timezone-aware or naive
+            
+        Returns:
+            datetime object that is timezone-naive
+        """
+        if dt is None:
+            return None
+        if dt.tzinfo is not None:
+            # Convert to naive datetime by removing timezone info
+            return dt.replace(tzinfo=None)
+        return dt

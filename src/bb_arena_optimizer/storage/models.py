@@ -103,6 +103,9 @@ class GameRecord:
 
     # Revenue data (in whole dollars)
     ticket_revenue: int | None = None
+    
+    # Calculated revenue (computed from attendance * prices, read-only)
+    calculated_revenue: int | None = None
 
     # Pricing at the time of the game (in whole dollars)
     bleachers_price: int | None = None
@@ -248,6 +251,7 @@ class TeamInfo:
     country_name: str | None = None
     rival_id: str | None = None
     rival_name: str | None = None
+    create_date: str | None = None  # Team creation date from BB API
     last_synced: datetime | None = None
     created_at: datetime | None = None
     
@@ -267,6 +271,87 @@ class TeamInfo:
             country_name=team_data.get("country"),
             rival_id=team_data.get("rival_id"),
             rival_name=team_data.get("rival"),
+            create_date=team_data.get("create_date"),
             last_synced=datetime.now(),
             created_at=datetime.now(),
         )
+
+
+@dataclass
+class LeagueHierarchy:
+    """Represents league hierarchy information for efficient level calculation."""
+    
+    id: int | None = None
+    country_id: int | None = None
+    country_name: str | None = None
+    league_id: int | None = None  # The league ID
+    league_name: str | None = None  # The league name (e.g., "USA I.1" or "A1 Ethniki")
+    league_level: int | None = None  # The league level (1=I, 2=II, etc.)
+    created_at: datetime | None = None
+    
+    @classmethod
+    def from_api_data(cls, country_id: int, country_name: str, league_id: int,
+                     league_name: str, league_level: int) -> "LeagueHierarchy":
+        """Create LeagueHierarchy from BB API leagues data."""
+        return cls(
+            country_id=country_id,
+            country_name=country_name,
+            league_id=league_id,
+            league_name=league_name,
+            league_level=league_level,
+            created_at=datetime.now(),
+        )
+
+
+@dataclass
+class TeamLeagueHistory:
+    """Represents a team's league information for a specific season."""
+    
+    id: int | None = None
+    bb_team_id: str | None = None  # BuzzerBeater team ID (the current team ID)
+    season: int | None = None
+    team_name: str | None = None  # Name of the team in that season (may be different for predecessor teams)
+    league_id: str | None = None  # League ID extracted from URL
+    league_name: str | None = None  # Full league name like "USA III.1"
+    league_level: int | None = None  # Calculated level: 1=I, 2=II, 3=III, etc.
+    achievement: str | None = None  # Achievement description (champions, playoffs, etc.)
+    is_active_team: bool = True  # False for inactive/predecessor teams (displayed in muted color)
+    created_at: datetime | None = None
+    
+    @classmethod
+    def from_webpage_data(cls, team_id: str, season: int, team_name: str, 
+                         league_id: str, league_name: str, league_level: int = None,
+                         achievement: str = None, is_active_team: bool = True) -> "TeamLeagueHistory":
+        """Create TeamLeagueHistory from parsed webpage data."""
+        return cls(
+            bb_team_id=team_id,
+            season=season,
+            team_name=team_name,
+            league_id=league_id,
+            league_name=league_name,
+            league_level=league_level,
+            achievement=achievement,
+            is_active_team=is_active_team,
+            created_at=datetime.now(),
+        )
+    
+    def calculate_league_level(self) -> int | None:
+        """Calculate league level from league name (e.g., 'USA III.1' -> 3)."""
+        if not self.league_name:
+            return None
+            
+        # Extract the Roman numeral from league name
+        import re
+        roman_match = re.search(r'\b([IVX]+)\.\d+', self.league_name)
+        if not roman_match:
+            return None
+            
+        roman_numeral = roman_match.group(1)
+        
+        # Convert Roman numeral to integer
+        roman_to_int = {
+            'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+            'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10
+        }
+        
+        return roman_to_int.get(roman_numeral)

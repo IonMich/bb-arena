@@ -219,6 +219,22 @@ class ArenaService {
   }
 
   /**
+   * Get seasons data with team-specific minimum season based on creation date
+   */
+  async getSeasonsForTeam(teamId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/seasons/team/${teamId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching seasons for team ${teamId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Force update seasons from BBAPI
    */
   async updateSeasons() {
@@ -529,6 +545,85 @@ class ArenaService {
       return await response.json();
     } catch (error) {
       console.error(`Error fetching prefix max attendance for team ${teamId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Collect enhanced pricing data for a specific team
+   */
+  async collectTeamPricingData(teamId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/historical-pricing/collect/${teamId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error collecting pricing data for team ${teamId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get team league history
+   */
+  async getTeamLeagueHistory(teamId, activeOnly = false) {
+    try {
+      const params = new URLSearchParams({ active_only: activeOnly });
+      const response = await fetch(`${API_BASE_URL}/api/bb/team/${teamId}/league-history?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching team league history for ${teamId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current league info for a team
+   */
+  async getTeamCurrentLeague(teamId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/team/${teamId}/current-league`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching current league for team ${teamId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Collect team league history from BuzzerBeater webpage
+   */
+  async collectTeamLeagueHistory(teamId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/team/${teamId}/league-history/collect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error collecting team league history for ${teamId}:`, error);
       throw error;
     }
   }
