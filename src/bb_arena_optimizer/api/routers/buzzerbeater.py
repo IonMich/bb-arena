@@ -8,8 +8,6 @@ from typing import Any, List
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from bb_arena_optimizer.collecting.pricing_service import HistoricalPricingService
-
 logger = logging.getLogger(__name__)
 
 # Request/Response models
@@ -179,120 +177,6 @@ async def collect_arenas_from_bb(request: BBAPIRequest):
         raise HTTPException(status_code=500, detail=f"Failed to collect arena data: {str(e)}")
 
 
-@router.post("/historical-pricing/collect/{team_id}", response_model=PriceCollectionResponse)
-async def collect_team_pricing_data(team_id: str, force_update: bool = False):
-    """Collect enhanced pricing data for a specific team using improved period-based logic.
-    
-    This endpoint uses the enhanced collection method that includes:
-    - Official games from the team's arena webpage  
-    - Additional home games (friendlies) from the database within pricing periods
-    - Timezone-aware safe zone logic for ambiguous friendly game timing
-    - Period-based pricing with precise boundaries and snapshots
-    
-    Args:
-        team_id: The team ID to collect pricing for
-        force_update: If True, update games even if they already have pricing
-    """
-    from ...storage.database import DatabaseManager
-    from ...collecting.team_arena_collector import TeamArenaCollector
-    from ...collecting.improved_pricing_service import ImprovedPricingService
-    
-    try:
-        logger.info(f"Starting improved pricing collection for team {team_id}")
-        
-        # Initialize components using improved logic
-        db_manager = DatabaseManager("bb_arena_data.db")
-        collector = TeamArenaCollector()
-        improved_service = ImprovedPricingService(db_manager)
-        
-        # Collect arena data using enhanced collection
-        collection_result = collector.collect_team_arena_data_enhanced(team_id, db_manager)
-        
-        if not collection_result.success:
-            raise ValueError(f"Collection failed: {collection_result.error_message}")
-        
-        # Update games using improved period-based pricing logic
-        update_result = improved_service.update_games_with_period_based_pricing(team_id, collection_result, force_update)
-        
-        # Format result to match expected structure
-        result = {
-            "success": True,
-            "collection_result": {
-                "last_10_games_found": collection_result.last_10_games_found,
-                "additional_games_found": collection_result.additional_games_found, 
-                "price_changes_found": collection_result.price_changes_found
-            },
-            "update_result": update_result
-        }
-        
-        # Close the collector to clean up resources
-        collector.close()
-        
-        if result["success"]:
-            collection_result = result["collection_result"]
-            update_result = result["update_result"]
-            
-            message_parts = []
-            
-            # Collection summary
-            official_games = collection_result.get("last_10_games_found", 0)
-            additional_games = collection_result.get("additional_games_found", 0)
-            price_changes = collection_result.get("price_changes_found", 0)
-            
-            if official_games > 0:
-                message_parts.append(f"{official_games} official games from arena page")
-            if additional_games > 0:
-                message_parts.append(f"{additional_games} additional games (friendlies) from database")
-            if price_changes > 0:
-                message_parts.append(f"{price_changes} price changes found")
-            
-            # Update summary using improved service results
-            total_updated = update_result.get("total_games_updated", 0)
-            periods_processed = update_result.get("periods_processed", 0)
-            
-            if total_updated > 0:
-                message_parts.append(f"Updated {total_updated} games using period-based pricing")
-            if periods_processed > 0:
-                message_parts.append(f"Analyzed {periods_processed} pricing periods")
-            
-            # Add period breakdown if available
-            period_summary = update_result.get("period_summary", [])
-            if period_summary:
-                updated_periods = [p for p in period_summary if p.get("status") == "updated"]
-                if updated_periods:
-                    period_details = []
-                    for period in updated_periods:
-                        games_count = len(period.get("games_updated", []))
-                        period_details.append(f"Period {period['period_number']}: {games_count} games")
-                    if period_details:
-                        message_parts.append(f"Details: {', '.join(period_details)}")
-            
-            success_message = f"Improved pricing collection for team {team_id}: " + "; ".join(message_parts)
-            
-            logger.info(success_message)
-            
-            return PriceCollectionResponse(
-                success=True,
-                message=success_message,
-                prices_collected=total_updated,
-                prices_skipped=0,
-                failed_teams=[]
-            )
-        else:
-            error_message = f"Collection failed for team {team_id}: {result.get('error', 'Unknown error')}"
-            logger.error(error_message)
-            return PriceCollectionResponse(
-                success=False,
-                message=error_message,
-                prices_collected=0,
-                prices_skipped=0,
-                failed_teams=[]
-            )
-            
-    except Exception as e:
-        error_message = f"Error during pricing collection for team {team_id}: {str(e)}"
-        logger.error(error_message)
-        raise HTTPException(status_code=500, detail=error_message)
 
 @router.post("/collect-prices", response_model=PriceCollectionResponse)
 async def collect_prices_from_bb(request: BBAPIRequest):

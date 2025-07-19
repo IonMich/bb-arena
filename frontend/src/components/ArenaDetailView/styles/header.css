@@ -111,6 +111,32 @@
   border: 1px solid #fecaca;
 }
 
+.result-header {
+  margin-bottom: 4px;
+}
+
+.result-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.result-details span {
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.result-details .error-indicator {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  font-weight: 600;
+}
+
 @keyframes slideInFromTop {
   from {
     opacity: 0;

@@ -549,28 +549,6 @@ class ArenaService {
     }
   }
 
-  /**
-   * Collect enhanced pricing data for a specific team
-   */
-  async collectTeamPricingData(teamId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/bb/historical-pricing/collect/${teamId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`Error collecting pricing data for team ${teamId}:`, error);
-      throw error;
-    }
-  }
 
   /**
    * Get team league history
@@ -625,6 +603,50 @@ class ArenaService {
     } catch (error) {
       console.error(`Error collecting team league history for ${teamId}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Collect team pricing data from arena webpage and update game pricing
+   */
+  async collectTeamPricingDataEnhanced(teamId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/collecting/update-pricing-from-arena`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_id: teamId
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      // Transform the response to match the expected format in the frontend
+      return {
+        success: true,
+        message: result.message,
+        total_periods_processed: result.periods_created,
+        total_games_found: result.games_updated, // Using games_updated as games_found
+        total_games_price_updated: result.games_updated,
+        errors: []
+      };
+    } catch (error) {
+      console.error(`Error collecting team pricing data for ${teamId}:`, error);
+      return {
+        success: false,
+        message: error.message || 'Unknown error occurred',
+        total_periods_processed: 0,
+        total_games_found: 0,
+        total_games_price_updated: 0,
+        errors: [error.message]
+      };
     }
   }
 }

@@ -230,19 +230,29 @@ class PricePeriod:
                 "Period has no games and no start price change. "
                 "This is not allowed as it would create an empty period."
             )
-        # Bound by earliest game in period (if any games exist)
+        
+        # Calculate earliest game time if games exist
+        earliest_game_time = None
         if self.game_events:
-            # max by row_index gives us the earliest game (larger row_index = earlier date)
             earliest_game = max(self.game_events, key=lambda g: g.row_index)
             earliest_game_time = get_game_start_time_UTC(earliest_game.game_id, self.db_manager)
-            
-        if self.start_price_change is not None:
-            candidate_start = get_latest_utc_for_date(self.start_price_change.date_raw, self.timezone_str)
-            result: datetime = min(candidate_start, earliest_game_time)
-            return result
-        else:
-            return earliest_game_time
         
+        # Calculate price change time if it exists
+        price_change_time = None
+        if self.start_price_change is not None:
+            price_change_time = get_latest_utc_for_date(self.start_price_change.date_raw, self.timezone_str)
+        
+        # Return the appropriate time based on what's available
+        if earliest_game_time is not None and price_change_time is not None:
+            return min(earliest_game_time, price_change_time)
+        elif earliest_game_time is not None:
+            return earliest_game_time
+        elif price_change_time is not None:
+            return price_change_time
+        else:
+            # This should never happen due to the initial validation
+            raise ValueError("No valid time source found for period start")
+
     @property
     def safe_end(self) -> datetime:
         """
@@ -286,6 +296,115 @@ class PricePeriod:
     def total_game_count(self) -> int:
         """Total number of home games in this period (arena table + database games)."""
         return len(self.game_events) + len(self.other_home_games)
+    
+    def update_game_pricing(self) -> dict[str, bool]:
+        """
+        Update pricing for all games in this period using the period's pricing information.
+        
+        Uses pricing from start_price_change if available, otherwise from price_snapshot.
+        Updates both game_events and other_home_games in the database.
+        
+        Returns:
+            Dictionary mapping game_id to update success (True/False)
+        """
+        results: dict[str, bool] = {}
+        
+        # Determine pricing to use
+        pricing_data = self._get_pricing_data()
+        if not pricing_data:
+            logger.warning(
+                f"Period {self.period_id} has no pricing information available. "
+                "Cannot update game pricing."
+            )
+            return results
+        
+        # Update pricing for game_events (from arena table scraping)
+        for game_event in self.game_events:
+            try:
+                # Get the game record from database
+                game_record = self.db_manager.get_game_by_id(game_event.game_id)
+                if not game_record:
+                    logger.warning(f"Game {game_event.game_id} not found in database")
+                    results[game_event.game_id] = False
+                    continue
+                
+                # Update pricing fields
+                game_record.bleachers_price = pricing_data.get("bleachers_price")
+                game_record.lower_tier_price = pricing_data.get("lower_tier_price")
+                game_record.courtside_price = pricing_data.get("courtside_price")
+                game_record.luxury_boxes_price = pricing_data.get("luxury_boxes_price")
+                
+                # Save to database
+                success = self.db_manager.update_game_prices(game_record)
+                results[game_event.game_id] = success
+                
+                if success:
+                    logger.info(f"Updated pricing for game {game_event.game_id} in period {self.period_id}")
+                else:
+                    logger.warning(f"Failed to update pricing for game {game_event.game_id}")
+                    
+            except Exception as e:
+                logger.error(f"Error updating pricing for game {game_event.game_id}: {e}")
+                results[game_event.game_id] = False
+        
+        # Update pricing for other_home_games (from database)
+        for game_record in self.other_home_games:
+            try:
+                # Update pricing fields
+                game_record.bleachers_price = pricing_data.get("bleachers_price")
+                game_record.lower_tier_price = pricing_data.get("lower_tier_price")
+                game_record.courtside_price = pricing_data.get("courtside_price")
+                game_record.luxury_boxes_price = pricing_data.get("luxury_boxes_price")
+                
+                # Save to database
+                success = self.db_manager.update_game_prices(game_record)
+                results[game_record.game_id] = success
+                
+                if success:
+                    logger.info(f"Updated pricing for database game {game_record.game_id} in period {self.period_id}")
+                else:
+                    logger.warning(f"Failed to update pricing for database game {game_record.game_id}")
+                    
+            except Exception as e:
+                logger.error(f"Error updating pricing for database game {game_record.game_id}: {e}")
+                results[game_record.game_id] = False
+        
+        # Log summary
+        total_games = len(results)
+        successful_updates = sum(results.values())
+        logger.info(
+            f"Period {self.period_id} pricing update complete: "
+            f"{successful_updates}/{total_games} games updated successfully"
+        )
+        
+        return results
+    
+    def _get_pricing_data(self) -> dict[str, Optional[int]]:
+        """
+        Get pricing data for this period from start_price_change or price_snapshot.
+        
+        Returns:
+            Dictionary with pricing data for all seating sections
+        """
+        if self.start_price_change is not None:
+            # Use pricing from price change
+            return {
+                "bleachers_price": self.start_price_change.bleachers_price,
+                "lower_tier_price": self.start_price_change.lower_tier_price,
+                "courtside_price": self.start_price_change.courtside_price,
+                "luxury_boxes_price": self.start_price_change.luxury_boxes_price,
+            }
+        elif self.price_snapshot is not None:
+            # Use pricing from snapshot
+            return {
+                "bleachers_price": self.price_snapshot.bleachers_price,
+                "lower_tier_price": self.price_snapshot.lower_tier_price,
+                "courtside_price": self.price_snapshot.courtside_price,
+                "luxury_boxes_price": self.price_snapshot.luxury_boxes_price,
+            }
+        else:
+            # No pricing information available
+            return {}
 
 class PricePeriodBuilder:
     """Service for building PricePeriod objects from game event and price data."""

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from ..storage.database import DatabaseManager
-from .routers import team_league_history, arenas, prices, buzzerbeater, games, teams
+from .routers import team_league_history, arenas, prices, buzzerbeater, games, teams, collecting
 
 # Load environment variables
 load_dotenv()
@@ -78,12 +78,7 @@ app.include_router(buzzerbeater.router)
 app.include_router(team_league_history.router)
 app.include_router(games.router)
 app.include_router(teams.router)
-
-
-@app.get("/")
-async def root():
-    """Root endpoint."""
-    return {"message": "BB Arena Optimizer API"}
+app.include_router(collecting.router)
 
 
 @app.get("/")

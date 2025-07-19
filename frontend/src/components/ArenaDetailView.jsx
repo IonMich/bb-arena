@@ -562,7 +562,7 @@ const ArenaDetailView = ({
     return parts.join('\n');
   };
 
-  // Handle enhanced data collection for the current team
+  // Handle data collection for the current team
   const handleDataCollection = async () => {
     if (!currentArena?.team_id || isCollecting) return;
     
@@ -571,13 +571,23 @@ const ArenaDetailView = ({
     setError(null);
     
     try {
-      console.log(`Starting enhanced data collection for team ${currentArena.team_id}`);
+      console.log(`Starting data collection for team ${currentArena.team_id}`);
       
-      // Call the enhanced pricing collection endpoint
-      const response = await arenaService.collectTeamPricingData(currentArena.team_id);
+      // Call the enhanced pricing collection endpoint with database integration
+      const response = await arenaService.collectTeamPricingDataEnhanced(currentArena.team_id);
       
       if (response.success) {
-        setCollectionResult(response);
+        setCollectionResult({
+          success: true,
+          message: response.message,
+          // Add summary information for user feedback
+          details: {
+            totalPeriods: response.total_periods_processed,
+            gamesFound: response.total_games_found,
+            pricesUpdated: response.total_games_price_updated,
+            hasErrors: response.errors && response.errors.length > 0
+          }
+        });
         
         // Update stored games count after successful collection
         await updateStoredGamesCount();
@@ -585,9 +595,9 @@ const ArenaDetailView = ({
         // Trigger refresh of game data in sidebar to show updated pricing
         setGameDataRefreshKey(prev => prev + 1);
         
-        console.log('Enhanced data collection completed:', response);
+        console.log('Data collection completed:', response);
       } else {
-        setError(`Collection failed: ${response.error || 'Unknown error'}`);
+        setError(`Collection failed: ${response.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Error during data collection:', err);
@@ -595,10 +605,10 @@ const ArenaDetailView = ({
     } finally {
       setIsCollecting(false);
       
-      // Clear result after 10 seconds
+      // Clear result after 15 seconds (longer for detailed results)
       setTimeout(() => {
         setCollectionResult(null);
-      }, 10000);
+      }, 15000);
     }
   };
 
@@ -684,12 +694,12 @@ const ArenaDetailView = ({
             </div>
             <span>Current View: {formatDate(selectedSnapshot?.created_at)}</span>
             
-            {/* Enhanced Data Collection Button */}
+            {/* Data Collection Button */}
             <button 
               onClick={handleDataCollection}
               disabled={isCollecting}
               className={`collection-button ${isCollecting ? 'collecting' : ''}`}
-              title="Collect pricing data for friendly games and additional matches"
+              title="Collect pricing data using database integration - includes friendly games and price snapshot analysis"
             >
               {isCollecting ? (
                 <>⏳ Collecting...</>
@@ -715,7 +725,19 @@ const ArenaDetailView = ({
             {/* Collection Result Display */}
             {collectionResult && (
               <div className={`collection-result ${collectionResult.success ? 'success' : 'error'}`}>
-                {collectionResult.success ? '✅' : '❌'} {collectionResult.message}
+                <div className="result-header">
+                  {collectionResult.success ? '✅' : '❌'} {collectionResult.message}
+                </div>
+                {collectionResult.success && collectionResult.details && (
+                  <div className="result-details">
+                    <span>Periods: {collectionResult.details.totalPeriods}</span>
+                    <span>Games Found: {collectionResult.details.gamesFound}</span>
+                    <span>Prices Updated: {collectionResult.details.pricesUpdated}</span>
+                    {collectionResult.details.hasErrors && (
+                      <span className="error-indicator">⚠️ Some errors occurred</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             
