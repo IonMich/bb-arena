@@ -1,7 +1,7 @@
 """Team info and league history database operations."""
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, UTC as datetime_utc
 from pathlib import Path
 from typing import Any
 
@@ -103,7 +103,7 @@ class TeamInfoManager:
         if not team_info or not team_info.last_synced:
             return True
             
-        time_since_sync = datetime.now() - team_info.last_synced
+        time_since_sync = datetime.now(datetime_utc) - team_info.last_synced
         return time_since_sync.total_seconds() > (hours_threshold * 3600)
 
     # League Hierarchy Management Methods
@@ -129,7 +129,7 @@ class TeamInfoManager:
                     league.league_id,
                     league.league_name,
                     league.league_level,
-                    league.created_at.isoformat() if league.created_at else datetime.now().isoformat()
+                    league.created_at.isoformat() if league.created_at else datetime.now(datetime_utc).isoformat()
                 ))
             conn.commit()
             logger.info(f"Saved {len(leagues)} league hierarchy entries to database")
@@ -208,7 +208,7 @@ class TeamInfoManager:
                             league_id=int(league_data['id']),
                             league_name=league_data['name'],
                             league_level=1,  # We're only fetching level 1
-                            created_at=datetime.now()
+                            created_at=datetime.now(datetime_utc)
                         )
                         all_leagues.append(league)
                         
@@ -302,7 +302,7 @@ class TeamInfoManager:
                             league_id=int(league_id),
                             league_name=league_name,
                             league_level=1,
-                            created_at=datetime.now()
+                            created_at=datetime.now(datetime_utc)
                         )
                         all_leagues.append(league)
                         country_leagues_count += 1
@@ -380,7 +380,7 @@ class TeamInfoManager:
                     entry.league_level,
                     entry.achievement,
                     entry.is_active_team,
-                    entry.created_at.isoformat() if entry.created_at else datetime.now().isoformat()
+                    entry.created_at.isoformat() if entry.created_at else datetime.now(datetime_utc).isoformat()
                 ))
             conn.commit()
             logger.info(f"Saved {len(history_entries)} league history entries for team {team_id}")

@@ -1,0 +1,1635 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>
+	BuzzerBeater | Olympiakos 2007 | S.E.F
+</title><link href="../../CSS/undohtml.css" rel="stylesheet" type="text/css"/><link href="../../CSS/main.css?1" rel="stylesheet" type="text/css"/><link href="../../CSS/contentbox.css?c=3" rel="stylesheet" type="text/css"/><link href="../../CSS/layouts.css" rel="stylesheet" type="text/css"/><link href="../../CSS/titlebar.css" rel="stylesheet" type="text/css"/><link href="../../CSS/bb-buttons.css" rel="stylesheet" type="text/css"/><link href="../../CSS/BBPublic/fontawesome.min.css" rel="stylesheet"/><link href="../../CSS/BBPublic/brands.min.css" rel="stylesheet"/><link href="../../CSS/BBPublic/fonts/material-design-iconic-font/css/material-design-iconic-font.min.css" rel="stylesheet"/>
+<script language="JavaScript" type="text/javascript">
+            var txtisFbLogin = 'isFbLogin';
+            var txtfbuserId = 'fbuserId';
+            var txtfbuserEmail = 'fbuserEmail';
+            var txtfbAuthToken = 'fbAuthToken';
+            var txtbtnLogin = 'btnLogin';
+            var isInUSAIP = true;
+            var isSupporter = 0;
+        </script>
+<!-- advertising BbN1ezaPR2d9Xv_dJYRxfompPs-ON8lNAXAacUXGDF_zxwJ27HQmTyV74TZKArga4xh90PbOHAs9gn8kVSbZyA==-->
+<script data-cfasync="false" id="clever-core" type="text/javascript">
+        (function (document, window) {
+            var a, c = document.createElement("script");
+            if ('https:' == document.location.protocol && !isInUSAIP && !isSupporter) {
+                c.id = "CleverCoreLoader48627";
+                c.src = "//scripts.cleverwebserver.com/f0e52158d74ae8b44e0b9373034d6503.js";
+
+                c.async = !0;
+                c.type = "text/javascript";
+                c.setAttribute("data-target", window.name);
+                c.setAttribute("data-callback", "put-your-callback-macro-here");
+
+                try {
+                    a = parent.document.getElementsByTagName("script")[0] || document.getElementsByTagName("script")[0];
+                } catch (e) {
+                    a = !1;
+                }
+
+                a || (a = document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]);
+                a.parentNode.insertBefore(c, a);
+            }
+        })(document, window);
+    </script>
+<!-- end advertising -->
+<script language="JavaScript" src="/JavaScript/toolkit.js" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/mootools-1.2b5.js?version=2" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/menu_helpers.js" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/fb_mt_v3.js?version=20220505" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/jquery.1.9.1.js" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/jquery-ui.min.1.9.2.js" type="text/javascript"></script>
+<script language="JavaScript" src="/JavaScript/jquery.cookie.1.4.1.js" type="text/javascript"></script>
+<script language="JavaScript" type="text/javascript">
+        var $j = jQuery.noConflict();
+    </script>
+<meta content="BuzzerBeater, the world's largest free online basketball manager game. Can you beat the buzzer? Sign up now to play against the greatest basketball managers in the world!" name="description"/><meta content="rcvphio1js9o22hq58waxeqk6tbd1i" name="facebook-domain-verification"/>
+<style type="text/css">
+
+    .bubble-wrap a {
+      color: #333;
+      font-size: 10px;
+      line-height: 1.1em;
+    }
+
+    .bubble-wrap {
+      width: 300px;
+      margin: 15px; 
+      position: absolute;
+      z-index: 10000;
+      display: none;
+    }
+
+    .bubble {
+      position: absolute; 
+      padding: 15px;
+      background: #FFFFFF;
+      border-radius: 4px;
+      border: #7F7F7F solid 1px;
+      font-size: 1.3em;
+      line-height: 1.4em;
+      color: #333;
+      font-family: "Lucida Grande", Tahoma, Verdana, Arial, sans-serif;
+    }
+
+    .bubble.left:after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 16px 16px 16px 0;
+      border-color: transparent #FFFFFF;
+      display: block;
+      width: 0;
+      z-index: 1;
+      left: -15px;
+      top: 30px;
+      margin-top: -16px
+      
+    }
+
+    .bubble.left:before {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 16px 16px 16px 0;
+      border-color: transparent #7F7F7F;
+      display: block;
+      width: 0;
+      z-index: 0;
+      left: -16px;
+      top: 30px;
+      margin-top: -16px;
+    }
+
+    .bubble.right:after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 16px 0 16px 16px;
+      border-color: transparent #FFFFFF;
+      display: block;
+      width: 0;
+      z-index: 1;
+      right: -16px;
+      top: 30px;
+      margin-top: -16px;
+    }
+
+    .bubble.right:before {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 16px 0 16px 16px;
+      border-color: transparent #7F7F7F;
+      display: block;
+      width: 0;
+      z-index: 0;
+      right: -16px;
+      top: 30px;
+      margin-top: -16px;
+    }
+
+    .bubble-counter {
+      text-align: right;
+    }
+
+    #imgHideTutorial {
+        padding: 2px;
+        margin-top: -10px;
+        margin-right: -10px;
+        position: relative;
+    }
+
+    #lblTutorialStep {
+        font-size: 12px;
+        float: left;
+    }
+
+    #tutorialMessage {
+        position: absolute;
+        bottom: 50px;
+        right: 50px;
+        font-size: 1.3em;
+        line-height: 1.4em;
+        color: #333;
+        font-family: "Lucida Grande", Tahoma, Verdana, Arial, sans-serif;
+        background-color: white;
+        border: orange 1px solid;
+        padding: 10px;
+        z-index: 100;
+        border-radius: 5px;
+        display:none;
+    }
+
+    .counter-line {
+      float: right;
+      width: 15px;
+      height: 4px;
+      margin-right: 5px;
+      margin-top: 8px;
+    }
+    
+    .counter-line13 {
+      width: 12px;
+      margin-right: 5px;
+    }
+    
+    .counter-line25 {
+      width: 5px;
+      margin-right: 4px;
+      height: 5px;
+    }
+    
+    .orange-line {
+      background-color: orange;
+    }
+
+    .green-line {
+      background-color: lime;
+    }
+
+    #bubble-skiptutorial {
+      float: left;
+      clear: both;
+    }
+
+    #bubble-skipstep {
+      float: right;
+      padding-right: 5px;
+    }
+
+    #bubble-closetutorial {
+      float: right;
+      clear: both;
+      top: 1px;
+    }
+
+    .TutorialTargetLink {
+      background-color: rgba(255, 165, 0, 0.0);
+      display:inline-block;
+      border: 0px solid transparent;    
+    -webkit-transition: border 1s linear, box-shadow 1s linear, background-color 1s linear;
+       -moz-transition: border 1s linear, box-shadow 1s linear, background-color 1s linear;
+            transition: border 1s linear, box-shadow 1s linear, background-color 1s linear;
+    }
+    .TutorialTargetLinkGlow {
+        background-color: rgba(255, 165, 0, 0.3);
+        -webkit-box-shadow: 0 0 10px orange;
+           -moz-box-shadow: 0 0 10px orange;
+                box-shadow: 0 0 10px orange;
+    }
+    
+    .blackBorder {
+        border: solid 1px black;
+    }
+
+    /* admin search */
+    .buttonS {
+	    display: inline-block;
+	    margin: 4px 2px;
+	    font-size: 14px;
+	    padding-left: 24px;
+	    padding-right: 24px;
+	    height: 35px;
+	    line-height: 35px;
+	    text-align: center;
+	    color: black;
+	    text-decoration: none;
+	    cursor: pointer;
+	    -moz-user-select: none;
+	    -khtml-user-select: none;
+	    -webkit-user-select: none;
+	    -ms-user-select: none;
+	    user-select: none;
+    }
+
+    .buttonS:hover {
+	    transition-duration: 0.4s;
+	    -moz-transition-duration: 0.4s;
+	    -webkit-transition-duration: 0.4s;
+	    -o-transition-duration: 0.4s;
+	    background-color: white;
+	    color: black;
+    }
+
+    .search-container {
+        float: right;
+	    position: relative;
+	    display: inline-block;
+	    margin: 4px 28px;
+	    height: 35px;
+	    width: 35px;
+	    vertical-align: bottom;
+    }
+
+    .mglass {
+	    display: inline-block;
+	    pointer-events: none;
+	    -webkit-transform: rotate(-45deg);
+	    -moz-transform: rotate(-45deg);
+	    -o-transform: rotate(-45deg);
+	    -ms-transform: rotate(-45deg);
+    }
+
+    .searchbutton {
+	    position: absolute;
+	    font-size: 22px;
+	    width: 100%;
+	    margin: 0;
+	    padding: 0;
+    }
+
+    .search:focus + .searchbutton {
+	    transition-duration: 0.4s;
+	    -moz-transition-duration: 0.4s;
+	    -webkit-transition-duration: 0.4s;
+	    -o-transition-duration: 0.4s;
+	    background-color: white;
+	    color: black;
+    }
+
+    .search {
+	    position: absolute;
+	    left: 49px; /* Button width-1px (Not 50px/100% because that will sometimes show a 1px line between the search box and button) */
+	    background-color: white;
+	    outline: none;
+	    border: none;
+	    padding: 0;
+	    width: 0;
+	    height: 100%;
+	    z-index: 10;
+	    transition-duration: 0.4s;
+	    -moz-transition-duration: 0.4s;
+	    -webkit-transition-duration: 0.4s;
+	    -o-transition-duration: 0.4s;
+    }
+
+    .search:focus {
+	    width: 260px; /* Bar width+1px */
+	    padding: 0 16px 0 0;
+    }
+
+    .expandright {
+	    left: auto;
+	    right: 44px; /* Button width-1px */
+    }
+
+    .expandright:focus {
+	    padding: 0 0 0 16px;
+    }
+
+    .hidden-button {
+        display: none;
+    }
+
+   </style>
+<script type="text/javascript"> 
+      var a = Math.floor(Math.random() * 9999999999 + 1)
+      var random_number = a;
+
+      function showIcons() {
+          var iconSet = document.getElementById("iconSet");
+          var icons = iconSet.getElementsByTagName("li");
+          for (var i = 0; i < icons.length; i++) {
+              icons[i].style.display = "block";
+              icons[i].style.visibility = "visible";
+              icons[i].style.zindex = "1000";
+          }
+          return true;
+      }
+
+      function hideIcons() {
+          var iconSet = document.getElementById("iconSet");
+          var icons = iconSet.getElementsByTagName("li");
+          for (var i = 0; i < icons.length; i++) {
+              if (icons[i].className === "hideable") {
+                  icons[i].style.display = "none";
+                  icons[i].style.visibility = "hidden";
+              }
+          }
+          return true;
+      }
+  </script>
+<!-- Google Ad Manager -->
+<script async="" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+<script>
+        window.googletag = window.googletag || { cmd: [] };
+        googletag.cmd.push(function () {
+            googletag.defineSlot('/22647480701/default_leaderboard', [728, 90], 'div-gpt-ad-1639823621945-0').addService(googletag.pubads());
+            googletag.defineSlot('/22647480701/default_skyscraper', [160, 600], 'div-gpt-ad-1639824022406-0').addService(googletag.pubads());
+            googletag.pubads().enableSingleRequest();
+            googletag.enableServices();
+        });
+    </script>
+<!-- End Google Ad Manager -->
+<!-- Facebook Pixel Code -->
+<script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '197307022353735');
+        fbq('track', 'PageView');
+    </script>
+<noscript>
+<img height="1" src="https://www.facebook.com/tr?id=197307022353735&amp;ev=PageView
+    &amp;noscript=1" width="1"/>
+</noscript>
+<!-- End Facebook Pixel Code -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-0EMGG4J8HC"></script>
+<script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-0EMGG4J8HC');
+    </script>
+<!-- Global site tag (gtag.js) - Google Ads: 1057369031 -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=AW-1057369031"></script>
+<script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'AW-1057369031');
+    </script>
+<!-- End Google Ads -->
+<link href="../../App_Themes/bb_black/contentbox.css" rel="stylesheet" type="text/css"/><link href="../../App_Themes/bb_black/main.css" rel="stylesheet" type="text/css"/><link href="../../App_Themes/bb_black/misc/default.css" rel="stylesheet" type="text/css"/><link href="../../App_Themes/bb_black/misc/MainMenu.css" rel="stylesheet" type="text/css"/><link href="/CSS/Controls/Menu.css" rel="stylesheet" type="text/css"/><link href="/CSS/Controls/PlayerFace.css" rel="stylesheet" type="text/css"/></head>
+<body onload="setClock();saveURL();">
+<div class="overlay hidden" id="overlay"></div>
+<div class="error-popup hidden" id="error-popup">
+<div class="error-content">
+<i class="fa-solid fa-circle-exclamation"></i>
+<span id="error-message"></span>
+</div>
+<button onclick="closeErrorPopup()" type="button">Got it!</button>
+</div>
+<div id="iFrameContainer" style="display:none;">
+</div>
+<!-- Betting ads - Site: BuzzerBeater.com - Zone: Leaderboard -->
+<div class="hstpnetworkads" style="width:100%; height:0px;"> </div>
+<!-- Betting ads End -  Site: BuzzerBeater.com Zone: Leaderboard -->
+<div id="containerDiv">
+<form action="/team/27795/arena.aspx" id="form1" method="post">
+<div class="aspNetHidden">
+<input id="__EVENTTARGET" name="__EVENTTARGET" type="hidden" value=""/>
+<input id="__EVENTARGUMENT" name="__EVENTARGUMENT" type="hidden" value=""/>
+<input id="__VIEWSTATE" name="__VIEWSTATE" type="hidden" value="mJYQ1is4/IKH5lZ4ZIzo6CYk+eW9YH5UfyFOryEKnK6h+qUmv/EYs24vtGiQx8x5d2R4dCbpP/F9J1U3FMuxs8ZPENBMWMcEutPkRF/JIQd7fco8lNUZtAeDzWWqUsENAVlf96401eO0vG3bTF2pFfkJn3yXIPSQQs89hIFkWPuY4uOL+0e3pOzT8h7MX5+OyoXh5H1fHWgbj0Ns6k4S8FUynYmAu1WEbwO5TDCotjew5m3VVg7XFjSY+6kvkLdPqw+ddsPqqo6oPW6gtiTTseu74zx8GoWDkxmJ9mWwQmoMrz5tVxsE/Xpxd1Vjk/FmsxvseRs/jn8KXY6Xv4CU0s8ZZw+1cRYfIlVM/DDVRbI9jyhmOvDrHsPExSJRR78r/bVXhoiVNX09MyJ9c2TqokW0eM728+UC377ytvfxG4o5MIycYajhOqFKkzR6wGmVGaZp8B8/A0WR4wVSzYd6OmzqoWTj6Y1+JLqC9DHpISE5/rpIEcHO7yKlx9QN/fWhU1slcx90G7rJo9TfvRXWdIe/Cq/foPMAajLKJjHNslGZhLr+WJ5VgSwzor8GGz3hYWnoAnDejh1WfxNHbPnj8Ljmdxd/t4YkTvMTYqo+MHcTtJpG+xzbWDFxrUxF4CRCaFprF0MV0KsQzu0JGu8umD2MspIJy/JpMJm5wmftAlR6wMRtSqxhn3mQWN9ywKyA73kF8detT4hcOioljMLKlE+cwMobpTgwoe6wWdIU1i5g8MPw4efCCsoY4tyzjn1rVp6A3U35cCzDQnFpRmn9v+TLU55ZM0SJ+2TXPII+X9KTkUJ28rwubPmz2x1xPcw0f1GhzSOe7nGGGRI8+7gX87yI8fFvR8XWrtL6cGwaMrL7TrcRbj+v8Gooixe8gqK0QHMZjMKhpHX6v+IIhcKHHI/bkeoPfG69KpFgTzVTCKzdw9zRuVRVwF/b89IU7I6RNoiM18o5gRPz6HZKfBWkRqn3dkzkvjSov9Nvs3AYKd3s7oH4DczamMVy3/G8FU+pK/5coD37OdU0ravtThjLHDFdv+oVbWwkt9Q6kpA4E4sDFhRNrUdnQAAqaz7NXtTTwj9ifwbQBNDuEqQ/3YCVKLT3ap8Bwv4rMjikQyCHFNoVp7IwOVAgZEzrzsCnryIbUr94ftFdKzZPYDYBigWgVd58SZQnRumXUTwx0dwiH5L8ybHI56PH+mJav0lIu4YyTvXR4lwG4uWVdXpr9yXtAVdRDUXJz4Haxja95MJ7lsS5BEtFrFoLStCgV5LCB+v4TgVPKvIMEsVspnsLYYXvEHZJM6FLVosxxffbhFdZ2t0R/ufrra3Rohqg0JFmmM6P4N8FsK0l06FpxBbJbZ5hGniobvXegO7dAsSnJyVGilipKgHtgUTaTqK4NuL+wTwsF/Zbnvxq82z2V+AsH69jp3l58BoBeAbExooLNbHrDK563UqeuV/Frb5UpEQjEcOzScWkrdNu15Hsrz1WCjiYBB7tHYirAbRL3rQiTlG4JCPfLOjtbbA/igfNmW3XyzVzc+epPnPSQWL7JwgH7X6/NhJdyJV6DjRdbTGYNs5DDL3MA8ZkdnXhJNz5AWBM+3Q7ZAJ4bW2QXAXJlsTaFOepstIVd5zq5W0K68v4hChBCk/Rm0d8o9KbIb2Hd4z28ensYVN3W7z5IXjVjfArLa2jwoJR5WN3hSDMj6Up2Is/piWU+ppLDQeaf2n6PdNrAkNJ357RmQu6d0/+4ncKsri/0c8FX18xIavpV/QU3G3A1UgMACJN2Hgxhd40nX+2+mF0Ny/zaxd1b8H6849xC3I7lgXWDKQrIekHlxXZAFlq5FfrmbG9gQxjM+P6/CWCwdv5bQ/9rDeu9mHZxP22RLA/xcSSt6K3SdTqVen22yOCxVWJjDjzq/Vqo7CQqUHfjuN7ollnUplfGn+MMW491ABVPiNFTIX246ZaYa9GKYo2kmuyqPEnyOes1O4TygiM8u+K2cSxzDWOXbYvuUvbD6knaFBfYE2ujD/bm5j7ugW3PqqQUXI12lNszGApO63g7d/9lUXRBrKG+CS9/6QXZi4SoJsP0Wp86jD7sndeWsyT2m6BtWL5YO3LF7mx5wBJtrnFRTQTxHJ+Z4sRy2CxQC3YclN854bngWYt218JBWxS0xnlecUHEtLA2rrFxdDB9ZCySG0xmUMYNCfCjNVVK42BZwe2qSdLzlEzhLJuwJOfGONx7kiTXvPo/Muxzu3geZzwPrbtQgU8BgIm5EWf8hQKu64KMWOsnUsdRykxmq+1Uk8MMBom1UAqBE1sa8KgNMDfth4wncIvPuX5QPWO64uUI5OCkuGa/GwsOGoOpcHtWY/ZO2CRElt91dokJtJCC45xUTvgQRhBEkpAGcV8+e2PZJiSAijE+fRQnFddcijlBn5els2a8OpHUXCtd9oZNxRSuXbvcMfGccEYz6wg4bMM39H2v/VtntL6xxh4JbgzAQ6EwIC3396EiJtt0ph3wCD0zvaC7Zo5DZb//C6SmMWf1fv3yQVIaEDmaX5zms744vcm0vJhNIbJ3AXfUDBTVQoW79b5qkPVi8gneelwlGoahjyQFgyTV9Of6AgUjJT1AyUqrisfkr+kGW75BxeCg9douj+GOdIzzltkH0y48ZCvVloeZhOj1yYE5xRvkLtUSG+SermVTsm3+nyVdJWnKCybh9XfMHIU9RG1vz8SPjLua+BKdOkBkHrX7UDaN557IDySKJN+owQO0x6XFQc24WXfsYPngHx9e3GObFXPEqwpnAZI+CjW7a+mj4TiXzBD3kuZxGvf99GyS7JtUnCkNK8brjSI81Mt3O9vh6P3O+dZeNwE3NklLbpVNyLHAnLLMiA8RD5629H5nT1B0ppRtUBCC4ZQprAgWU/RZ/+Se7psG8X6y8AeSxYXgN+YSyEj9vZLIcFOce79XZqKNt+b3N470Q1gekYlHJXSi2s0EN7a0B52qEZ+yGo7j00eBLWI4Xa5AUSPU8Yut90vrUoKtWK4EjICDOPNBOar5jMoWmgmANCmBTfoTf86y1FwTlL3fEdZOhLAs8FQQNoEFqafXNf6MrmrOsVJBhlSYresf0cn1KEpz8wp58Ehm1bagBQ0H0U4FFFAvXBdcbE0YZC6moYtssrafpheQLcQhQ1Q3s/CrD/SbmKE131Hj15sRBCNI/MyxeY2imhT2rXa/eN9tvB2Cl/efz/v895yeA8ExF9iuksuc4TS+ONjOvW9U939YD0IJxkJ1004p6KYtlBGr95540Wli96mJKhVIBu2iTFKJLeY6UwOrN8Xb1+cIlpq+k9qQwFzTRyawtOcuidCJ9RBSNtZfvTuDC1LsgNmhCtkLl42HRSypmMZ0a8hDtA0qqNzJCLMXnlX52FktAp5aI7ujcQi/35SxKqlzyUf1qFNIIAym/x7tajXpqIgzNOZrNRsLsiaxsnsnp3rwHzC/PvtE9SRWykuKJTLzyP4DQEUn2qm3tjsJLvhpGCIR6X2Y7qDsdKIjcfDOO5cZKz47Cg0C+2cLZ9Xwj6CEJRrwfW17PLy/wgv+Yy+AMMvhLuBwtOBRFT0FpdTUfdsJ6QKaE3eAh9MJtybx2gReZl5goP80V8XkwVGnVtWeaXTlGVdqdSWF5jR80ClNkWIV0M//bRjZCMrZQxZkxzxeEXy1TrrqY9VUB1tSeicN5YXRY+CfVXFEJvTmV3/L9ZPlMhEiG7ZpmXw6bGDc1rpw7UI/hlDEUhAffB0Tf/ZYVHivULhDnivcZFBbjP7CffA1hV4pO+5lCeq9C0VejwZNEhSrUgHquoTV33rCwks9Jo0w/mn4bn9si/MKYPP2u/06UJo+aA3hSG9FHf/aq4WvU9b/7dxyvYcvi6xX7Xhx1+WQhEgzvSmoRVUNDR4dwSSKvbot/swBophyB2RMtVoYvEO0T3GiniyzYW66m5SIkaLGUh6BaA6wiOzDnLYBae+oCFCHN6mCrRgs1ON+vA3KhDBtqpwPl1mJ5Fsu/F43d2c1cDF5kIWMIXnWKYKUIQUTVNG0LkyLG/rTfO2MkNjq7Buq0l1Poq83NHKlUGJcGVKDETLtGG8v0GFGN19igQLmtAQO12TXV7+Fc3C5CvihSa5rMZ0+YdSvAyvv/60pzGsdC4Yx6WH3S+KMi2WbkL0cWF045p0/BGr4Bb8pHE0m9Y7Hr7tLJ/87rrENf33mFef9w/IOYrr+m+pTiT5VD/YOF3ysuJTz/rmMWvPO5J7k2h1uypnB/wpkWJUbloXoiGg84bVcYA0DykRDPuhpaB40QIcJFvw87qcNivQe/MkNSobUGGrlHVa0KJQAu8mV1mfnznJAhEvm4oiI08DcZnRDQcAM4AqRKgak2YOGkLDHCGNc88bLny8Vn89nlHwQQ1gR+OmW0Nka5kUf4MwTYnJa2WTYL8ALqDitF3wCF4Q3XmZy7tgbd4aLUbTio1wiy6ZN/dMWZh76ptzMWzkqSOVlVi2JPJMsTRpYFl1BVpA5wcJZdBxEDT9CcFLy8pojE/iB220N1AOqj2lLaCbW4HMrkH7uiGuG1fg/DVj+Iwej5f+qPIIh3r8lAGuvsgFDimuYMoKP0hj+UOSKsCLHZnj70P54zvn/RnBEel0TozNF1BnLdgf052uEBv5FtEaOErt56lBjupLmJ8vUTCb4p+JC99JWRNSvjjcXDfQ9+CBjzXNknapu5bILx0JSKUyQf9iMjlqPQuAe8dRs2TQ/qwM3l8p0U21m6PpaFwiJIZ+MIZfZamxWYQ3yZBE9M3c0ILcacIPCiCUIbiWmvKLttDXkZ6AJodb5zXoNFRzG8BhXsj/SS/cIkIQxxPYleja10LkCMccW5SGYfHz2KkT4SGqxytwxf/ftljltIaQgGWmxgXXKjp/tprZ3pzD/Qjq3vYaQQqk+qC4wYoTsg8A61UwSmH8QXhosskKUPUVtj7TOY+mGJHf7qkcFX4M0HasRBdbFyfCCXlCi+WRvzdNPWPtkj9uei1rgV9cy7kjawoTEpBh0SyrauWyclEo23Rosq+3M+3tfo2/Y4FLyY6LtdsqLDwu4y2pADGGDGyGz0YrPelUCntfFIO8P+uh7WMAuDdF+OtJYAthpKXJgCN7LnhRHThs5kzh+QZdTbk3YeTi4xVUAv6sd1nj6GWvfBYWD7fdN36b86Y9BRM/SC+1rTpa3DPes7rJ7HW88tryzCe8KhOjvHwcYVb1ITkDD3qT4LwnAPmaSlrnoEq5flp2k61bn2zc4Q4TA1R9xQTvUA3n6ZfZWpuVHv85j/xQXy3d4g8noLlU1nHF4C49K3p/VgF2j65AST3xdU1mAyMQ+V7mWUiSbU1qH4f6HA69n0j517wJtQwYFlAjc5zXKvZ5r8OMJ1MtGFx1rBVRG3IeRq7NzHE8lXipUKjFWE8oKNJur+V8lYE7EI4a5xHVdatOGXkMMtG28JyqiL13Xh7vBwtVtvlqmUhjOhLAAWU88peS966XBF1tYgOkpoNzs04ZITdfx/sxZNl/UECgrz0xyySiYCxvFgXKJBX5YtjF2NIYkQVdQaCmfqjG+/9yRlfvFA+oHTXdQ3IRE8EKINZh3CJuV1NCXdol+mzJ4ZQ+l+EHBaBYXMn1Ro4e2Sd96xA/hNyMsiPZPhhOqb+Sx1542C8Z4zAvU2/C9YCu1D6QFf+X0tPAR3ZN0WpbFgRp+ryFefBvUGv/q4Y/Mg8rNoqdV8d8Jv8z6H4K7y19nJ1aLuthJTbY3EAs3+DTBC4IfcpCtoSZF+Dx/cR4qWipPsfvG/GfOBI39xu48WgWpU6xf2UTTEvLET2euFDpzhkQw4LxtsbUH9Fw3+8YVWAkwg3Pk2FRY9Oi5o1hdSSVHLFlg1oZ030EqFIlWEwMRoZOr2xxsXrK1lvJqByur0zc9jHgFIWk+bxRr224z5arllX4Y10YNMMSs6KVY1BDXj3Otkz5GATLrpLmzSe/7p2ss3TIbySzMOLj6Z3zycobVqOEG0PcFwI7Hh0NR/fYtr0g7pJBXh/LT7Mu045DENC0xWap2+QPRMQAO5kDZLqE2FjneSo/BTz6hxrjyVqmmAfysrvHRIE/zOWptxkwR/sbnbOtWQD+e6JmPgD1AZPPlkqbF2R2NdAkBjfwC1egmlp1sv+N6zcr4SrZfpj+EVHo5f+/MeiUvyvT7OT+YCP3S16uXI6OdsUANiTvnxEStdoE+80vSWhz6k9Ab5wmYRzFo46WGSlEh3GCwHp5MyFDdImLK0NoG0YGqTf8h/bn8CKhaWuO4cQZpH7ZTVWT9BZnqY4O1IhmKCIS7WrGkozHFdHaio8NmhLLGk1sM2gpCmozP8iEwOugFY7CGKYacaLjrtkOYBkwgNEDRG8edPFof+Clt3npSoxEsR8cV386EKwqCMo4G5wtSNvRusSUfzgALTB+6kJGJoy4el3qFK/dBFz3fJQ+mljNgRo55l2aOGKGHYU8rBrGE3b2E06BUv/0HKoPHEX9yD64UaSxGA9lbq37BBFGdgwLTYc+qfLVtmUzpygKhT4YukCOMlqFBGKSlkaYOSi1RTv7QWti89ojc7nV4kUjrJ2+pyLHmApDsz423FJ3RPTv3mAzPtu3/HMQVkDmW4vVeUlDP7MQlrKmQ2GMMiwYLpCfOlfyvHtTQBKKKg04DeIXw2LzzScKhqs4N3ipkXpSjs97ldlNeMqdV97F+eifxV2SpvuJ3gya/1qoyfoeeEzUYoQ8UrVTTGMtgAMBtbHXmXrNU/GwOYCUDMOhw+GT75tL7N9ibXqvQ77njJSBlwS/n16Wmks+pkKejQjk+ApFhUoL7v8cX5KdBWDiweeeved7FZLqN63o83YpNRBBtmbx/qaeGQA8MSVNHkcuIePjNpJJJPBAhXQAR7AqFd1+/YBYUEqbY5uHkMpp1vTMFlGT88aOtRIlyrM1+mxTbCppLUQ1kUGGtpPGfTFvbYSEWErXpihMEg7pgV6Kldd8TuRnjcdwti0FMjbIis5kpJhYXA7UJTQhcR8AaGa9VI1FTlaw7QqvfNU18vJ+gYNSETj/79P1ZsUTA/53TIWOdng73Bu1kxQpA7vZpd9FEw4oV57oAC7RZLKMtFgAY2vwXl7Ms9DscIsLIx6IXGLYtoCrrNY8eFQwWIekti2rDK3vi9bO/IB1oLQHn+uHjUuCQeXV+3ZdxV7GSpIGfZbUbrAK+9d4aZoSN4t2GGobHe6cR2tT9rrofKYPh9eaWPsbHu915m7NViUl8BOVHKfl2mtlBWJ74CBpi5m3UoSlUtDj4Nj6fGYQjcVgcH75+/janaQJS/v0C6tk3g6fNIDGLM1jZoHJpCMLyTEOrSi+I7aLHUXlCBM15jiZc7gNJ+siezLe1WIEaF7FqFNp+sUqDxNDGDlkB6N+YykZfbE6g7Gs09J249Bl2eZ/XP5UUbYijmme1hhU22KXKphIGRk11LGgNNtssxisbl4vasZYVd7QWzLD1tniOIiGZrRzjK05Zk/hsTjLhJD543R53li3vIdc3iMaIPZwZ7B3WCSImXiwebDv+xmgd921upkgbZxH/o7Hh8a2KtpFXfgVRjYJmpKoWHACuo8fP97qv6rSjFxjkCbDKN1rh6seL7jEzN2YlypUNMyaM35np4TSJMAyHe6qtwtqDE/v6KunPRuuKoVN1xajWiwwEq7SdqY2hUqRQ89CEM7gDFp7Vv71m/5CBEHNZIVZ+/3a74PXVhioE2FbjEj951teksyqNSyBan4DvupZeJmuZBOKm+nvlV/xVJf2ser9zjxNkGZM/QPITCxuIClgnr+sLmfg76BhO4ya0efgNsP+Uq8XTYtLH+3M3VTKPhvns5z/UYCrf5FHKxmXWLuGcUxcRAAIY0ucfzKvDMkGY3vua89nZZ5j6OAuckP0YZDLajPFgGd9ClxcUVwJ6iJP/fjSTqSAK8lRhlkzlhaETNDSR5f+SOPMxgC3xhNJXiiCZQP8/t/jFOxsoqP3LbC0ijjHN3vrp65x/SrcKvur4NNky8MK4X34K4YRR7wpDG4HnOwo/w56sy8F3mpSTJ/rB840itrU8sEyiucppAQ6U5lDErVWrsytkKlGO6h6WxVrtHZPxgwDe0/jGP+m3yZxRqg8RfvZmNdab6xPERaR6+LSAu3A5+p+KUaIur5a57yuZzlGduJG71BhqmgOq5zbx+ZrB4ZrbCaD/R2WIYcGN+pDqko660ZtQytpX/nPsjgLJMBZnrtT77AR5io586Tv4u+vpCtd004pkzPRTEse415WodQ1jHxUcbUv45rOi5BzgwlIouoT+2cJCQ59mT1XrtFYO1Lc6jd7BesUAIadHJMD5cqOoKTlC3lmxNYIg8Km2uvrOEOLCaOkdJfVXBjmnQXTTdktq29a21Pmu5mV5pK8LIa2NDBfkTBBCf0du7tKWT8JIwwfHgi4xhMrY2dCBbzHBTTXKZZJOyVoYSkpQ4XiPcosMlGd6BQuabRtnjQGKaeddPgxkQn1hNJJ46C9Xxj1ZcN3FC6QHYSgyXKh03pYx5r54mecqsTnYanUvm6ubMASitgk4Rc1Bc9yPeFpHgGcWcbWhwh96MsZRZwJOROjI7mValVYsCUBkA8/PAsGWtjoHiGD5JJwesxqwg/t4v1E2z9f1Rifc7U9hWGz5L4GKIOP7ZbfD69FcuGiJpmfnjqeL+xcQiqoU+Repa4Udq/PcZ1sIG1gJnCxPz9/2vZfYIxJYD/VklTk5SYDs1Uqz7l6w0LDNn3RxsHHZvaFp4uFcoe1WwocHRrwZJ0FEaB5LI/5Pu5eRWQK/Oafkdng7j/u9LYt9rEph+8UjR+fwf9QbJM3eYb5kmFU8GjhASPrfvQid2siGO2vq6QiNE/ZDMm65LiA8F9mHJwp/5erYnHYXUI+0jvgZ90akR72AuljqAMe3bOMo1k/NQgfIzz387tjOpSPAXZqSbUOOEbeJQgga+uuuK6dCLSWFqBlwpMG11p5xkDN3Tv4CkZD3/b5RIYjjbZ8vr0cp/fvS8GA5Xu4kCXtdc5hQ6PxEThIK9l3kqmzQQ6i7JMEk9v5mmpXtuPlyRL5ambvlA5C/ZwIjDl9nl2OU4XLiVtey77QCRd3oSU1qO1f6Dyl13VUXEOcYXeZEG/oOTwWiC2VZrPkyV/SYDLaQYHDla+5OM2HuEsbx2gKY98Vp+E3p4clH6G30+I0h99lfghL6gudOluc636OdUUW82/KsSRmHUZjaQnXtk7jqYyvT6GxceGrBCctwawQ5XKVMC6NKhbr7hJmIW9U6PY9HVdTzA9PtnODhulBSi/nzKgBjOClo8omFmlrmdibh0VjjYGfxJX6DoNRocA2Urd9mMSqSt/vj5KQHHKY3ry4kVuDnDftlxsQPQD6EFtTlPyZFubZdlHTlS+SW8TUq4fmHCsxpB41N8xIVoGgwFl1xlomgqECYNcZLZ/PRcjZbJuJRZxSZRoro1+ZLa4IpEC5RgxJDEdKyER65fzSjebMHG1KPfNSt1BCk0RDULLSE5y1P+tkYdnUYah1qR08rf7cFyGsLRNuMNpDAb29TPCq3poeJc8B7xON7M7IBkeN3VzDxMhls8JNL1PJUwCffeepYTw4tbGErB85p9NBrN+ujzi1D30BQgfWzDl1TQMzFEhUdGkxqNEvPGnSXZ9qUdJdeVsZ5tUV+/pqndVRJh0FinWUnONXGIL5yV6hWwnfNfQODQmaN0st8+6ZeRUG4+dFXf/z2FlHrmyrgZpdEniG0uPnK3WP5pYRHTZhFFzVE34TYvSNqRNfhgP+ukCg9zQJttSripk/8v4/wij7HwMBSHSPbBRECVg07p6dnFcWjszI9L6e4P0lXIhbGfUjaJIJI+Pa5GjRU+xdN6nX8VKoeou3zpohZas718wjxcSe9PQiFm1ptDoDtPOiU3Q1ra23oxhePwNGuW+QLKlzbNCwvF9pkXZvyCsNJbWUAfVQnbWiwdKN2f4DRPoe/pNnnO3ajyZlJ8t4a+VYWP71IScclvNFRDKT/zETDJpZ+M0neLey7GkFnL4XX1J4agySSPdlCLku5BhB19WHJZ1i5f5SqBHHEWxh46FsrjVoKGhPVjRHHu3qoEyv9BfYLLnziDcDSsSiw36PMXghI5qraD9CWzpY4joDcFD2YnexFEZflFlogF8KVopLMWjtiZymPNamXBwkDOLKMMB7aG/y+WpT+lJ7Zs8f5lP4hw3TDe6XhsmZuhMutoOWRVouOV/22W6zTV4DQ/xEg6CZlM8NdN3ete2cBBCLvHsul4yCVWC2SPowzY9KCf8huPkUnV81bWkYgXnXxi2xOKY1I1VNaQduoQ6LWlX7jjC9J2sjkwSm15MaWdmJ1Hy8szMMaWH+/KS2seceh3M5TEPGTw3hBmsQjjzGhfyUbSQ06e1u0yBxqFKhho0V9hC3aoAcRzuLlUpUUUsFX67PtOzzlVU36YKkkq5CiBORDrBQ0clotXGJCyI9NVx7DJELHcM20mCqbPM+ne66pzDQLeYpe7Yp0NDLb9MAf47y/A0CDQfA9QIz2bFfXpwGyNF2YqTb/9rXdb+2ocZmb5AoajoED2B7P8nYsIMA9qhTlT6BCZ5Xxo7hr2fJEkMT7bGxaZu4rQxdkW3ukxRfP6sqyLp8w9yE3i/csLzNlIIAlKXm9e/OVgEo35rlbz9MtUEQdhm86vozzlyuN2fQG13EP8Eeki+g8xYJIMaBXSUdNthawEveLyezuzli24I7MtrWCJz0O5xFWLzQQPVtYS9y7GRgRr55iTSXF5OCIQG9jl2k4YVnXU6hA1Uv4KR55mbePgE9PnzU2/TZ8vA3o86/aMrwm7LLjBHevX/3WcODSwMFk0e3uFdJTvjl7zFT/H/9kanJTrc1tjCxi7P2i8Y2KM78etdP5oNenYQMWA0oLZxGEvKyuskybS5Zw4oyGURM1TtOp8OtHDRdomhTSL7nbfLMC8uqkks8KsrQ9/rGmfZ1LyDsK/AmmiYkwFkeZHJRX8OzWT1DQZ1om99uUIoPECCV+adZhtkGAQF9s75MXyhhT/IglUTqXNT+uT9PczDFl88BhSJXQZgLYXuwq/5cTSrK2LmC1lpV4TN3DIfa6VMtzPsHW3gJAxFYEPBpjwYtlhmB4JQRwPAFUKRBek9i1BmIVyExqGo86lM9S0OqTN2QI51am/cO+cw2f9baKjVgYyoXNHefCMElF3vmY35+++3n/kTlMgCK0N/qPhKVxx7l3YT3MqqSrEPdzPaKZpbvaMSIFqc/cMMikEuM/c004Gy/iPlgwX2zQ5jtFx+aww2P+kb5bmR104SXz7Mpi1mvGsb8MpvBlPb9SjRgcSdq/i4YAN9O5oqlfBSanYXwYpBRpUHVc9DAwDeowmADNhnqmCH9hYh0LyekSHBmBLkgPOzGIhOA2iDmDabVWus+pAp9bKBoKl/U6W8MBV+KKauAiU1t7Jg6aQX8Wgd55gpXu+f3uIuFVp6rz4J+ID0N8AC+tZNITv+DHYlCrZN4ikLYbXsnqWFr0XVFQaraReTKy/LO7nVrDpvoHoh1B9WMyW+skJ9GEKr1aqEEC0h1dumRnksV09N5tnbAUVWKaaGf7qN9w48eZt4APzfiJZJyLiW3XWCi7dk9rW86BNUNAQ95UmAlYjuSbwd1d9CYHzYyuJtpqw49aN2b2gmJDB4FIuvik781ULto5sIA7pa6PXWfyMIL/CN/1W9yLoHS/FZ6xte6JodCxJBJUpAMhzAEtQFIdD5q3miC6rot9gvywX3U8ZsuaCG67coBCuZfGRAtVNBwudu2D58j+7E3ECKd12H+VFUCMk3iPUr1CIT6ZPI9bLD4kieQZReyrKPkyPVvZxBgSeTYvdR2+g4iNPUhCgozp6V5j9TQkJv6wsRB/eJvfUU5vY3czoVYxwPAazZSFMqb2Yc8rVT+2hHG90dBGQK3+hWNk6ebcDGqjZ6KLYX55c0Q/YodilIvPRuDK+PcHJsPiUwwfYo09clFD3hlWS8FcLTvR8GvXK/pgRnF6DNwKXCLK93mhFzdJEkA8SULrkdaCbXoN2ycmetPZU7lVn8xXmMdV/EkuBs2cFFJmKoFiLMBKiY1Rv/4EzHd+hygVrFLgL7Gl6tgIMVBKXWa4TeAXl/8rUMwtNb1mXuTfFBwexy+KM8HPx8pGpVwuoETPM+EyEcJAUFcRmjY/DnCbhIIF0mmVyBxsdRFveuJ9kArD5AsXT9LbAQmeNTexXAxFR/Rh7cedhN8y9+UlmC4NOzxhqre8pd6bPnAqdB8UVIcrVNgQyKw1vf4EsB3G3UxlCX5IKU3M93A3YAyFRRzVyQAuBtW3SyhSbg6zSUyODHWbMEuibRlBbmcynEI7yC3BTlimS7x4fj1g0DDScnpPQugH4pms2AwEvscIzcBhwUNydrkX6eW/Pa9D6Aot1te1SIqYlCBZyvbInIWaT/VXKxrhN+Unt8nTnEN4XsQnDwWSRzxd6pSrWaC3DUKcT+HX8YtWUtrce2mW5cDqE19Yx/eI/zId4JaMnkSQKNhs7tRDJT0ZfOzHQFO6xrXSBcxG0JErV8mySwyQaihFdR2TZIUAIir4TGirW4h7I6cHl38z+U0TkgoCrFOvraIk3pui7dYK+aYGogaYq4DX7Jjn8nfyWla9420OVEkNhZ6NvtiJSbGKwq9fLtP7TwKinhj3vCkFe+GCA7h0BQBnShOpGkyRkjhSmgUWUu3K47dBFq/7I2vdAa9NdNkIwA5PkGsxUKIaik/Z9rpRHGJY44S+X/1MzxNnYZ1wuLd3p4B1VV7QUqu4N391yJpMNuTd1GyPSAuS0SadSFWszWoMTygK2cY2oy4KZT2Fsw8bsbuAdti/v3F7WiQCIJQkCmZXUY8W292vxuye4Ns6pRYU3ISppDQNxF/yQYttD+dG5lk4DKnmXp0pvsEc8RfWomQrIVh4LjwiSUHMSDOLIRIrnDdrtxiMOlLI3Ko1XHod1ft6OvURCozYG6Ufg5RXGf6LzX0Xu0Ec0pZ0yDd59Mi+O9Nnd+rXRDxSMgX260eP3FQwAUFecsv6tFUn1QfIeD7dwI0f51D7+ZyxXTN5fNbCZo47tf/3byXI1UUQaEuLIZAYgtzm0i5kb5tfCRPkVKplRlRjd917yUuHZvYfdIJrrxMUTzUvvOTnlsIlOsuWIYyLLwDZD6PLsvZY/IrHnzSXgtpgnSxQj6f6bp+djhXSvc0Ys35vk2xCfhhMD70ksR/EsrC1RiBwXv3gxqGhBduti1o4t625hiE6vRzlzH4540HKOvN5gptXQ7rq1BTJ/tKrb1g80/0hzoAiMgOI16+Vb2gyCrTY8ZzoixnaDm2GmSJSAWN7m+cNCpHhpUoq5/xtM5bsfNo1+qcSQg8ailUJzJrTTdag5RJ/9fPQ7MpZlEahWitq8ud2uHhO4Lnax0+i5xr7zL9c8PZXpPcD3NJcPa1iVfBMexhBd4oK4EUASpFf1s2CqJrZGXkQYAfVhvCLcNrOnTz1N0hO9MtzExVoZjlX+AmtSw29CmJdmqzRA2ChN1AaFhsrkl+8EAG9rv4IPr6yWLSiLH4oyEule2zFuc2LuEQpi6YflefXBCyBpSWmwJbLky2im/tbQk5X5/krP+QL+4GA9MVeUOrugflD38nrFkK5SQt2St21YUATp076qhrBocfliVoixmEN4c8Kt8nuiR5n/Mdw5I2OeId8ScoFkIAX0JufZtpDH14Iao0l4PkciHBhBJ3gfIAnjbqew0+Nxt9BWFEr0GppnrcCRG3DVN58XV74FP0Av1T+Xclr92mv4c1+sL38kV38l/vk99wlmCK2r/MojWajO2TYwqjkR9NRgWRnw+P4bQDykfYH1A36zt4syQxE9uIfe1Z7pyw8vVPG+8V/p+KQTZjwOh/sg9qBXXLkiiu7A0NN9iEdGDUq3SUmxVBCMAheQ1uj5PAIK1GdLQlJk2eff0ra8Q1WNyCxzY1OmtzA6pIM7KIRBA+Q8LOFTYyusUWgaxuFCmgED07TszjNPcY8rt5OIje0gR8UyC4JZKIkrnNK8Bub9OtHNqp8+nFgYFLi7qkcCPZ3L4++0gEzyA3bFxniNPOdP6vJ2BU6onRKJcgS1HcsVNB/KFCCfTZl7EwZYSXEwir97tf+hDAfGhu3GGTvFTm3GzAh7XRzm9ycGlqUNHi0LE/LZeLdi0/96Boy8NM2vssiW7aMAHQosyemmcvnGJWJeXEFJniZFYXLtL+rUOuUTprzHT5RfDVctvPJ6AThjp2WVgm7ehnDdOv/yQ67M1CKsb5fs8QWt2dOqdh5IP6HaSX9toVAC+q9+mt2Yq9cwdvvVgtdiims7oTFf4Gtg2ACLCwo3OmDw4y1z77OlnoCOL/7LXRUypgnWLWzP8iz2c1X29gMyENv0BhosUk9pBLbBy4RY8vkR0kFni4GkQ0yGSkkHrSHr2qTrodfzmp8qfIEMf13YRaFioGrG5L2Uj++ANR+c0XlKQpVLFeZ6KI26SMZdOss4SJSHD/MTRAnI02hpBKEm3j8RpHQEtyV53rnDhREfas/fK3FicLsYuzXuTfLNmLzD+o9AbkOLp2bDCL5uEFdfZoX6qiqEXE7i9hr/huUKNGCfJ7/6PwG8H+eOIE39dkMTjcuX3cOMc2KaCqPa7QnYlRnVZApf17qJKBzMiDYarxOKADJK3f/UYO6p7B8erk33eRy0bnpfbaRw0eRxbTemdGxAOmyh9/zib/EmG6JBhcfutQErp+4JmeVktmPb1IHo+az07kUvzhty1e8H8O/aKAaqpBOhrbnJFlwTZo97qgdgPSPUc+fch88WHKsNDsfAyXhNq0kKrBYRwiZ7pt9dkVisEpJKXMKoTlCb6kDzgyVn7U3bH/aet9udOQKV4NAJfQ1pFMrK/vvC0dJrmkpknl75dNyywutmJqCxCixrc+bqsOoN91ptT31bIL8+lHjhl82OxaxHqlTY0Ztl9l+XM4SqUkuUuqOkgz0VCwqlsjLAWt8EkNut0BCSnfntvvZxXsq67gtVSSoHsmmRcC7H4gek2VX6aMzlozctJPp1A9Pl0M55U7YSyFuSRuTYEKPUbsqTwTNSczQSZDarN+RpWbWIOabp8++mmCoEqLMSZ7enfadED9SKFmu7o9qkbKlY/o/YgBcSg3g5x1Z5Yys2NXPhIiKVwfIAa9IfBtYZkcN07QL2UjQdKe19kzUhPp8UqydDo6HdJKyUVV4Eg8tNCwjmw5/3wmUFJHRzw5+9qeCm2amybV0UVtGhiy6TkZZ8LJYvGAssjUXeRBmxNREdtBo7Ac8L+fJQ3jg4d1s3SvsLPPjUn4ixtGklX8m4ICfYOC3v2eo8V0wOz7s6arh45MQ4Ybuz05wDbhxVdfEgw3ZfCOrgwcwFAsklbDPFwMUO+vPfsAPOs2nbTCKIDjiqFMyzfwTVIsZVh4c08WAPAu6Av2sjLn5HCvXvQytF4mwNgFuMhbeGPQUzcjzV8LGeDrLAp4i2bDwKgEw2Ca35v29jiXlAHZ6us3zC+8TFR+PabvvC3qjjTa4YgWLTSYnZWCnnO74sXJo6eckDIX3FfABhzqpEhc3emUprauK3j5HH7DHYmW4MNdtFxwF+TkTAqUiL7on3r9gtAz8S2V0VfG8IR03YKWYILwU2MuaiqCEAqb4/yJ1JhG3ndcP+N9x91lkKqKnFOvRK52b2695zMaWtkB3VVyfzPk+Jdk6lwsw/8e0yBrdtN5HgykSIOzkw3txIxJ5SZeTaQ6r4zCf8yXr84oHUeQKrdPfwT0chlnkDDUPm3Df89KzAbI07yb9lD3l8B+DWzNIkT8HLFgnuNYcOsyG+6100DANYfHSETR82XQtrkPx9EOqsu+X6/AhT/x6pvcQ1CZ2RyOPo6LKvcl6kFnvLSquIKcfZKLB65G+iiHh1kt8Fw+bHiGU4E6FjlTywYcv1WvPXpUKMpYt4Dlxe78zHD6GGMzk62To5i6/uXNiJy6qb4FMmvadsnAar1+yMxMIChNW+T4kaems5Hp/3SSNjs6yLGj6Bqu3rPczbKVQmAGl6xaBpCkchiSnbkF+Hw/ROoh4K5QWb+sCeIuWK6PRHOGTpL1jJ3crfOGXeW0jRAs9hOOOEwfvZS9Cob58UCGgAdG3ZSx8GjldL5iYcZdguIazM7UDwBTxZKODgA/rqbKeVniG1zmVH0BxvFQioW4SakONukuYYkjp4qS0pOCo9f5Chf4Mud+nuBMAh/TKdD5Ycj2C0JwiPjWHOUngTXlEpev+8h8rzKgT2R0Ov0qzAETZseuVapCeTb4T9195K1JkpOda3OGZJh5cvKxcphG5UzIl08RUdX1t0tloYbKX7HH+cuX8OciqxO+aoUVwykuNJ+cYxFuUbHAq3PXW4Hg0BZ1665xrG9wXIF2cx+Wwyv4QWB43LvOi6Mil8qthQ/1MgIYE3UUhShIqygkk+2xnOcVtswQC/Fh2QFWAE/d8jvrqqz6r42vMiPYzyqiC/eSSlBfzfR1GNWX/o9vbFnyOAXaI8znSew+LxgDaNqlq8s+iA2+if6a73cqRW7PIn0v3Jq30I5m3ur0ecCmYiTM1sVvxuK+KVA7RqiB/PqHVwh/jbM7qGcyk4NVQn3dioXpwxJhW9M/fhUeoy/J8MorbyVxGTuyyHzs3tKyjB7z4dehw1i9QqrokPm1jzGeUENj3LLfdhUd03lhuFSrgv34HzBpyPmaglaIHC6eoCPtLr0avx9so4V7YXUsHYnFKqJgenk="/>
+</div>
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+<script src="/WebResource.axd?d=pynGkmcFUV13He1Qd6_TZHP1_L3hfhMR2EzWO_Bc-oo5hpOuvVRkqQfM-ICXssTCLPPi6Q2&amp;t=637787871227087951" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=NJmAwtEo3Ipnlaxl6CMhvtCChPytAN7-5i3NocOW7P5cJoWxBeGB1NMH7FSqB0ub9kyvparYuG51tpZLBGSvSa-1xET8GZ4rFlhWZVGoStx0isz6jGbTOKNDB4uY2wLKEWTAHaBjRDkBRBYCmD9aWeXleWM1&amp;t=ffffffffe6d5a9ac" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=dwY9oWetJoJoVpgL6Zq8OKFNFOaVeK0GO5E2VtIArbnPpiZoGjpVDXSGDNbRZhABcAFTzswa_r3hE3aHW1k2fUsFnvwP0Upy3Edl0GeK_w6toV1iJwQio3TpzbEk1itNVUsGMBAp9mKHi3ZcrgEgC7Q98fg1&amp;t=ffffffffe6d5a9ac" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+var PageMethods = function() {
+PageMethods.initializeBase(this);
+this._timeout = 0;
+this._userContext = null;
+this._succeeded = null;
+this._failed = null;
+}
+PageMethods.prototype = {
+_get_path:function() {
+ var p = this.get_path();
+ if (p) return p;
+ else return PageMethods._staticInstance.get_path();},
+saveArenaBackground:function(elementList,type,succeededCallback, failedCallback, userContext) {
+return this._invoke(this._get_path(), 'saveArenaBackground',false,{elementList:elementList,type:type},succeededCallback,failedCallback,userContext); }}
+PageMethods.registerClass('PageMethods',Sys.Net.WebServiceProxy);
+PageMethods._staticInstance = new PageMethods();
+PageMethods.set_path = function(value) { PageMethods._staticInstance.set_path(value); }
+PageMethods.get_path = function() { return PageMethods._staticInstance.get_path(); }
+PageMethods.set_timeout = function(value) { PageMethods._staticInstance.set_timeout(value); }
+PageMethods.get_timeout = function() { return PageMethods._staticInstance.get_timeout(); }
+PageMethods.set_defaultUserContext = function(value) { PageMethods._staticInstance.set_defaultUserContext(value); }
+PageMethods.get_defaultUserContext = function() { return PageMethods._staticInstance.get_defaultUserContext(); }
+PageMethods.set_defaultSucceededCallback = function(value) { PageMethods._staticInstance.set_defaultSucceededCallback(value); }
+PageMethods.get_defaultSucceededCallback = function() { return PageMethods._staticInstance.get_defaultSucceededCallback(); }
+PageMethods.set_defaultFailedCallback = function(value) { PageMethods._staticInstance.set_defaultFailedCallback(value); }
+PageMethods.get_defaultFailedCallback = function() { return PageMethods._staticInstance.get_defaultFailedCallback(); }
+PageMethods.set_enableJsonp = function(value) { PageMethods._staticInstance.set_enableJsonp(value); }
+PageMethods.get_enableJsonp = function() { return PageMethods._staticInstance.get_enableJsonp(); }
+PageMethods.set_jsonpCallbackParameter = function(value) { PageMethods._staticInstance.set_jsonpCallbackParameter(value); }
+PageMethods.get_jsonpCallbackParameter = function() { return PageMethods._staticInstance.get_jsonpCallbackParameter(); }
+PageMethods.set_path("arena.aspx");
+PageMethods.saveArenaBackground= function(elementList,type,onSuccess,onFailed,userContext) {PageMethods._staticInstance.saveArenaBackground(elementList,type,onSuccess,onFailed,userContext); }
+//]]>
+</script>
+<div class="aspNetHidden">
+<input id="__VIEWSTATEGENERATOR" name="__VIEWSTATEGENERATOR" type="hidden" value="42C9646A"/>
+<input id="__EVENTVALIDATION" name="__EVENTVALIDATION" type="hidden" value="z5c0SC/bb4DKHv+cRPzaGOQohw8O3ij455mkGDet3+MfAh6ut+pzcy86HWSgvzr7qdLapF0NimZsUX9rgoe23R3+YVt6wHE6aj94QD84MBbAy7yPULzADdgPNXL1pQ7APt2MU4bSNtAyZ2PS9YpVuIMrOe9iQdLmhtpqCnP6MqFraSS0qg5T+w+JttduFprVhOcUIZFgybkzvZldLkjwQpvZufNqMcPlKVJR6Njh4s+Ead7n9xzD+Y3RwnTQukKkIlVriIiAnUNOV1j2vnaeNc9+2RzuoSuczQzuyaxlaG2/GavkZZiGjA83Hqs7oVN44NFTFYGwrLIUK4Nqc1HsDKP8nTtkIed31vpy/M3PeLw9eRw1MPM0nkoegGhorFVNotXYXEN9aIfOufoHEkwPdem24N8GijlWFmKDrsGlqKumoBfxrHSIvhJcOZRt1dFyk0cJ9q9T/DL0rRv3vs51qZyuHy1YqvBln43dDAG/OhHuX2S1jYOPs6DL+JKNkPemuZI7kBtdo+Durw923tF1zlNMDJY+9mFq+4VcNA7TJWGEy+z1f39kT1iDNf5ZwfHmpYeYyCsfubgTf6meMr7lFHXMDkl9v2xhL4DNMMgMBy90NAU8um25dLVVdf1+jxYhUafYjlWw7SSAia5kCjyvEQ7dK9nirOZaVPQwa7kz4NlLgPvxT9m0VKGeMIx1cH43g6+gnLGarUnrDd4Rvh8ykqoHfFYCkZquH1a5Ny4oF1mug477rmqTUyWYX2wwiAL8kxLYroqlZE7Uwfy+5ApwqnqOSpaaVfnKgHK4dKyr8/+jqF4XHdF+bLz9c9bZnktH2ggfKp7sB27nF9Zjl+NTHzdKZvsh2r9Cm61VtGR7yqROg+kgq/7Vsgh5Q61GTABTY55faBU99DvGZKA+6Pe35Mc8brP32g9tSb7Ip0rJxtC4itsAdrwAFpaaz9APzaj7knXdkILhDdb4J08ZLqDb2TU8svWeAl0V1ft6sc2IcC9b4OfkOumBS76osFZLv35sQjBQ8x1eJZcYjU2bUY/QeTuiIXg35DOnu+CoIIxVnFWJaU3JofWv84RUKDom8n5XhubvQrez24gO/T386TL4GUjMNim0h5yKUOy4ydMOgrqEVjnfk1JwUIyJRZ4xL4++6jYb3bb0HRIz1kkWfuza3AB2BsjWyCO4vCeDDRw/6zEasHkCpuGLwrJOeBsqzbqvGI684FD+2DgFeCkv3vO7GrHWgpgGGB8J+2TwDIX/9cW69bfWI/YtbgS3XW6zi55ZadazBtlsHd/VV5m9X9ergI3NGj99TvC92EdJ9t3aS+IWBHC0yQhgbvugO4PVdXy2/LwziN9psRMQwTmU91MeI3fvnwdDGvGXlOM5dRhfqetiKpf74K+ZSBzSUHXSa9sm2NwpMhrKnbLHdizeNTuDpQg9Xue7dKZjJNFikgWVdsf2sZOsuj0dXZObEHUW+Hva/qoqHXpXkpXNwMtuLvYQ07elVdK/FNn7PcSjiAdJPkTIpmpKj6jEQCA2XwD7y7ccbozVl8G5RboVUi3QvMUoWcBqH4eJdqNoJ1Rf8okFpaJqUijneqr41q0W5OM0EwLMkX1Bh+koDEFhspM7zCPU2PWv1BWHmjxOg9H/9leZUn0C2MifCIEUSO5JZ1eL0uI8/pxAeHnaM8iC/fJEl5rR/0P8UAj8Jub3fmPDusg89lKFtZfmPRuxAKgfwxNykc6IuRjKg3uIu0+93BP1/agB8SufSTBvfq/PTTNUZ+HoU251r+1N9Pd81DQcZaWerjzW9uQ0KQ5yEestOBbmF2oKJnjQbjzaOtESnL+JtwawTuItlsl2R27HI1kB/qDUNvpiZ0q90qsFq4hHrcKBxRh6mWLGI88KcnprwFCsAvrqNiU9rFuxDPEmWgS/lUGfD1yijZci/QWz6mVqJnQIQ4hajT0wmwnfcOI8c17HrcUXy+UemPnxRDVM0CAwsxze5q8BOIBxp4nH6Po8B3/MeGYwrtZsqIIr8pLGrorRIFaDI4CS0qK2Edy+/UDDwJpSkcrbIOhD7aHmFH5VjDmQlKSOmrEunfUMIUJ/ExflB3uMMiahsqlJp9oGAX1o0jFTTy5mOGXZJffqKuKgz6Z8nKkoKZZM+0tDlPUobFphhjQGIz59yHOl4E3hXMahdfKollcmNytpoNx3XPdL4Raql155RxcRjf7KJHat+aJNER1Vyivn5iX8VG7hE/PmzTIeNOA3hvggmAmuLZZyBQZH1N+pZUuDEtmJHOciwq/p2fnkr2mb371B"/>
+</div>
+<script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$sm', 'form1', [], [], [], 90, 'ctl00');
+//]]>
+</script>
+<div id="tutorialMessage"></div>
+<input id="hdnNetlogLang" name="ctl00$hdnNetlogLang" type="hidden"/>
+<div style="background-image:'http://www.buzzerbeater.com/BBWeb/App_Themes/bb_blue/bg1.gif'; background-repeat: repeat-x"></div>
+<input id="myURL" name="ctl00$myURL" type="hidden"/>
+<div id="backing" style="height:500px"> <!-- as long as the height is bigger than the background fading image, we're set. -->
+<div id="page">
+<div id="header">
+<div id="adspace" style="position:relative; margin-left:124px; padding-top:10px; width:728px; height:90px;">
+<!-- /22647480701/default_leaderboard -->
+<div id="div-gpt-ad-1639823621945-0" style="min-width: 728px; min-height: 90px;">
+<script>
+                              googletag.cmd.push(function () { googletag.display('div-gpt-ad-1639823621945-0'); });
+                          </script>
+</div>
+</div>
+</div>
+<div id="leftColumn">
+<input id="timeOffset" name="timeOffset" type="hidden" value="-1"/>
+<script language="JavaScript" type="text/javascript">
+                        var d = new Date();
+                        document.getElementById("timeOffset").value = d.getTimezoneOffset();
+                        if (document.cookie.indexOf("BBtimeOffset") < 0) {
+                            document.cookie = "BBtimeOffset=" + d.getTimezoneOffset() + ";max-age=" + 60 * 60 * 2;
+                        }
+
+                        function toggleDeleteImages() {
+                            var size = $$('.clTextDiv')[0].getSize();
+                            if (size.x == 93) {
+                                $$('.clTextDiv').setStyle('width', 106);
+                                $$('.clImagesDiv').slide('hide');
+                            } else {
+                                $$('.clTextDiv').setStyle('width', 93);
+                                $$('.clImagesDiv').slide('show');
+                            }
+                        }
+
+                        function hideCLdivs() {
+                            $$('.hiddenCLDiv').slide('hide');
+                        }
+
+                        function hideDeleteImages() {
+                            $$('.clTextDiv').setStyle('width', 106);
+                            $$('.clImagesDiv').slide('hide');
+                        }
+
+                        function ValidateCurrentLink() {
+                            if ($('ctl00_tbCurrentPageName').value == '') {
+                                $('divCurrentPageAdd').getParent().setStyle('height', 44);
+                                $('ctl00_lblLinkNameValidator1').setStyle('display', 'block');
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+
+                        function ValidateCustomLink() {
+                            var isOK = true;
+                            if ($('ctl00_tbCustomLinkText').value == '') {
+                                $('divCustomLinkAdd').getParent().setStyle('height', 59);
+                                $('ctl00_lblLinkNameValidator2').setStyle('display', 'block');
+                                isOK = false;
+                            } else {
+                                $('divCustomLinkAdd').getParent().setStyle('height', 46);
+                                $('ctl00_lblLinkNameValidator2').setStyle('display', 'none');
+                            }
+                            if ($('ctl00_tbCustomLinkURL').value == '') {
+                                $('divCustomLinkAdd').getParent().setStyle('height', (isOK == true) ? 59 : 72);
+                                $('ctl00_lblLinkUrlValidator').setStyle('display', 'block');
+                                isOK = false;
+                            } else {
+                                $('divCustomLinkAdd').getParent().setStyle('height', (isOK == true) ? 46 : 59);
+                                $('ctl00_lblLinkUrlValidator').setStyle('display', 'none');
+                            }
+                            return isOK;
+                        }
+
+                        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(hideCLdivs);
+                        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(hideDeleteImages);
+                    </script>
+<div id="pnlNotAuthed">
+<div class="noclass" id="loginBox" style=" 
+ ">
+<div class="boxheader" style="border-top-left-radius:4px;border-top-right-radius:4px;padding-left:6px;padding-right:6px; 
+ ">
+Login
+</div>
+<div class="boxcontent" style=" 
+ ">
+<div id="pnlLoginBox">
+<span id="Label1">Username or Email:</span><br/>
+<input id="txtLoginName" name="ctl00$txtLoginName" style="font-size:12pt;height:25px;width:100px;" type="text"/><br/>
+<br/>
+<span id="Label2">Password</span><br/>
+<input id="txtPassword" name="ctl00$txtPassword" style="font-size:12pt;height:25px;width:100px;" type="password"/><br/>
+<input id="isFbLogin" name="ctl00$isFbLogin" type="hidden"/>
+<input id="email" name="ctl00$email" type="hidden"/>
+<input id="fbAuthToken" name="ctl00$fbAuthToken" type="hidden"/>
+<input id="fbuserId" name="ctl00$fbuserId" type="hidden"/>
+<input id="fbuserEmail" name="ctl00$fbuserEmail" type="hidden"/>
+<br/>
+<input id="btnLogin" name="ctl00$btnLogin" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$btnLogin", "", true, "", "", false, false))' style="font-weight:bold;height:30px;width:104px;" type="submit" value="Login"/>
+<br/>
+<div align="left" style="padding-top:4px; display:none;">
+</div>
+<br/>
+<img onclick="loginFacebook();" src="/images/fb/fblogin2.png" style="cursor:pointer;"/>
+<span class="warning" id="logLbl"></span>
+<div align="center" style="padding-top:2px">
+<a href="/getpassword.aspx" id="aForgotPassword">
+<span>Forgot Password?</span>
+</a>
+</div>
+</div>
+<div class="boxclear"></div>
+</div>
+</div>
+<div class="noclass" id="Languages" style=" 
+ ">
+<div class="boxheader" style="border-top-left-radius:4px;border-top-right-radius:4px;padding-left:6px;padding-right:6px; 
+ ">
+Languages
+</div>
+<div class="boxcontent" style=" 
+ ">
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_0" name="ctl00$rptMenuLanguages$ctl00$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl00$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_43.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Bahasa Ind." type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl00$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_0" style="font-weight: normal;">Bahasa Ind.</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_1" name="ctl00$rptMenuLanguages$ctl01$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl01$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_35.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Bosanski" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl01$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_1" style="font-weight: normal;">Bosanski</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_2" name="ctl00$rptMenuLanguages$ctl02$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl02$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_255.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Català" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl02$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_2" style="font-weight: normal;">Català</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_3" name="ctl00$rptMenuLanguages$ctl03$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl03$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_37.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Čeština" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl03$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_3" style="font-weight: normal;">Čeština</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_4" name="ctl00$rptMenuLanguages$ctl04$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl04$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_39.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Dansk" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl04$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_4" style="font-weight: normal;">Dansk</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_5" name="ctl00$rptMenuLanguages$ctl05$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl05$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_8.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Deutsch" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl05$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_5" style="font-weight: normal;">Deutsch</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_6" name="ctl00$rptMenuLanguages$ctl06$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl06$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_27.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Deutsch" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl06$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_6" style="font-weight: normal;">Deutsch</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_7" name="ctl00$rptMenuLanguages$ctl07$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl07$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_41.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Eesti" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl07$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_7" style="font-weight: normal;">Eesti</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_8" name="ctl00$rptMenuLanguages$ctl08$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl08$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_1.gif" style="height:20px;width:29px;vertical-align: -7px;" title="English" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl08$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_8" style="font-weight: normal;">English</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_9" name="ctl00$rptMenuLanguages$ctl09$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl09$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_14.gif" style="height:20px;width:29px;vertical-align: -7px;" title="English" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl09$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_9" style="font-weight: normal;">English</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_10" name="ctl00$rptMenuLanguages$ctl10$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl10$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_7.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Español" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl10$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_10" style="font-weight: normal;">Español</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_11" name="ctl00$rptMenuLanguages$ctl11$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl11$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_2.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Español" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl11$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_11" style="font-weight: normal;">Español</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_12" name="ctl00$rptMenuLanguages$ctl12$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl12$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_57.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Filipino" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl12$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_12" style="font-weight: normal;">Filipino</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_13" name="ctl00$rptMenuLanguages$ctl13$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl13$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_11.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Français" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl13$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_13" style="font-weight: normal;">Français</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_14" name="ctl00$rptMenuLanguages$ctl14$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl14$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_254.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Galego" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl14$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_14" style="font-weight: normal;">Galego</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_15" name="ctl00$rptMenuLanguages$ctl15$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl15$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_24.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Hrvatski" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl15$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_15" style="font-weight: normal;">Hrvatski</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_16" name="ctl00$rptMenuLanguages$ctl16$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl16$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_10.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Italiano" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl16$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_16" style="font-weight: normal;">Italiano</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_17" name="ctl00$rptMenuLanguages$ctl17$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl17$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_46.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Latviešu" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl17$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_17" style="font-weight: normal;">Latviešu</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_18" name="ctl00$rptMenuLanguages$ctl18$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl18$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_20.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Lietuvių" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl18$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_18" style="font-weight: normal;">Lietuvių</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_19" name="ctl00$rptMenuLanguages$ctl19$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl19$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_48.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Magyar" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl19$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_19" style="font-weight: normal;">Magyar</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_20" name="ctl00$rptMenuLanguages$ctl20$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl20$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_16.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Nederlands" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl20$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_20" style="font-weight: normal;">Nederlands</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_21" name="ctl00$rptMenuLanguages$ctl21$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl21$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_13.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Nederlands" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl21$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_21" style="font-weight: normal;">Nederlands</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_22" name="ctl00$rptMenuLanguages$ctl22$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl22$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_26.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Norsk" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl22$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_22" style="font-weight: normal;">Norsk</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_23" name="ctl00$rptMenuLanguages$ctl23$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl23$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_58.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Polski" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl23$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_23" style="font-weight: normal;">Polski</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_24" name="ctl00$rptMenuLanguages$ctl24$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl24$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_3.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Português" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl24$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_24" style="font-weight: normal;">Português</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_25" name="ctl00$rptMenuLanguages$ctl25$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl25$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_18.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Português" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl25$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_25" style="font-weight: normal;">Português</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_26" name="ctl00$rptMenuLanguages$ctl26$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl26$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_61.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Română" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl26$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_26" style="font-weight: normal;">Română</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_27" name="ctl00$rptMenuLanguages$ctl27$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl27$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_79.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Shqipe" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl27$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_27" style="font-weight: normal;">Shqipe</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_28" name="ctl00$rptMenuLanguages$ctl28$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl28$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_67.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Slovenčina" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl28$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_28" style="font-weight: normal;">Slovenčina</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_29" name="ctl00$rptMenuLanguages$ctl29$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl29$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_66.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Slovenščina" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl29$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_29" style="font-weight: normal;">Slovenščina</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_30" name="ctl00$rptMenuLanguages$ctl30$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl30$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_29.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Srpski" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl30$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_30" style="font-weight: normal;">Srpski</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_31" name="ctl00$rptMenuLanguages$ctl31$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl31$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_69.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Suomi" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl31$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_31" style="font-weight: normal;">Suomi</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_32" name="ctl00$rptMenuLanguages$ctl32$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl32$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_9.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Svenska" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl32$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_32" style="font-weight: normal;">Svenska</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_33" name="ctl00$rptMenuLanguages$ctl33$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl33$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_6.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Türkçe" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl33$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_33" style="font-weight: normal;">Türkçe</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_34" name="ctl00$rptMenuLanguages$ctl34$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl34$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_12.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Ελληνικά" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl34$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_34" style="font-weight: normal;">Ελληνικά</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_35" name="ctl00$rptMenuLanguages$ctl35$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl35$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_36.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Български" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl35$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_35" style="font-weight: normal;">Български</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_36" name="ctl00$rptMenuLanguages$ctl36$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl36$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_49.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Македонски" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl36$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_36" style="font-weight: normal;">Македонски</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_37" name="ctl00$rptMenuLanguages$ctl37$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl37$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_19.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Русский" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl37$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_37" style="font-weight: normal;">Русский</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_38" name="ctl00$rptMenuLanguages$ctl38$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl38$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_33.gif" style="height:20px;width:29px;vertical-align: -7px;" title="Українська" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl38$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_38" style="font-weight: normal;">Українська</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_39" name="ctl00$rptMenuLanguages$ctl39$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl39$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_15.gif" style="height:20px;width:29px;vertical-align: -7px;" title="עברית" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl39$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_39" style="font-weight: normal;">עברית</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_40" name="ctl00$rptMenuLanguages$ctl40$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl40$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_59.gif" style="height:20px;width:29px;vertical-align: -7px;" title="فارسی" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl40$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_40" style="font-weight: normal;">فارسی</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_41" name="ctl00$rptMenuLanguages$ctl41$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl41$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_62.gif" style="height:20px;width:29px;vertical-align: -7px;" title="ქართული ენა" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl41$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_41" style="font-weight:normal;font-size:smaller;">ქართული ენა</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_42" name="ctl00$rptMenuLanguages$ctl42$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl42$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_5.gif" style="height:20px;width:29px;vertical-align: -7px;" title="中文（简体）" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl42$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_42" style="font-weight: normal;">中文（简体）</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_43" name="ctl00$rptMenuLanguages$ctl43$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl43$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_5.gif" style="height:20px;width:29px;vertical-align: -7px;" title="中文（繁體）" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl43$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_43" style="font-weight: normal;">中文（繁體）</a>
+</p>
+<p dir="ltr" style="padding:1px">
+<input id="rptMenuLanguages_btnFlag_44" name="ctl00$rptMenuLanguages$ctl44$btnFlag" onclick='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl44$btnFlag", "", true, "", "", false, false))' src="../../images/flags/flag_53.gif" style="height:20px;width:29px;vertical-align: -7px;" title="日本語" type="image"/>
+<a href='javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("ctl00$rptMenuLanguages$ctl44$btnLang", "", true, "", "", false, true))' id="rptMenuLanguages_btnLang_44" style="font-weight: normal;">日本語</a>
+</p>
+<div class="boxclear"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="noclass" id="mainContent" style=" 
+ ">
+<div class="boxheader" style="border-top-left-radius:4px;border-top-right-radius:4px;padding-left:6px;padding-right:6px; 
+ ">
+<div style="float:left"><a href="/default.aspx">BuzzerBeater</a> &gt;
+<a href="/country/12/overview.aspx">Hellas</a> &gt;
+<a href="/league/316/overview.aspx">League III.16</a> </div>
+<div id="clock" style="float:right; position:relative"></div>
+</div>
+<div id="middleColumn">
+<div class="boxcontent" style=" 
+ ">
+<div id="titlebar">
+<table width="100%"><tr><td>
+<table><tr>
+<td style="padding-top:5px" valign="top"><a href="/country/12/overview.aspx" title="Hellas"><img alt="Hellas" src="/images/flags/flag_12.gif"/></a></td>
+<td><h1 style="color:white"><a href="/team/27795/overview.aspx" style="text-decoration:none">Olympiakos 2007</a></h1></td>
+<td rowspan="2" style="padding-top:5px; padding-left:4px" valign="top"></td>
+<tr><td style="padding-top:5px" valign="top"></td>
+<td style="padding-left:3px;"><h2 style="color:white">S.E.F</h2></td></tr></tr></table>
+</td><td align="right" width="0px"><table style="margin-right:-8px; margin-top:-8px"><tr><td><a href="/community/rules.aspx?nav=Arena"><img src="/images/icons/icon_help.png"/></a></td></tr></table></td>
+</tr></table>
+<ul id="iconSet" onmouseout="hideIcons()" onmouseover="showIcons()" style="width:150px">
+<li><table><tr><td valign="middle" width="37px"><a href="/team/27795/schedule.aspx" title="Schedule"><img src="/images/icons/icon_matches_small.png"/></a> </td><td valign="middle"><a href="/team/27795/schedule.aspx" title="Schedule">Schedule</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/players.aspx" title="Roster"><img src="/images/icons/icon_roster_small.png"/></a> </td><td valign="middle"><a href="/team/27795/players.aspx" title="Roster">Roster</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/arena.aspx" title="Arena"><img src="/images/icons/icon_arena_small.png"/></a> </td><td valign="middle"><a href="/team/27795/arena.aspx" title="Arena">Arena</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/halloffame.aspx" title="Hall of Fame"><img src="/images/icons/icon_hof.png"/></a> </td><td valign="middle"><a href="/team/27795/halloffame.aspx" title="Hall of Fame">Hall of Fame</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/history.aspx" title="Team History"><img src="/images/icons/icon_history_small.png"/></a> </td><td valign="middle"><a href="/team/27795/history.aspx" title="Team History">Team History</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/transferhistory.aspx" title="Transfer History"><img src="/images/icons/icon_transfers_small.png"/></a> </td><td valign="middle"><a href="/team/27795/transferhistory.aspx" title="Transfer History">Transfer History</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/stats.aspx" title="Season Stats"><img src="/images/icons/icon_seasonstats_small.png"/></a> </td><td valign="middle"><a href="/team/27795/stats.aspx" title="Season Stats">Season Stats</a></td></tr></table></li>
+<li class="hideable"><table><tr><td valign="middle" width="37px"><a href="/team/27795/overview.aspx" title="Overview"><img src="/images/icons/icon_teaminfo_small.png"/></a> </td><td valign="middle"><a href="/team/27795/overview.aspx" title="Overview">Overview</a></td></tr></table></li>
+</ul>
+</div>
+<div class="titleblcorner"></div>
+<div class="titlebrcorner"></div>
+<div class="titlefooter"></div>
+<div class="boxclear"></div>
+<div id="subcontent">
+<link href="/CSS/arena.css?ver=23022021" rel="stylesheet" type="text/css"/>
+<style type="text/css">
+ 
+        
+
+        #customizedcourtdiv {
+            height: 192px;
+            width: 368px;
+            background-image: url();
+            display: block;
+            margin: 0px auto 0px auto;
+        }
+
+        #lines {
+            background-color: #;
+            display: inline-block;
+            width: 368px;
+            height: 192px;
+            -webkit-mask-box-image: url(../../images/courtModified3.png);
+            mask: url(../../images/courtModified3.png);
+        }
+       
+    </style>
+<script type="text/javascript">
+
+        var link = document.createElement('link');
+        link.setAttribute('rel', 'stylesheet');
+        link.setAttribute('type', 'text/css');
+        link.setAttribute('href', '/CSS/toolTip.css');
+        document.getElementsByTagName('head')[0].appendChild(link);
+        var marl=0;
+        var marl1=0;
+        var marl2=0;
+        var koef=90;
+        var cost=0;
+        var indexi=0;
+        var dragElements=[];
+        var originalType=14;
+
+        var index=14;
+
+        var posx=28; 
+        var posy=2; 
+        var perc=58; 
+        var gridx=12; 
+        var gridy=7;
+        
+        var activeElementID='';
+        
+        var loadString = '';  
+        var backgroundType = 'default';
+        var IsOwnTeam = 'False';
+
+        function saveInfraLevels() {
+            $j('#cphContent_hdnGLvl').val($j('.lvlIndicator').eq(0).text().charAt(0));
+            $j('#cphContent_hdnTCLvl').val($j('.lvlIndicator').eq(1).text().charAt(0));
+            $j('#cphContent_hdnHRLvl').val($j('.lvlIndicator').eq(2).text().charAt(0));
+            $j('#cphContent_hdnTVRLvl').val($j('.lvlIndicator').eq(3).text().charAt(0));
+            $j('#cphContent_hdnMSLvl').val($j('.lvlIndicator').eq(4).text().charAt(0));
+        }
+        
+        $j( document ).ready(function() 
+        {
+            saveInfraLevels();  
+            
+            if ( $j('#cphContent_newArenaType').val() > 0 ) {
+                index=$j('#cphContent_newArenaType').val();
+                posx=$j('#cphContent_hdnPosx').val(); 
+                posy=$j('#cphContent_hdnPosy').val(); 
+                perc=$j('#cphContent_hdnPerc').val(); 
+            }
+    
+            if ( index > 1 ) {
+                switch (index) {
+                  case 2:
+                    posx=70;
+                    posy=-8;
+                    perc=55;
+                    break;
+                  case 3:
+                    posx=43;
+                    posy=-6;
+                    perc=55;
+                    break;
+                  case 4:
+                    posx=26;
+                    posy=-21;
+                    perc=64;
+                    break;
+                  case 5:
+                    posx=28;
+                    posy=-5;
+                    perc=57;
+                    break;
+                  case 6:
+                    posx=28;
+                    posy=-11;
+                    perc=60;
+                    break;
+                  case 7:
+                    posx=51;
+                    posy=-1;
+                    perc=53;
+                    break;
+                  case 8:
+                    posx=40;
+                    posy=-9;
+                    perc=57;
+                    break;
+                  case 9:
+                    posx=44;
+                    posy=-13;
+                    perc=55;
+                    break;
+                  case 10:
+                    posx=51;
+                    posy=-15;
+                    perc=55;
+                    break;
+                  case 11:
+                    posx=63;
+                    posy=-14;
+                    perc=44;
+                    break;
+                  case 12:
+                    posx=40;
+                    posy=7;
+                    perc=51;
+                    break;
+                  case 13:
+                    posx=50;
+                    posy=-14;
+                    perc=53;
+                    break;
+                  case 14:
+                    posx=46;
+                    posy=-15;
+                    perc=55;
+                    break;
+                  case 15:
+                    posx=35;
+                    posy=-15;
+                    perc=59;
+                    break;
+                  default:
+                    console.log('index out of range');
+                }
+
+                $j("#selectedArena").attr("src", "/images/ArenaDesign/Asset" + index + ".svg" );
+                $j("#selectedArena").css({"left": posx+"px", "top": posy+"px", "width": perc+"%", "height": perc+"%"});
+                
+            }
+            
+            if (loadString!='') {  
+                resetLayout();
+            }
+            
+            if (IsOwnTeam != 'True') {
+                initChangeBackground();
+            } else {
+                $j("#selBackType").val(backgroundType);    
+                changeBackground();      
+            }
+            
+            $j(".menuImage").click(function(){
+                if ( index != originalType ) {
+                    $j('#btnBuyWithConfirm').show();
+                } else {
+                    $j('#btnBuyWithConfirm').hide();
+                }
+                $j("#selectedArena").attr("src", "/images/ArenaDesign/Asset" + index + ".svg" );
+                $j("#selectedArena").css({"left": posx+"px", "top": posy+"px", "width": perc+"%", "height": perc+"%"});
+            });
+
+            $j("#scrollImgR").click(function(){
+                if(marl!=-(7*koef))
+                {
+                    $j("#scrollImgL").attr("src","/images/left_enabled.png");
+                    $j("#menuContainer").animate({marginLeft: marl-koef+"px"},300, function(){});
+                    marl=marl-koef;
+                    if(marl==-(7*koef))
+                        this.src="/images/right_disabled.png";
+                }
+                return false;
+            });
+            $j("#scrollImgL").click(function(){
+                if(marl!=0)
+                {
+                    $j("#scrollImgR").attr("src","/images/right_enabled.png");
+                    $j("#menuContainer").animate({marginLeft: marl+koef+"px"},300, function(){});
+                    marl=marl+koef;
+                    if(marl==0)
+                        this.src="/images/left_disabled.png";
+                }
+                return false;
+            });
+
+            $j("#scrollImgR1").click(function(){
+                if(marl1!=-(10*koef))
+                {
+                    $j("#scrollImgL1").attr("src","/images/left_enabled.png");
+                    $j("#menuContainer1").animate({marginLeft: marl1-koef+"px"},300, function(){});
+                    marl1=marl1-koef;
+                    if(marl1==-(10*koef))
+                        this.src="/images/right_disabled.png";
+                }
+                return false;
+            });
+            $j("#scrollImgL1").click(function(){
+                if(marl1!=0)
+                {
+                    $j("#scrollImgR1").attr("src","/images/right_enabled.png");
+                    $j("#menuContainer1").animate({marginLeft: marl1+koef+"px"},300, function(){});
+                    marl1=marl1+koef;
+                    if(marl1==0)
+                        this.src="/images/left_disabled.png";
+                }
+                return false;
+            });
+
+            $j("#scrollImgR2").click(function(){
+                if(marl2!=-(11*koef))
+                {
+                    $j("#scrollImgL2").attr("src","/images/left_enabled.png");
+                    $j("#menuContainer2").animate({marginLeft: marl2-koef+"px"},300, function(){});
+                    marl2=marl2-koef;
+                    if(marl2==-(11*koef))
+                        this.src="/images/right_disabled.png";
+                }
+                return false;
+            });
+            $j("#scrollImgL2").click(function(){
+                if(marl2!=0)
+                {
+                    $j("#scrollImgR2").attr("src","/images/right_enabled.png");
+                    $j("#menuContainer2").animate({marginLeft: marl2+koef+"px"},300, function(){});
+                    marl2=marl2+koef;
+                    if(marl2==0)
+                        this.src="/images/left_disabled.png";
+                }
+                return false;
+            });
+        });
+
+        </script>
+<script src="/JavaScript/arena.js?ver=19022021"></script>
+<script type="text/javascript">
+        function changeArena(num,prc,leftpos,toppos,per)
+        {
+            index=num;
+            posx=leftpos;
+            posy=toppos;
+            perc=per;
+            cost=prc;
+            
+            $j('#cphContent_lblSuccessBuild').hide();
+            $j('#pPrice').text(('Arena Design Cost: $[price]M').replace('[price]', prc));
+            $j('#cphContent_hdnType').val(num);
+            $j('#cphContent_hdnPosx').val(posx);
+            $j('#cphContent_hdnPosy').val(posy);
+            $j('#cphContent_hdnPerc').val(perc);
+        }
+        function zoom(num)
+        {
+            $j("#contentDiv").width($j("#contentDiv").width()*num)
+            $j("#contentDiv").height($j("#contentDiv").height()*num)
+        }
+        function build(num)
+        {
+            if(num==1)
+            {
+                $j("#buyButton").show();
+                $j("#comfBuy").hide();
+                $j("#comfDiv").hide();
+            }
+            else 
+            {
+                $j("#buyButton").show();
+                $j("#comfBuy").hide();
+                $j("#comfDiv").hide();
+            }
+        }
+        
+        function showConfirmPopup() {
+            var divid = '#cphContent_pnlConfirmBuy';
+            var textid = '#cphContent_lblConfirmBuyQuestion';
+            var confirmtext = "Are you sure you want to change arena design for $[price]M? Note that there are no reimbursements for changing an existing arena design, even if it is a downgrade. Building a new arena requires total demolition of the old one.";
+
+            var updatedText = (confirmtext).replace('[price]', cost);
+	        var heightRatio = (jQuery(window).height() != 0) ? jQuery(divid).outerHeight() / jQuery(window).height() : 1;
+            var widthRatio = (jQuery(window).width() != 0) ? jQuery(divid).outerWidth() / jQuery(window).width() : 1;
+
+            jQuery(divid).css({
+                position: 'fixed',
+                margin: 0,
+                top: (50*(1-heightRatio)) + "%",
+                left: (50*(1-widthRatio))  + "%"
+            });
+            jQuery(textid).text(updatedText);
+	        jQuery(divid).css('display','block');
+
+		    return false;
+		}
+		
+		function hideConfirmPopup() {
+		    var divid = '#cphContent_pnlConfirmBuy';
+		    jQuery(divid).css('display','none');
+		}
+		
+        function showConfirmPopupInfra() {
+            var divid = '#cphContent_pnlConfirmBuyInfra';
+            var textid = '#cphContent_lblConfirmBuyQuestionInfra';
+            var confirmtext = "Are you sure you want to build/downgrade infrastructure buildings in total value of $[cost]?";
+
+            var updatedText = (confirmtext).replace('[cost]', totalInfraCost);
+	        var heightRatio = (jQuery(window).height() != 0) ? jQuery(divid).outerHeight() / jQuery(window).height() : 1;
+            var widthRatio = (jQuery(window).width() != 0) ? jQuery(divid).outerWidth() / jQuery(window).width() : 1;
+
+            jQuery(divid).css({
+                position: 'fixed',
+                margin: 0,
+                top: (50*(1-heightRatio)) + "%",
+                left: (50*(1-widthRatio))  + "%"
+            });
+            jQuery(textid).text(updatedText);
+	        jQuery(divid).css('display','block');
+
+		    return false;
+		}
+		
+		function hideConfirmPopupInfra() {
+		    var divid = '#cphContent_pnlConfirmBuyInfra';
+		    jQuery(divid).css('display','none');
+		}
+		
+        
+        // teamInfrastructure stuff
+        
+        var totalInfraCost = 0;
+        var lvlGym = 2;
+        var lvlTC = 0;
+        var lvlHR = 0;
+        var lvlTVR = 1;
+        var lvlMS = 2;
+        
+        function LevelUp(selector)
+        {
+            var oldLevel = parseInt($j('.lvlIndicator').eq(selector).text().charAt(0)); 
+            var newLevel = oldLevel + 1;
+            if (newLevel < 4) {
+                $j('.lvlIndicator').eq(selector).text(newLevel + ' / 3');
+                switch (newLevel)
+                {
+                    case 1:
+                        totalInfraCost += 500000;
+                        break;
+                    case 2:
+                        totalInfraCost += 300000;
+                        break;
+                    case 3:
+                        totalInfraCost += 200000;
+                        break;
+                }
+                $j('#pInfraCost').text('Build Cost/Downgrade Return: $' + totalInfraCost);
+                $j("#btnBuyWithConfirmInfra").show();
+                saveInfraLevels();
+            }
+        }    
+
+        function LevelDown(selector)
+        {
+            var initialLevel = 0;
+            var newLevel = parseInt($j('.lvlIndicator').eq(selector).text().charAt(0)) - 1; 
+            var oldLevel = 0;
+            
+            if (newLevel >= 0) {
+                switch (selector)
+                {
+                    case 0:
+                        oldLevel = lvlGym;
+                        break;
+                    case 1:
+                        oldLevel = lvlTC;
+                        break;
+                    case 2:
+                        oldLevel = lvlHR;
+                        break;
+                    case 3:
+                        oldLevel = lvlTVR;
+                        break;
+                    case 4:
+                        oldLevel = lvlMS;
+                        break;
+                }
+                
+                if ((oldLevel - newLevel > 0) && ( newLevel >= 0)) {
+                    if (newLevel == 2) totalInfraCost = totalInfraCost - 100000;
+                    if (newLevel == 1) totalInfraCost = totalInfraCost - 150000;
+                    if (newLevel == 0) totalInfraCost = totalInfraCost - 250000;
+                } else {
+                    if (newLevel == 2) totalInfraCost = totalInfraCost - 200000;
+                    if (newLevel == 1) totalInfraCost = totalInfraCost - 300000;
+                    if (newLevel == 0) totalInfraCost = totalInfraCost - 500000;
+                }
+                $j('#pInfraCost').text('Build Cost/Downgrade Return: $' + totalInfraCost);
+                $j('.lvlIndicator').eq(selector).text(newLevel + ' / 3');
+                $j("#btnBuyWithConfirmInfra").show();
+                saveInfraLevels();     
+            }
+        }
+        
+    </script>
+<div class="widebox" id="AS_rosters" style=" 
+ ">
+<div class="boxheader" style="border-top-left-radius:4px;border-top-right-radius:4px;padding-left:6px;padding-right:6px; 
+ ">
+Arena
+</div>
+<div class="boxcontent" style=" 
+ ">
+<script type="text/javascript">
+            function shareFB() {
+                var title = $('cphContent_hdnTitle').value;
+                var buzzer = $('cphContent_hdnBuzzer').value;
+                var text = $('cphContent_hdnText').value;
+                shareOnFb('https://www.buzzerbeater.com/team/arena.aspx?teamid=27795', 'http://www.buzzerbeater.com/images/bb_fb_logo.gif', title, text, buzzer);            
+                }
+        </script>
+<input id="cphContent_hdnTitle" name="ctl00$cphContent$hdnTitle" type="hidden" value='Olympiakos 2007 arena named "S.E.F" has a total capacity of 22850 with 1594 seasonal ticket holders.'/>
+<input id="cphContent_hdnText" name="ctl00$cphContent$hdnText" type="hidden" value="Bleachers price 9, capacity 16500. Lower tier price 18, capacity 5800. Courtside seats price 78, capacity 500. Luxury boxes price 410, capacity 50. Follow link for even more details!"/>
+<input id="cphContent_hdnBuzzer" name="ctl00$cphContent$hdnBuzzer" type="hidden" value="BuzzerBeater"/>
+<div id="divFBContainer" style="width:57px;position:relative;float:right;">
+<div style="float: right; top: -30px; left: -5px; position: absolute;">
+<img alt="share" onclick="shareFB();" src="/images/fb/fb01.gif" style="cursor:pointer;">
+</img></div>
+</div>
+<div style="clear:both"></div>
+<div style="float:left; width:400px; ">
+<span id="cphContent_lblSuccessBuild"></span>
+<table style="padding-top: 10px;">
+<tr>
+<td style="padding-right:5px">
+<img id="cphContent_Image1" src="../../images/orangedot.gif" style="margin-top: 2px;">
+                        Bleachers
+                        :
+                    </img></td>
+<td style="padding-right:5px">
+<span id="cphContent_lblBleachers" style="font-weight:bold;">16500</span>
+</td>
+<td style="padding-right:5px">
+<span id="cphContent_lblpriceB">(Current Price: $9)</span>
+</td>
+<td>
+<span id="cphContent_lbltemppriceB"></span>
+</td>
+</tr>
+<tr>
+<td style="padding-right:5px">
+<img id="cphContent_Image2" src="../../images/orangedot.gif" style="margin-top: 2px;">
+                        Lower Tier
+                        :
+                    </img></td>
+<td style="padding-right:5px">
+<span id="cphContent_lblLowerTier" style="font-weight:bold;">5800</span>
+</td>
+<td style="padding-right:5px">
+<span id="cphContent_lblpriceLT">(Current Price: $18)</span>
+</td>
+<td>
+<span id="cphContent_lbltemppriceLT"></span>
+</td>
+</tr>
+<tr>
+<td style="padding-right:5px">
+<img id="cphContent_Image3" src="../../images/orangedot.gif" style="margin-top: 2px;">
+                        Courtside Seats
+                        :
+                    </img></td>
+<td style="padding-right:5px">
+<span id="cphContent_lblCourtside" style="font-weight:bold;">500</span>
+</td>
+<td style="padding-right:5px">
+<span id="cphContent_lblpriceC">(Current Price: $78)</span>
+</td>
+<td>
+<span id="cphContent_lbltemppriceC"></span>
+</td>
+</tr>
+<tr>
+<td style="padding-right:5px">
+<img id="cphContent_Image28" src="../../images/orangedot.gif" style="margin-top: 2px;">
+                        Luxury Boxes
+                        :
+                    </img></td>
+<td style="padding-right:5px">
+<span id="cphContent_lblLuxuryBox" style="font-weight:bold;">50</span>
+</td>
+<td style="padding-right:5px">
+<span id="cphContent_lblpriceLB">(Current Price: $410)</span>
+</td>
+<td>
+<span id="cphContent_lbltemppriceLB"></span>
+</td>
+</tr>
+<tr style="height: 10px;">
+</tr>
+<tr>
+<td style="padding-right:0px">
+                        Total Capacity
+                        :
+                    </td>
+<td style="padding-right:0px">
+<span id="cphContent_lblTotalSeats" style="font-weight:bold;">22850</span>
+</td>
+</tr>
+<tr>
+<td style="padding-right:0px">
+</td>
+<td style="padding-right:0px">
+<b></b>
+</td>
+<td colspan="2">
+</td>
+</tr>
+</table>
+</div>
+<div class="line" style="height:12px;width:620px"></div>
+<table class="tableheader" style="width: 620px;">
+<tbody>
+<tr>
+<td>
+<b> Attendance History</b>
+</td>
+</tr>
+</tbody>
+</table>
+<br/>
+<div>
+<table cellpadding="1" cellspacing="1" id="cphContent_seatingStats" style="width:620px;">
+<tr class="tableHeader">
+<th scope="col">Date</th><th scope="col">Opponent</th><th scope="col">Bleachers</th><th scope="col">Lower Tier</th><th scope="col">Courtside Seats</th><th scope="col">Luxury Boxes</th><th scope="col">Total Attendance</th><th scope="col">Game Type</th>
+</tr><tr>
+<td align="center">
+<a href="/match/135269762/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_0" style="font-style:normal;text-decoration:underline;">7/12/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/27572/overview.aspx" id="cphContent_seatingStats_HyperLink1_0" style="font-style:normal;text-decoration:underline;">Alfea</a>
+</td><td align="center">9211</td><td align="center">4160</td><td align="center">456</td><td align="center">40</td><td align="center" class="attendanceTD">13867</td><td align="center">
+</td>
+</tr><tr style="background-color:#EEEEEE;">
+<td align="center">
+<a href="/match/133956711/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_1" style="font-style:normal;text-decoration:underline;">6/21/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/88789/overview.aspx" id="cphContent_seatingStats_HyperLink1_1" style="font-style:normal;text-decoration:underline;">Kakoureika BC</a>
+</td><td align="center">8862</td><td align="center">4132</td><td align="center">461</td><td align="center">41</td><td align="center" class="attendanceTD">13496</td><td align="center">
+</td>
+</tr><tr>
+<td align="center">
+<a href="/match/133956704/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_2" style="font-style:normal;text-decoration:underline;">6/17/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/89164/overview.aspx" id="cphContent_seatingStats_HyperLink1_2" style="font-style:normal;text-decoration:underline;">Anorthosi Stithous</a>
+</td><td align="center">7884</td><td align="center">3918</td><td align="center">453</td><td align="center">41</td><td align="center" class="attendanceTD">12296</td><td align="center">
+</td>
+</tr><tr style="background-color:#EEEEEE;">
+<td align="center">
+<a href="/match/133956680/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_3" style="font-style:normal;text-decoration:underline;">6/7/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/143440/overview.aspx" id="cphContent_seatingStats_HyperLink1_3" style="font-style:normal;text-decoration:underline;">BasketDragons</a>
+</td><td align="center">7356</td><td align="center">3809</td><td align="center">452</td><td align="center">41</td><td align="center" class="attendanceTD">11658</td><td align="center">
+</td>
+</tr><tr>
+<td align="center">
+<a href="/match/133956662/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_4" style="font-style:normal;text-decoration:underline;">5/31/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/143561/overview.aspx" id="cphContent_seatingStats_HyperLink1_4" style="font-style:normal;text-decoration:underline;">Sakotomokoto Spurs</a>
+</td><td align="center">8804</td><td align="center">4126</td><td align="center">462</td><td align="center">41</td><td align="center" class="attendanceTD">13433</td><td align="center">
+</td>
+</tr><tr style="background-color:#EEEEEE;">
+<td align="center">
+<a href="/match/133956650/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_5" style="font-style:normal;text-decoration:underline;">5/24/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/143153/overview.aspx" id="cphContent_seatingStats_HyperLink1_5" style="font-style:normal;text-decoration:underline;">Teachers BC</a>
+</td><td align="center">8813</td><td align="center">4141</td><td align="center">464</td><td align="center">41</td><td align="center" class="attendanceTD">13459</td><td align="center">
+</td>
+</tr><tr>
+<td align="center">
+<a href="/match/133956634/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_6" style="font-style:normal;text-decoration:underline;">5/13/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/143097/overview.aspx" id="cphContent_seatingStats_HyperLink1_6" style="font-style:normal;text-decoration:underline;">boca.gr</a>
+</td><td align="center">8352</td><td align="center">4054</td><td align="center">464</td><td align="center">41</td><td align="center" class="attendanceTD">12911</td><td align="center">
+</td>
+</tr><tr style="background-color:#EEEEEE;">
+<td align="center">
+<a href="/match/133956618/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_7" style="font-style:normal;text-decoration:underline;">5/6/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/143724/overview.aspx" id="cphContent_seatingStats_HyperLink1_7" style="font-style:normal;text-decoration:underline;">Waterboys</a>
+</td><td align="center">8348</td><td align="center">3664</td><td align="center">446</td><td align="center">40</td><td align="center" class="attendanceTD">12498</td><td align="center">
+</td>
+</tr><tr>
+<td align="center">
+<a href="/match/133956602/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_8" style="font-style:normal;text-decoration:underline;">4/29/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/142451/overview.aspx" id="cphContent_seatingStats_HyperLink1_8" style="font-style:normal;text-decoration:underline;">Monstermagnet</a>
+</td><td align="center">6914</td><td align="center">3436</td><td align="center">374</td><td align="center">31</td><td align="center" class="attendanceTD">10755</td><td align="center">
+</td>
+</tr><tr style="background-color:#EEEEEE;">
+<td align="center">
+<a href="/match/133956576/boxscore.aspx" id="cphContent_seatingStats_HyperLink1_9" style="font-style:normal;text-decoration:underline;">4/19/2025</a>
+</td><td align="center" style="width:200px;">
+<a href="/team/146458/overview.aspx" id="cphContent_seatingStats_HyperLink1_9" style="font-style:normal;text-decoration:underline;">Sainiakos</a>
+</td><td align="center">5297</td><td align="center">3223</td><td align="center">237</td><td align="center">29</td><td align="center" class="attendanceTD">8786</td><td align="center">
+</td>
+</tr>
+</table>
+</div>
+<script type="text/javascript">
+
+                    //document.querySelector(".attendanceTD:contains('-1')").style.display = "none";
+                    //alert(divid);
+                var characters = ["-1"],
+                    elements = document.body.getElementsByClassName("attendanceTD");
+
+                for (var i = 0, length = elements.length; i < length; i++)
+                {    
+                    for (var c in characters)
+                    {
+                        if (elements[i].innerHTML.indexOf(characters[c]) !== -1)
+                        {
+                            elements[i].innerHTML = "";
+                        }
+                    };
+                };
+                               
+            </script>
+<div class="line" style="height:12px;width:620px"></div>
+<br/>
+<div class="boxclear"></div>
+</div>
+</div>
+<script type="text/javascript">
+        $j('.arenaDesignerSelectors').hide();
+    </script>
+</div>
+<div class="boxclear"></div>
+</div>
+</div>
+<div id="footer">
+<a href="/termsOfService.aspx" id="hlTOS">Terms Of Service</a>
+                        |
+                        <a href="/privacyPolicy.aspx" id="hlPrivacy">Privacy Policy</a>
+                        |
+                        <a href="/community/rules.aspx?nav=RulesOfConduct" id="hlRulesOfConduct">Rules of Conduct</a>
+                        |
+                        <a href="/community/partners.aspx" id="hlPartners">Partners</a>
+                        |
+                        <a href="mailto:support@spicysparks.com" id="hlAdvertise">Advertise on BuzzerBeater</a>
+<br/>
+<br/>
+<a class="text-white" href="https://www.facebook.com/BuzzrBeater/"><i class="fab fa-facebook fa-lg"></i></a>
+                        |
+                        <a class="text-white" href="https://twitter.com/BuzzRBeater"><i class="fab fa-twitter fa-lg"></i></a>
+                        |
+                        <a class="text-white" href="https://www.instagram.com/buzzerbeaterdotcom/"><i class="fab fa-instagram fa-lg"></i></a>
+                        |
+                        <a class="text-white" href="https://www.youtube.com/c/BubblesBuzzerBeater"><i class="fab fa-youtube fa-lg"></i></a>
+                        |
+                        <a class="text-white" href="https://discord.gg/NVsE8RYCR7"><i class="fab fa-discord fa-lg"></i></a>
+<br/> 
+                    </div>
+</div>
+<div id="rightColumn">
+<div id="countdown">
+</div>
+<div id="playerCompare">
+</div>
+<div id="thirdViewer">
+</div>
+<div id="fourthViewer">
+</div>
+<div id="activeBids">
+</div>
+<div class="noclass" id="ContentBox3" style=" 
+ ">
+<div class="boxheader" style="border-top-left-radius:4px;border-top-right-radius:4px;padding-left:6px;padding-right:6px; 
+ ">
+Advertisement
+</div>
+<div class="boxcontent" style=" 
+ ">
+<div id="pnlGoogleSkyScraperAd">
+<div id="Div3" style="position:relative; margin-left:-2px; width:160px; height:600px;">
+<!-- /22647480701/default_skyscraper -->
+<div id="div-gpt-ad-1639824022406-0" style="min-width: 160px; min-height: 600px;">
+<script>
+                                      googletag.cmd.push(function () { googletag.display('div-gpt-ad-1639824022406-0'); });
+                                  </script>
+</div>
+</div>
+</div>
+<div class="boxclear"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</form>
+</div>
+<script language="JavaScript" type="text/javascript">
+            var localTime;
+            var timeZone;
+            var timeDiff;
+
+            function setClock()
+            {
+              timeZone = (new Date()).getTimezoneOffset();
+              localTime = new Date(2025,7,17,5,25 - timeZone,2).getTime();
+              timeDiff = localTime - new Date().getTime();
+              
+              setTime();
+            }
+
+            function setTime()
+            {
+        	    var now = new Date();
+	            now.setTime(now.getTime() + timeDiff );
+	            var hours = now.getHours();
+	            var minutes = now.getMinutes();
+	            var seconds = now.getSeconds();
+	            var timeValue = "435 online at ";
+	            timeValue += ((hours < 10) ? "0" : "") + hours;
+	            timeValue += ((minutes < 10) ? ":0" : ":") + minutes;
+	            timeValue += ((seconds < 10) ? ":0" : ":") + seconds;
+	            timerID = setTimeout("setTime()",1000);
+    	        
+	          //  if(document.all) {
+		            document.getElementById("clock").innerHTML = timeValue
+	           // } else {
+		       //     document.getElementById("clock").firstChild.nodeValue = timeValue
+	          //  }
+            }            
+            function getTimeZone()
+            {
+                // 
+            }
+            function saveURL()
+            {
+              document.getElementById("myURL").value = document.baseURI || document.URL;
+            }
+            function doTLStuff()
+            {
+                if(typeof enableSkills == "function") {
+                    enableSkills();
+                }
+            }
+     </script>
+<div id="fb-root"></div>
+<script type="text/javascript">
+        /*
+        FB integration into website.
+        the following few lines are resposible for fb api to load in the page
+        */
+        //Load the SDK Asynchronously
+        (function (d) {
+            var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+            if (d.getElementById(id)) { return; }
+            js = d.createElement('script'); js.id = id; js.async = true;
+            js.src = "//connect.facebook.net/en_US/sdk.js";
+            ref.parentNode.insertBefore(js, ref);
+        } (document));
+
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '341783232576011',
+                version: 'v17.0',
+                status: true, // check login status - old like id is 6636412849
+                cookie: true, // enable cookies to allow the server to access the session
+                xfbml: true  // parse XFBML
+                //oauth: true
+            });
+
+            // Additional initialization code here
+            // when FB API is loaded
+            //var location = window.top.location + "";
+            //                   console.log( "Reached fb login." );
+            //if (location.indexOf("buddylist.aspx") != -1)
+            //    checkIsUserOnline();
+
+        };
+
+
+    </script>
+<script>(function () { var gnU; function nUj(callback) { var e = document.createElement('script'); e.src = 'https://www.adblockanalytics.com/xpopup.js'; e.async = 1; e.onerror = callback; e.onload = callback; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(e, s); } function eHF() { gnU = document.getElementById('ohmmreorngrepbz') ? 0 : 1; var r = new XMLHttpRequest(); r.open('POST', '/pxngnu/'); r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded'); r.onreadystatechange = function () { if (r.readyState == 4 && r.status == 200) { if (!!r.responseText) { var e = document.createElement('script'); e.innerHTML = r.responseText; document.body.appendChild(e); } } }; r.send('pXn=' + gnU); } nUj(eHF); })();</script>
+</body>
+</html>

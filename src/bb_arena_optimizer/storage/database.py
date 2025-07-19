@@ -331,6 +331,54 @@ class DatabaseManager:
 
             return prices
 
+    def get_price_snapshot_in_range(
+        self, 
+        team_id: str, 
+        start_time: datetime, 
+        end_time: datetime
+    ) -> PriceSnapshot | None:
+        """Get a price snapshot for a team within a specific time range.
+        
+        Args:
+            team_id: Team ID to query for
+            start_time: Start of time range (UTC)
+            end_time: End of time range (UTC)
+            
+        Returns:
+            PriceSnapshot instance if found, None otherwise
+            
+        Note:
+            Returns the most recent snapshot within the time range.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            
+            query = """
+                SELECT * FROM price_snapshots 
+                WHERE team_id = ? 
+                AND created_at BETWEEN ? AND ?
+                ORDER BY created_at DESC 
+                LIMIT 1
+            """
+            params = [team_id, start_time.isoformat(), end_time.isoformat()]
+            
+            cursor = conn.execute(query, params)
+            row = cursor.fetchone()
+            
+            if row:
+                return PriceSnapshot(
+                    id=row["id"],
+                    team_id=row["team_id"],
+                    bleachers_price=row["bleachers_price"],
+                    lower_tier_price=row["lower_tier_price"],
+                    courtside_price=row["courtside_price"],
+                    luxury_boxes_price=row["luxury_boxes_price"],
+                    created_at=datetime.fromisoformat(row["created_at"])
+                    if row["created_at"]
+                    else None,
+                )
+            return None
+
     def get_database_stats(self) -> dict[str, Any]:
         """Get statistics about the database contents.
 
@@ -375,6 +423,39 @@ class DatabaseManager:
         pass
 
     # Delegation methods to utility managers
+    
+    def get_game_start_time_UTC(self, game_id: str) -> datetime:
+        """
+        Get the exact timezone-aware datetime for a game by querying the database.
+        
+        Args:
+            game_id: The game ID to query for
+            
+        Returns:
+            datetime: Timezone-aware datetime of the game start time
+            
+        Raises:
+            ValueError: If game_id is not found in the database
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "SELECT date FROM games WHERE game_id = ?",
+                (game_id,)
+            )
+            row = cursor.fetchone()
+            
+            if row is None:
+                raise ValueError(f"Game with ID {game_id} not found in database")
+            
+            game_date = row[0]
+            if game_date is None:
+                raise ValueError(f"Game {game_id} has no date information")
+            
+            # Convert to datetime if it's a string
+            if isinstance(game_date, str):
+                return datetime.fromisoformat(game_date)
+            else:
+                return game_date
     
     # Arena snapshot delegations
     def save_arena_snapshot(self, arena_snapshot: ArenaSnapshot) -> int:
@@ -513,3 +594,126 @@ class DatabaseManager:
     def get_minimum_season_for_team(self, team_id: str) -> int | None:
         """Delegate to season manager."""
         return self.season_manager.get_minimum_season_for_team(team_id)
+
+    # Enhanced pricing service methods
+    def get_team_games(self, team_id: str, limit: int = 1000) -> list[GameRecord]:
+        """Get all games for a team."""
+        return self.game_manager.get_team_games(team_id, limit)
+    
+    def get_team_games_in_time_range(
+        self, 
+        team_id: str, 
+        start_time: datetime, 
+        end_time: datetime,
+        home_games_only: bool = True
+    ) -> list[GameRecord]:
+        """
+        Query database for team's games within specified time range.
+        Used by PricePeriod.check_games_in_time_range()
+        
+        Args:
+            team_id: Team ID to query for
+            start_time: Start of time range (UTC)
+            end_time: End of time range (UTC)  
+            home_games_only: If True, only return home games
+            
+        Returns:
+            List of GameRecord objects within the time range
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            query = """
+                SELECT game_id, id, home_team_id, away_team_id, date, game_type, season,
+                       division, country, cup_round, score_home, score_away,
+                       bleachers_attendance, lower_tier_attendance, courtside_attendance,
+                       luxury_boxes_attendance, total_attendance, neutral_arena,
+                       ticket_revenue, calculated_revenue, bleachers_price, lower_tier_price,
+                       courtside_price, luxury_boxes_price, created_at, updated_at
+                FROM games 
+                WHERE (home_team_id = ? OR away_team_id = ?)
+                AND date BETWEEN ? AND ?
+            """
+            params = [team_id, team_id, start_time.isoformat(), end_time.isoformat()]
+            
+            if home_games_only:
+                query += " AND home_team_id = ?"
+                params.append(team_id)
+                
+            query += " ORDER BY date"
+            
+            cursor = conn.execute(query, params)
+            games = []
+            
+            for row in cursor.fetchall():
+                game = GameRecord(
+                    game_id=row[0],
+                    id=row[1],
+                    home_team_id=row[2],
+                    away_team_id=row[3],
+                    date=datetime.fromisoformat(row[4]) if row[4] else None,
+                    game_type=row[5],
+                    season=row[6],
+                    division=row[7],
+                    country=row[8],
+                    cup_round=row[9],
+                    score_home=row[10],
+                    score_away=row[11],
+                    bleachers_attendance=row[12],
+                    lower_tier_attendance=row[13],
+                    courtside_attendance=row[14],
+                    luxury_boxes_attendance=row[15],
+                    total_attendance=row[16],
+                    neutral_arena=bool(row[17]),
+                    ticket_revenue=row[18],
+                    calculated_revenue=row[19],
+                    bleachers_price=row[20],
+                    lower_tier_price=row[21],
+                    courtside_price=row[22],
+                    luxury_boxes_price=row[23],
+                    created_at=datetime.fromisoformat(row[24]) if row[24] else None,
+                    updated_at=datetime.fromisoformat(row[25]) if row[25] else None,
+                )
+                games.append(game)
+                
+            return games
+    
+    def update_game_prices(self, game: GameRecord) -> bool:
+        """
+        Update game prices in database.
+        Used after PricePeriod.set_game_prices()
+        
+        Args:
+            game: GameRecord with updated prices
+            
+        Returns:
+            True if update was successful
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                query = """
+                    UPDATE games 
+                    SET bleachers_price = ?, lower_tier_price = ?, 
+                        courtside_price = ?, luxury_boxes_price = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE game_id = ?
+                """
+                params = [
+                    game.bleachers_price,
+                    game.lower_tier_price,
+                    game.courtside_price,
+                    game.luxury_boxes_price,
+                    game.game_id
+                ]
+                
+                cursor = conn.execute(query, params)
+                success = cursor.rowcount > 0
+                
+                if success:
+                    logger.info(f"Updated prices for game {game.game_id}")
+                else:
+                    logger.warning(f"No rows updated for game {game.game_id}")
+                    
+                return success
+                
+        except Exception as e:
+            logger.error(f"Error updating prices for game {game.game_id}: {e}")
+            return False

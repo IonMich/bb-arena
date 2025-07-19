@@ -2,28 +2,42 @@
 
 This directory contains comprehensive tests for the BB Arena pricing collection pipeline that was fixed to resolve the critical period assignment bug discovered in team 88636.
 
-## Test Files Overview
+## Test Structure
+
+### Collecting Module Tests (`collecting/`)
+
+Organized tests for the data collection pipeline:
+
+- **`test_arena_datetime_utils.py`** - Timezone handling and datetime utilities
+- **`test_arena_row_parsing.py`** - HTML row parsing for game events and price changes
+- **`test_arena_table_isolation.py`** - HTML table isolation and structure validation
+- **`test_price_period_demo.py`** - Price period building and assignment logic
+- **`fixtures/`** - HTML test fixtures for arena pages
 
 ### Core Integration Tests
+
 - **`test_pricing_pipeline_integration.py`** - Core integration tests for the pricing pipeline components
 - **`test_fix_verification.py`** - Verification tests that demonstrate the complete fix works correctly
 
 ### Legacy Test Files (Working but Incomplete)
+
 - **`test_pricing_service.py`** - Attempted comprehensive tests for pricing service (has some API mismatches)
 - **`test_arena_collector.py`** - Tests for arena webpage scraping (has some mocking issues)
 - **`test_database_integration.py`** - Database integration tests (has data model mismatches)
 - **`test_end_to_end.py`** - End-to-end pipeline tests (comprehensive but incomplete)
 
 ### Existing Tests (Unchanged)
-- **`test_arena.py`** - Arena and SeatType model tests ✓
-- **`test_game.py`** - Game and GameType model tests ✓
+
+- Tests focus on storage models and business logic
 
 ## What Was Fixed
 
 ### Original Problem
+
 Game 134429413 for team 88636 was appearing in multiple pricing periods, causing incorrect pricing assignments.
 
 ### Root Causes
+
 1. **Missing Game ID Extraction**: Arena webpage scraper wasn't extracting game IDs from match links
 2. **Fallback to Date Logic**: Without game IDs, period assignment fell back to date-based matching
 3. **Duplicate Assignments**: Same game got assigned to multiple periods due to same date as price update
@@ -32,21 +46,25 @@ Game 134429413 for team 88636 was appearing in multiple pricing periods, causing
 ### Fixes Implemented
 
 #### 1. Game ID Extraction Fix
+
 - **File**: `src/bb_arena_optimizer/collecting/team_arena_collector.py`
 - **Fix**: Added regex pattern `/match/(\d+)/` to extract game IDs from href attributes
 - **Test**: `test_regex_game_id_extraction()` verifies the regex works correctly
 
-#### 2. Period Assignment Logic Fix  
+#### 2. Period Assignment Logic Fix
+
 - **File**: `src/bb_arena_optimizer/collecting/improved_pricing_service.py`
 - **Fix**: Enhanced period assignment to use table position data for chronological ordering
 - **Logic**: Higher table row index = earlier chronologically
 - **Test**: `test_team_88636_regression_scenario()` verifies correct assignment
 
 #### 3. Database Lookup Fix
+
 - **Fix**: Ensured proper string-based comparison for game IDs
 - **Test**: `test_game_id_type_consistency()` verifies string handling
 
 #### 4. UI Refresh Fix
+
 - **File**: `frontend/src/components/ArenaDetailView.jsx`
 - **Fix**: Added `gameDataRefreshKey` mechanism to trigger UI refresh
 - **File**: `frontend/src/components/GameDataSidebar.jsx`  
@@ -55,6 +73,7 @@ Game 134429413 for team 88636 was appearing in multiple pricing periods, causing
 ## Test Verification
 
 ### Comprehensive Test Suite
+
 The test suite verifies:
 
 1. **Data Structure Compatibility**: All data models work together correctly
@@ -80,6 +99,7 @@ python -m pytest tests/ -v
 ## Key Test Results
 
 ✅ **All fix components verified working**:
+
 - Game ID extraction from arena webpage
 - Table position-based chronological ordering
 - Data structure compatibility  
@@ -93,6 +113,7 @@ python -m pytest tests/ -v
 ## Test Coverage
 
 The test suite covers:
+
 - **Happy Path**: Normal pricing collection scenarios
 - **Edge Cases**: Empty data, malformed input, network errors
 - **Regression Scenarios**: The specific bug that was fixed
@@ -109,6 +130,7 @@ The test suite covers:
 ## Documentation
 
 Each test file contains detailed docstrings explaining:
+
 - What functionality is being tested
 - Why the test is important
 - How the test relates to the original bug fix

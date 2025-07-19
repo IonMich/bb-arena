@@ -1,7 +1,7 @@
 """Game records database operations."""
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, UTC as datetime_utc
 from pathlib import Path
 from typing import Any
 
@@ -113,7 +113,7 @@ class GameRecordManager:
                     game_record.lower_tier_price,
                     game_record.courtside_price,
                     game_record.luxury_boxes_price,
-                    datetime.now(),
+                    datetime.now(datetime_utc),
                     game_record.game_id,
                 ),
             )
@@ -161,7 +161,7 @@ class GameRecordManager:
                         game_record.courtside_price,
                         game_record.luxury_boxes_price,
                         game_record.created_at,
-                        datetime.now(),
+                        datetime.now(datetime_utc),
                     ),
                 )
 
@@ -342,3 +342,63 @@ class GameRecordManager:
                     'courtside': 0,
                     'luxury_boxes': 0
                 }
+    
+    def get_team_games(self, team_id: str, limit: int = 1000) -> list[GameRecord]:
+        """Get all games for a team (both home and away).
+        
+        Args:
+            team_id: Team ID to get games for
+            limit: Maximum number of games to return
+            
+        Returns:
+            List of GameRecord objects
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            query = """
+                SELECT game_id, id, home_team_id, away_team_id, date, game_type, season,
+                       division, country, cup_round, score_home, score_away,
+                       bleachers_attendance, lower_tier_attendance, courtside_attendance,
+                       luxury_boxes_attendance, total_attendance, neutral_arena,
+                       ticket_revenue, calculated_revenue, bleachers_price, lower_tier_price,
+                       courtside_price, luxury_boxes_price, created_at, updated_at
+                FROM games 
+                WHERE home_team_id = ? OR away_team_id = ?
+                ORDER BY date DESC
+                LIMIT ?
+            """
+            
+            cursor = conn.execute(query, [team_id, team_id, limit])
+            games = []
+            
+            for row in cursor.fetchall():
+                game = GameRecord(
+                    game_id=row[0],
+                    id=row[1],
+                    home_team_id=row[2],
+                    away_team_id=row[3],
+                    date=datetime.fromisoformat(row[4]) if row[4] else None,
+                    game_type=row[5],
+                    season=row[6],
+                    division=row[7],
+                    country=row[8],
+                    cup_round=row[9],
+                    score_home=row[10],
+                    score_away=row[11],
+                    bleachers_attendance=row[12],
+                    lower_tier_attendance=row[13],
+                    courtside_attendance=row[14],
+                    luxury_boxes_attendance=row[15],
+                    total_attendance=row[16],
+                    neutral_arena=bool(row[17]),
+                    ticket_revenue=row[18],
+                    calculated_revenue=row[19],
+                    bleachers_price=row[20],
+                    lower_tier_price=row[21],
+                    courtside_price=row[22],
+                    luxury_boxes_price=row[23],
+                    created_at=datetime.fromisoformat(row[24]) if row[24] else None,
+                    updated_at=datetime.fromisoformat(row[25]) if row[25] else None,
+                )
+                games.append(game)
+                
+            return games

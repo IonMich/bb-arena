@@ -1,7 +1,7 @@
 """Database models for storing BuzzerBeater data."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, UTC as datetime_utc
 from typing import Any
 
 
@@ -40,7 +40,7 @@ class ArenaSnapshot:
                 "completion_date"
             ),
             expansion_cost=arena_data.get("expansion", {}).get("cost"),
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc)
         )
 
 
@@ -70,7 +70,7 @@ class PriceSnapshot:
             lower_tier_price=int(prices["lower_tier"]) if prices.get("lower_tier") is not None else None,
             courtside_price=int(prices["courtside"]) if prices.get("courtside") is not None else None,
             luxury_boxes_price=int(prices["luxury_boxes"]) if prices.get("luxury_boxes") is not None else None,
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc),
         )
 
 
@@ -191,7 +191,8 @@ class GameRecord:
             lower_tier_price=to_int_dollars(game_data.get("lower_tier_price")),
             courtside_price=to_int_dollars(game_data.get("courtside_price")),
             luxury_boxes_price=to_int_dollars(game_data.get("luxury_boxes_price")),
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc),
+            updated_at=datetime.now(datetime_utc)
         )
 
 
@@ -230,7 +231,7 @@ class Season:
             season_number=season_data.get("number"),
             start_date=start_date,
             end_date=end_date,
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc)  # Use UTC for consistency
         )
 
 
@@ -272,8 +273,8 @@ class TeamInfo:
             rival_id=team_data.get("rival_id"),
             rival_name=team_data.get("rival"),
             create_date=team_data.get("create_date"),
-            last_synced=datetime.now(),
-            created_at=datetime.now(),
+            last_synced=datetime.now(datetime_utc),
+            created_at=datetime.now(datetime_utc)
         )
 
 
@@ -299,7 +300,7 @@ class LeagueHierarchy:
             league_id=league_id,
             league_name=league_name,
             league_level=league_level,
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc),
         )
 
 
@@ -332,7 +333,7 @@ class TeamLeagueHistory:
             league_level=league_level,
             achievement=achievement,
             is_active_team=is_active_team,
-            created_at=datetime.now(),
+            created_at=datetime.now(datetime_utc)
         )
     
     def calculate_league_level(self) -> int | None:

@@ -61,17 +61,17 @@ def validate_games_in_database(game_events: List[GameEvent], db_manager: Databas
     missing_games = []
 
     for game in game_events:
-        # Convert game_id to int if it's a string
+        # Convert game_id to int if it's a string for validation
         try:
             game_id_int = int(game.game_id) if isinstance(game.game_id, str) else game.game_id
             if not isinstance(game_id_int, int) or game_id_int <= 0:
                 missing_games.append(f"Row {game.row_index}: invalid game_id {game.game_id}")
             else:
-                # Query database to check if game exists
+                # Query database to check if game exists (use original string game_id)
                 try:
-                    db_manager.get_game_start_time_UTC(game_id_int)
+                    db_manager.get_game_start_time_UTC(game.game_id)
                 except ValueError:
-                    missing_games.append(f"Row {game.row_index}: game_id {game_id_int} not found in database")
+                    missing_games.append(f"Row {game.row_index}: game_id {game.game_id} not found in database")
         except (ValueError, TypeError):
             missing_games.append(f"Row {game.row_index}: invalid game_id format {game.game_id}")
     

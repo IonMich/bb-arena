@@ -1,7 +1,7 @@
 """Season management database operations."""
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, UTC as datetime_utc
 from pathlib import Path
 from typing import Any
 
@@ -38,7 +38,7 @@ class SeasonManager:
                     season.season_number,
                     season.start_date.isoformat() if season.start_date else None,
                     season.end_date.isoformat() if season.end_date else None,
-                    season.created_at.isoformat() if season.created_at else datetime.now().isoformat()
+                    season.created_at.isoformat() if season.created_at else datetime.now(datetime_utc).isoformat()
                 ))
             conn.commit()
             logger.info(f"Saved {len(seasons)} seasons to database")
@@ -74,8 +74,8 @@ class SeasonManager:
         Returns:
             Current Season object or None if no season found
         """
-        now = datetime.now()
-        
+        now = datetime.now(datetime_utc)
+
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
                 SELECT season_number, start_date, end_date, created_at
@@ -132,15 +132,16 @@ class SeasonManager:
         latest_season = self.get_latest_season()
         if not latest_season:
             return True
-            
-        now = datetime.now()
-        
+
+        now = datetime.now(datetime_utc)
+
         # If the latest season has an end date and it has passed, we might need new seasons
         if latest_season.end_date:
-            # Make sure both datetimes are comparable (handle timezone issues)
+            # Ensure both datetimes are timezone-aware for comparison
             end_date = latest_season.end_date
-            if end_date.tzinfo is not None:
-                end_date = end_date.replace(tzinfo=None)
+            if end_date.tzinfo is None:
+                # If loaded date is naive, assume it's UTC
+                end_date = end_date.replace(tzinfo=datetime_utc)
             if end_date < now:
                 return True
             
@@ -148,8 +149,9 @@ class SeasonManager:
         # by comparing to historical season durations
         if not latest_season.end_date and latest_season.start_date:
             start_date = latest_season.start_date
-            if start_date.tzinfo is not None:
-                start_date = start_date.replace(tzinfo=None)
+            if start_date.tzinfo is None:
+                # If loaded date is naive, assume it's UTC
+                start_date = start_date.replace(tzinfo=datetime_utc)
             current_season_duration = (now - start_date).days
             
             # Get the maximum duration of all completed seasons as our threshold
@@ -172,8 +174,9 @@ class SeasonManager:
         # Check if we haven't updated seasons in a while (every 7 days)
         if latest_season.created_at:
             created_at = latest_season.created_at
-            if created_at.tzinfo is not None:
-                created_at = created_at.replace(tzinfo=None)
+            if created_at.tzinfo is None:
+                # If loaded date is naive, assume it's UTC
+                created_at = created_at.replace(tzinfo=datetime_utc)
             days_since_update = (now - created_at).days
             if days_since_update > 7:
                 return True
