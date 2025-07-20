@@ -168,12 +168,33 @@ class GameRecord:
             except (ValueError, TypeError):
                 return None
 
+        # Determine neutral_arena logic:
+        game_type = game_data.get("type")
+        # BBM and BBM playoff are always neutral, regardless of the field
+        if game_type in ["bbm", "bbm.playoff"]:
+            is_neutral = True
+        else:
+            # Use the neutral field from the API if present, else fallback to False
+            is_neutral = bool(game_data.get("neutral", 0))
+
+        # If neutral, clear prices
+        if is_neutral:
+            bleachers_price = None
+            lower_tier_price = None
+            courtside_price = None
+            luxury_boxes_price = None
+        else:
+            bleachers_price = to_int_dollars(game_data.get("bleachers_price"))
+            lower_tier_price = to_int_dollars(game_data.get("lower_tier_price"))
+            courtside_price = to_int_dollars(game_data.get("courtside_price"))
+            luxury_boxes_price = to_int_dollars(game_data.get("luxury_boxes_price"))
+
         return cls(
             game_id=game_data.get("id", ""),
             home_team_id=home_team_id,
             away_team_id=away_team_id,
             date=game_date,
-            game_type=game_data.get("type"),
+            game_type=game_type,
             season=game_data.get("season"),
             division=game_data.get("division"),
             country=game_data.get("country"),
@@ -185,12 +206,12 @@ class GameRecord:
             courtside_attendance=attendance_data.get("courtside") if isinstance(attendance_data, dict) else None,
             luxury_boxes_attendance=attendance_data.get("luxury_boxes") if isinstance(attendance_data, dict) else None,
             total_attendance=total_attendance,
-            neutral_arena=game_data.get("type") == "bbm",  # BBM games are currently played at neutral venues
+            neutral_arena=is_neutral,
             ticket_revenue=ticket_revenue,
-            bleachers_price=to_int_dollars(game_data.get("bleachers_price")),
-            lower_tier_price=to_int_dollars(game_data.get("lower_tier_price")),
-            courtside_price=to_int_dollars(game_data.get("courtside_price")),
-            luxury_boxes_price=to_int_dollars(game_data.get("luxury_boxes_price")),
+            bleachers_price=bleachers_price,
+            lower_tier_price=lower_tier_price,
+            courtside_price=courtside_price,
+            luxury_boxes_price=luxury_boxes_price,
             created_at=datetime.now(datetime_utc),
             updated_at=datetime.now(datetime_utc)
         )
@@ -320,9 +341,17 @@ class TeamLeagueHistory:
     created_at: datetime | None = None
     
     @classmethod
-    def from_webpage_data(cls, team_id: str, season: int, team_name: str, 
-                         league_id: str, league_name: str, league_level: int = None,
-                         achievement: str = None, is_active_team: bool = True) -> "TeamLeagueHistory":
+    def from_webpage_data(
+        cls,
+        team_id: str,
+        season: int,
+        team_name: str,
+        league_id: str,
+        league_name: str,
+        league_level: int | None = None,
+        achievement: str | None = None,
+        is_active_team: bool = True
+    ) -> "TeamLeagueHistory":
         """Create TeamLeagueHistory from parsed webpage data."""
         return cls(
             bb_team_id=team_id,

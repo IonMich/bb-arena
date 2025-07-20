@@ -80,7 +80,7 @@ class SeasonManager:
             cursor = conn.execute("""
                 SELECT season_number, start_date, end_date, created_at
                 FROM seasons 
-                WHERE start_date <= ? AND (end_date IS NULL OR end_date >= ?)
+                WHERE datetime(start_date) <= datetime(?) AND (end_date IS NULL OR datetime(end_date) >= datetime(?))
                 ORDER BY season_number DESC
                 LIMIT 1
             """, (now.isoformat(), now.isoformat()))
@@ -209,7 +209,7 @@ class SeasonManager:
             cursor = conn.execute("""
                 SELECT season_number
                 FROM seasons 
-                WHERE start_date <= ? AND (end_date IS NULL OR end_date >= ?)
+                WHERE datetime(start_date) <= datetime(?) AND (end_date IS NULL OR datetime(end_date) >= datetime(?))
                 ORDER BY season_number DESC
                 LIMIT 1
             """, (target_date.isoformat(), target_date.isoformat()))
@@ -222,7 +222,7 @@ class SeasonManager:
             cursor = conn.execute("""
                 SELECT season_number
                 FROM seasons 
-                WHERE start_date <= ?
+                WHERE datetime(start_date) <= datetime(?)
                 ORDER BY season_number DESC
                 LIMIT 1
             """, (target_date.isoformat(),))

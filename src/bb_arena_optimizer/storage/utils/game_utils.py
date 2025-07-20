@@ -316,7 +316,7 @@ class GameRecordManager:
                     MAX(luxury_boxes_attendance) as max_luxury_boxes
                 FROM games 
                 WHERE home_team_id = ? 
-                AND date < ?
+                AND datetime(date) < datetime(?)
                 AND neutral_arena = FALSE
                 AND bleachers_attendance IS NOT NULL
                 AND lower_tier_attendance IS NOT NULL

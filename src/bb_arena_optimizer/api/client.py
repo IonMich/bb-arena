@@ -808,7 +808,7 @@ class BuzzerBeaterAPI:
             # Get basic match info
             match_id = match.get("id")
             start_time = match.get("start")
-            match_type = match.get("type", "league.rs")
+            match_type = match.get("type")
 
             # Get team info
             home_team_elem = match.find("./homeTeam")

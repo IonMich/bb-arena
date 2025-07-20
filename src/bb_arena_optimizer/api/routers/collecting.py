@@ -158,7 +158,7 @@ def fetch_and_save_arena_html(team_id: int, output_dir: str | None = None) -> No
     if output_dir is None:
         # Default to tests/collecting/fixtures relative to project root
         current_file = Path(__file__)
-        project_root = current_file.parent.parent.parent.parent  # Go up to bb-arena root
+        project_root = current_file.parent.parent.parent.parent.parent  # Go up to bb-arena root
         output_path = project_root / "tests" / "collecting" / "fixtures"
     else:
         output_path = Path(output_dir)

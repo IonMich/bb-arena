@@ -99,8 +99,9 @@ const GameDataSidebar = ({
       ]);
       
       // Filter for home games only (excluding BBM games which are played in neutral venues) and sort by date
+      console.log(scheduleData);
       const homeGames = scheduleData.games
-        .filter(game => game.home && game.type !== 'bbm')
+        .filter(game => game.home && game.type !== 'bbm' && game.type !== 'pl.rsneutral')
         .sort((a, b) => new Date(a.date) - new Date(b.date));
       
       // Create a map of stored games by ID for efficient lookup

@@ -508,7 +508,7 @@ class ArenaService {
       }
       
       // Filter for home games only (excluding BBM games which are played in neutral venues)
-      const homeGames = scheduleData.games.filter(game => game.home && game.type !== 'bbm');
+      const homeGames = scheduleData.games.filter(game => game.home && game.type !== 'bbm' && game.type !== 'pl.rsneutral');
       
       // Get all game IDs to check which ones are stored
       const gameIds = homeGames.map(game => game.id);

@@ -23,6 +23,8 @@ def load_test_data(home_team_id: str):
         fixture_path = Path(__file__).parent / "fixtures" / "team_27795_no_price_update.html"
     elif home_team_id == "142773":
         fixture_path = Path(__file__).parent / "fixtures" / "team_142773_with_price_updates_table_only.html"
+    elif home_team_id == "143092":
+        fixture_path = Path(__file__).parent / "fixtures" / "team_143092_arenapage_table_only.html"
     else:
         raise ValueError(f"Unknown team ID: {home_team_id}")
     
@@ -101,8 +103,7 @@ def test_price_period_builder(home_team_id, capsys):
     timezone_str = get_bb_timezone_from_html(html_content)
     
     # Build periods (use a fixed time for consistent testing)
-    # Using July 18, 2025 instead of July 17 to match the actual test date
-    demo_request_time = datetime(2025, 7, 18, 22, 50, 16, 206409, tzinfo=tz.utc)
+    demo_request_time = datetime(2025, 7, 16, 22, 50, 16, 206409, tzinfo=tz.utc)
     
     # Create database manager
     db_manager = DatabaseManager()

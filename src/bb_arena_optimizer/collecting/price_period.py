@@ -91,6 +91,7 @@ class PricePeriod:
     game_events: List[GameEvent]  # Games from arena table scraping
     db_manager: DatabaseManager  # Database manager for game time queries
     home_team_id: str  # Team ID for which this period applies
+    request_time: datetime
     price_snapshot: Optional[PriceSnapshot] = None  # Snapshot of prices at any point safely inside this period
     
     # Time boundaries - use price changes as boundaries for robustness
@@ -267,17 +268,9 @@ class PricePeriod:
         The result is bounded by the latest game in the period to ensure
         safe_start <= safe_end.
         """
-        if not self.end_price_change and not self.game_events:
-            raise ValueError(
-                "Period has no games and no end price change. "
-                "This is not allowed as it would create an empty period."
-            )
-        if self.end_price_change is not None:
-            candidate_end = get_earliest_utc_for_date(self.end_price_change.date_raw, self.timezone_str)
-        else:
-            # last period, so ends with the request time
-            return datetime.now(datetime_utc)
-
+        if not self.end_price_change:
+            return self.request_time
+        candidate_end = get_earliest_utc_for_date(self.end_price_change.date_raw, self.timezone_str)
         # Bound by latest game in period (if any games exist)
         if self.game_events:
             latest_game = min(self.game_events, key=lambda g: g.row_index)
@@ -489,6 +482,7 @@ class PricePeriodBuilder:
             game_events=games.copy(),
             db_manager=self.db_manager,
             home_team_id=self.home_team_id,
+            request_time=self.request_time,
             start_price_change=None,
             end_price_change=None,
             timezone_str=self.timezone_str
@@ -523,6 +517,7 @@ class PricePeriodBuilder:
                 game_events=period1_games,
                 db_manager=self.db_manager,
                 home_team_id=self.home_team_id,
+                request_time=self.request_time,
                 start_price_change=None,
                 end_price_change=price_change,
                 timezone_str=self.timezone_str
@@ -542,6 +537,7 @@ class PricePeriodBuilder:
             game_events=period2_games,
             db_manager=self.db_manager,
             home_team_id=self.home_team_id,
+            request_time=self.request_time,
             start_price_change=price_change,
             end_price_change=None,
             timezone_str=self.timezone_str
@@ -579,6 +575,7 @@ class PricePeriodBuilder:
                     game_events=period_games,
                     db_manager=self.db_manager,
                     home_team_id=self.home_team_id,
+                    request_time=self.request_time,
                     start_price_change=None,
                     end_price_change=price_change,
                     timezone_str=self.timezone_str
@@ -614,6 +611,7 @@ class PricePeriodBuilder:
                 game_events=period_games,
                 db_manager=self.db_manager,
                 home_team_id=self.home_team_id,
+                request_time=self.request_time,
                 start_price_change=price_change,
                 end_price_change=next_price_change,
                 timezone_str=self.timezone_str

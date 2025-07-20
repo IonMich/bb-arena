@@ -356,7 +356,7 @@ class DatabaseManager:
             query = """
                 SELECT * FROM price_snapshots 
                 WHERE team_id = ? 
-                AND created_at BETWEEN ? AND ?
+                AND datetime(created_at) BETWEEN datetime(?) AND datetime(?)
                 ORDER BY created_at DESC 
                 LIMIT 1
             """
@@ -620,6 +620,9 @@ class DatabaseManager:
         Returns:
             List of GameRecord objects within the time range
         """
+        # Convert team_id to int since database stores it as INTEGER
+        team_id_int = int(team_id)
+        
         with sqlite3.connect(self.db_path) as conn:
             query = """
                 SELECT game_id, id, home_team_id, away_team_id, date, game_type, season,
@@ -630,13 +633,13 @@ class DatabaseManager:
                        courtside_price, luxury_boxes_price, created_at, updated_at
                 FROM games 
                 WHERE (home_team_id = ? OR away_team_id = ?)
-                AND date BETWEEN ? AND ?
+                AND datetime(date) BETWEEN datetime(?) AND datetime(?)
             """
-            params = [team_id, team_id, start_time.isoformat(), end_time.isoformat()]
+            params = [team_id_int, team_id_int, start_time.isoformat(), end_time.isoformat()]
             
             if home_games_only:
                 query += " AND home_team_id = ?"
-                params.append(team_id)
+                params.append(team_id_int)
                 
             query += " ORDER BY date"
             
