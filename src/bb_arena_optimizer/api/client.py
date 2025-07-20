@@ -379,7 +379,7 @@ class BuzzerBeaterAPI:
         logger.info(f"Found {len(countries)} countries")
         return countries
 
-    def get_leagues(self, country_id: int, max_level: int = 10) -> list[dict[str, Any]]:
+    def get_leagues(self, country_id: int, max_level: int = 3) -> list[dict[str, Any]]:
         """Get all leagues for a specific country across multiple levels.
         
         Args:
@@ -407,8 +407,11 @@ class BuzzerBeaterAPI:
                     break
                 
                 for league_elem in league_elements:
+                    league_id_str = league_elem.get("id")
+                    league_id = int(league_id_str) if league_id_str and league_id_str.isdigit() else None
+                    
                     league_data = {
-                        "id": int(league_elem.get("id")) if league_elem.get("id") else None,
+                        "id": league_id,
                         "name": league_elem.text.strip() if league_elem.text else None,
                         "level": level
                     }
@@ -467,7 +470,7 @@ class BuzzerBeaterAPI:
             List of dictionaries with team history data
         """
         import re
-        from bs4 import BeautifulSoup
+        from bs4 import BeautifulSoup, Tag
         
         try:
             url = f"https://buzzerbeater.com/team/{team_id}/history.aspx"
@@ -484,7 +487,10 @@ class BuzzerBeaterAPI:
             
             # Find the div with class 'boxcontent' that contains the season history
             history_div = None
-            for div in container_div.find_all('div', class_='boxcontent'):
+            boxcontent_divs = container_div.find_all('div', class_='boxcontent')
+            for div in boxcontent_divs:
+                if not isinstance(div, Tag):
+                    continue
                 div_text = div.get_text()
                 if 'season' in div_text.lower() and 'league' in div_text.lower():
                     # Count season references to find the main history div
@@ -536,7 +542,7 @@ class BuzzerBeaterAPI:
                     league_name = match.group(3).strip()
                     
                     # Get league ID from our mapping - try exact match first, then partial match
-                    league_id = league_id_map.get(league_name)
+                    league_id: int | None = league_id_map.get(league_name)
                     
                     # If no exact match, try to find a partial match
                     if league_id is None:
@@ -600,7 +606,7 @@ class BuzzerBeaterAPI:
             logger.error(f"Error parsing team history for team {team_id}: {e}")
             return []
 
-    def _calculate_league_level(self, league_name: str, league_id: int = None) -> int:
+    def _calculate_league_level(self, league_name: str, league_id: int | None = None) -> int:
         """
         Calculate league level using three-tier approach:
         1. First try database lookup if league_id exists (for any level)
@@ -632,7 +638,7 @@ class BuzzerBeaterAPI:
                     
                     if result:
                         logger.debug(f"Found league level {result[0]} for league_id {league_id} in database")
-                        return result[0]
+                        return int(result[0])
                     
                     logger.debug(f"No database match found for league_id {league_id}")
                     
@@ -837,6 +843,26 @@ class BuzzerBeaterAPI:
             is_home = home_team_id == current_team_id
             opponent = away_team_name if is_home else home_team_name
 
+            # Extract scores from the XML (if available)
+            home_score = None
+            away_score = None
+            
+            # Try to get home team score
+            home_score_elem = home_team_elem.find("./score")
+            if home_score_elem is not None and home_score_elem.text:
+                try:
+                    home_score = int(home_score_elem.text.strip())
+                except ValueError:
+                    pass
+            
+            # Try to get away team score  
+            away_score_elem = away_team_elem.find("./score")
+            if away_score_elem is not None and away_score_elem.text:
+                try:
+                    away_score = int(away_score_elem.text.strip())
+                except ValueError:
+                    pass
+
             game_data = {
                 "id": match_id,
                 "date": start_time,
@@ -844,8 +870,8 @@ class BuzzerBeaterAPI:
                 "home": is_home,
                 "type": match_type,
                 "attendance": None,  # Not available in schedule
-                "score_home": None,  # Not available in schedule
-                "score_away": None,  # Not available in schedule
+                "score_home": home_score,  # Extracted from XML
+                "score_away": away_score,  # Extracted from XML
             }
 
             schedule_data["games"].append(game_data)
@@ -1078,4 +1104,6 @@ class BuzzerBeaterAPI:
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
+        # Parameters are required by the context manager protocol but not used
+        _ = exc_type, exc_val, exc_tb
         self.logout()

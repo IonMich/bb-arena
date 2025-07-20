@@ -1,7 +1,7 @@
 """Data collection service for gathering and storing BuzzerBeater data."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC as datetime_utc
 from typing import Any
 
 from ..api.client import BuzzerBeaterAPI
@@ -198,7 +198,7 @@ class DataCollectionService:
                     SET ticket_revenue = ?, updated_at = ?
                     WHERE game_id = ?
                 """,
-                    (revenue, datetime.now(), game_id),
+                    (revenue, datetime.now(datetime_utc), game_id),
                 )
                 conn.commit()
                 logger.debug(f"Updated revenue for game {game_id}: ${revenue}")
