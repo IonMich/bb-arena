@@ -372,8 +372,74 @@ def show_collected_data():
         print(f"✅ Task 5 (Home Games): {'SUCCESS' if games_success == len(discovered_teams) else 'PARTIAL'}")
         print(f"   └─ {games_success}/{len(discovered_teams)} teams have home games ({total_games_found} total)")
         
+        # Task 6: Game Pricing Updates - Check for games with pricing data
+        print(f"\n💰 TASK 6: Game Pricing Updates - Checking for games with pricing")
+        print("-" * 50)
+        
+        pricing_success = 0
+        pricing_missing = []
+        total_priced_games = 0
+        
+        for team_id in discovered_teams:
+            cursor.execute("""
+                SELECT COUNT(*) as priced_game_count FROM games 
+                WHERE home_team_id = ? 
+                AND (bleachers_price IS NOT NULL OR lower_tier_price IS NOT NULL 
+                     OR courtside_price IS NOT NULL OR luxury_boxes_price IS NOT NULL)
+            """, (team_id,))
+            
+            result = cursor.fetchone()
+            priced_game_count = result['priced_game_count'] if result else 0
+            
+            if priced_game_count > 0:
+                pricing_success += 1
+                total_priced_games += priced_game_count
+            else:
+                pricing_missing.append(team_id)
+        
+        print(f"✅ Teams with priced games: {pricing_success}/{len(discovered_teams)}")
+        print(f"📊 Total games with pricing: {total_priced_games}")
+        
+        if pricing_missing:
+            print(f"❌ Teams missing game pricing: {len(pricing_missing)}")
+            print(f"   Missing team IDs: {', '.join(map(str, pricing_missing[:10]))}")
+        
+        # Show sample pricing data
+        if pricing_success > 0:
+            cursor.execute(f"""
+                SELECT home_team_id, COUNT(*) as priced_games, 
+                       COUNT(CASE WHEN bleachers_price IS NOT NULL THEN 1 END) as bleachers_count,
+                       COUNT(CASE WHEN lower_tier_price IS NOT NULL THEN 1 END) as lower_tier_count,
+                       COUNT(CASE WHEN courtside_price IS NOT NULL THEN 1 END) as courtside_count,
+                       COUNT(CASE WHEN luxury_boxes_price IS NOT NULL THEN 1 END) as luxury_count
+                FROM games 
+                WHERE home_team_id IN ({','.join('?' * len(discovered_teams))})
+                AND (bleachers_price IS NOT NULL OR lower_tier_price IS NOT NULL 
+                     OR courtside_price IS NOT NULL OR luxury_boxes_price IS NOT NULL)
+                GROUP BY home_team_id
+                ORDER BY priced_games DESC
+                LIMIT 5
+            """, discovered_teams)
+            
+            sample_pricing = cursor.fetchall()
+            print(f"\nSample game pricing summaries:")
+            for pricing_summary in sample_pricing:
+                team_id = pricing_summary['home_team_id']
+                priced_games = pricing_summary['priced_games']
+                sections = []
+                if pricing_summary['bleachers_count'] > 0:
+                    sections.append(f"B:{pricing_summary['bleachers_count']}")
+                if pricing_summary['lower_tier_count'] > 0:
+                    sections.append(f"LT:{pricing_summary['lower_tier_count']}")
+                if pricing_summary['courtside_count'] > 0:
+                    sections.append(f"C:{pricing_summary['courtside_count']}")
+                if pricing_summary['luxury_count'] > 0:
+                    sections.append(f"LB:{pricing_summary['luxury_count']}")
+                sections_str = " ".join(sections)
+                print(f"  Team {team_id}: {priced_games} priced games ({sections_str})")
+        
         # Overall success rate
-        total_tasks = 5 if history_table_exists else 4
+        total_tasks = 6 if history_table_exists else 5
         successful_tasks = 0
         
         if len(discovered_teams) == 21:
@@ -386,6 +452,11 @@ def show_collected_data():
             successful_tasks += 1
         if games_success == len(discovered_teams):
             successful_tasks += 1
+        if pricing_success > 0:  # Task 6 success if any teams have pricing data
+            successful_tasks += 1
+        
+        print(f"✅ Task 6 (Game Pricing): {'SUCCESS' if pricing_success > 0 else 'PENDING'}")
+        print(f"   └─ {pricing_success}/{len(discovered_teams)} teams have priced games ({total_priced_games} total)")
         
         success_rate = successful_tasks / total_tasks
         print(f"\n📊 Overall Success Rate: {successful_tasks}/{total_tasks} tasks ({success_rate:.1%})")

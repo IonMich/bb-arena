@@ -113,13 +113,15 @@ class PricePeriod:
         self.game_events.sort(key=lambda x: x.row_index)
         
         # Validate that periods have either start_price_change or games (cannot be completely empty)
+        # NOTE: this should be caught by the builder, but we check here for robustness
         if not self.start_price_change and not self.game_events:
             raise ValueError(
-                "Invalid period: must have either start_price_change or games. "
-                "Empty periods are not allowed."
+                f"Invalid period: no games and no start price change. "
+                f"Period {self.period_id} is meaningless."
             )
         
         # Validate that periods with no games don't have both price changes on the same date
+        # NOTE: this should be caught by the builder, but we check here for robustness
         if (not self.game_events and
             self.start_price_change is not None and
             self.end_price_change is not None and
@@ -508,10 +510,15 @@ class PricePeriodBuilder:
         period1_games = [g for g in games if g.row_index > price_change.row_index]
         period2_games = [g for g in games if g.row_index < price_change.row_index]
         
-        periods = []
+        periods: List[PricePeriod] = []
         
         # Period 1: From start to price change (games after price change row)
-        if period1_games or True:  # Always create period even if no games
+        if not period1_games:  # Always create period even if no games
+            logger.warning(
+                f"Filtering out initial period due to no games. "
+                f"Price change at table row {price_change.row_index}."
+            )
+        else:
             period1 = PricePeriod(
                 period_id=0,
                 game_events=period1_games,
@@ -569,25 +576,31 @@ class PricePeriodBuilder:
             if i == 0:
                 # First period: from start to first price change
                 period_games = [g for g in games if g.row_index > price_change.row_index]
-                
-                period = PricePeriod(
-                    period_id=i,
-                    game_events=period_games,
-                    db_manager=self.db_manager,
-                    home_team_id=self.home_team_id,
-                    request_time=self.request_time,
-                    start_price_change=None,
-                    end_price_change=price_change,
-                    timezone_str=self.timezone_str
-                )
-                # Only add period if it has valid pricing
-                if period.has_valid_pricing():
-                    periods.append(period)
-                else:
+                # Only add period if it has games
+                if not period_games:
                     logger.warning(
-                        f"Filtering out initial period due to missing pricing information. "
-                        f"Period has {len(period.game_events)} games but no price_snapshot could be found."
+                        f"Filtering out initial period due to no games. "
+                        f"Price change at table row {price_change.row_index}."
                     )
+                else:
+                    period = PricePeriod(
+                        period_id=i,
+                        game_events=period_games,
+                        db_manager=self.db_manager,
+                        home_team_id=self.home_team_id,
+                        request_time=self.request_time,
+                        start_price_change=None,
+                        end_price_change=price_change,
+                        timezone_str=self.timezone_str
+                    )
+                    # Only add period if it has valid pricing
+                    if period.has_valid_pricing():
+                        periods.append(period)
+                    else:
+                        logger.warning(
+                            f"Filtering out initial period due to missing pricing information. "
+                            f"Period has {len(period.game_events)} games but no price_snapshot could be found."
+                        )
             
             # Create period starting from this price change
             if i == len(sorted_price_changes) - 1:
@@ -604,9 +617,9 @@ class PricePeriodBuilder:
             if (not period_games and 
                 next_price_change is not None and 
                 price_change.date_raw == next_price_change.date_raw):
-                continue  # Skip this period
+                continue  # Gracefully simply skip this period
             
-            period = PricePeriod(
+            _period = PricePeriod(
                 period_id=i + 1,
                 game_events=period_games,
                 db_manager=self.db_manager,
@@ -617,7 +630,7 @@ class PricePeriodBuilder:
                 timezone_str=self.timezone_str
             )
             # Periods with start_price_change should always have valid pricing
-            periods.append(period)
+            periods.append(_period)
         
         # Renumber period IDs to be sequential after any skipped periods
         for idx, period in enumerate(periods):
