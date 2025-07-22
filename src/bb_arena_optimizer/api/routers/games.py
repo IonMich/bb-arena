@@ -22,6 +22,45 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/bb", tags=["games"])
 
 
+def get_season_from_date(game_date_str: str, db_manager) -> int | None:
+    """Calculate season number from game date using database seasons.
+    
+    Args:
+        game_date_str: ISO date string from game data
+        db_manager: Database manager instance for season lookup
+        
+    Returns:
+        Season number if found, None otherwise
+    """
+    if not game_date_str:
+        return None
+        
+    try:
+        # Parse the game date
+        if game_date_str.endswith('Z'):
+            parsed_game_date = datetime.fromisoformat(game_date_str.replace('Z', '+00:00'))
+        else:
+            parsed_game_date = datetime.fromisoformat(game_date_str)
+        
+        # Get all seasons from database to find which season this game belongs to
+        all_seasons = db_manager.get_all_seasons()
+        for season in all_seasons:
+            if season.start_date and season.end_date:
+                if season.start_date <= parsed_game_date <= season.end_date:
+                    return season.season_number
+            elif season.start_date and not season.end_date:
+                # Current season with no end date
+                if season.start_date <= parsed_game_date:
+                    return season.season_number
+                    
+        logger.warning(f"Could not determine season for date {parsed_game_date}")
+        return None
+        
+    except Exception as date_parse_error:
+        logger.warning(f"Could not parse game date '{game_date_str}' for season calculation: {date_parse_error}")
+        return None
+
+
 @router.get("/team/{team_id}/schedule")
 async def get_team_schedule(team_id: int, season: int | None = None):
     """Get team schedule from BuzzerBeater API."""
@@ -251,33 +290,7 @@ async def fetch_and_store_game_from_bb(game_id: str):
                 )
             
             # Calculate season from game date using database seasons
-            calculated_season = None
-            game_date_str = boxscore_data["start_date"]
-            if game_date_str:
-                try:
-                    # Parse the game date
-                    if game_date_str.endswith('Z'):
-                        parsed_game_date = datetime.fromisoformat(game_date_str.replace('Z', '+00:00'))
-                    else:
-                        parsed_game_date = datetime.fromisoformat(game_date_str)
-                    
-                    # Get all seasons from database to find which season this game belongs to
-                    all_seasons = db_manager.get_all_seasons()
-                    for season in all_seasons:
-                        if season.start_date and season.end_date:
-                            if season.start_date <= parsed_game_date <= season.end_date:
-                                calculated_season = season.season_number
-                                break
-                        elif season.start_date and not season.end_date:
-                            # Current season with no end date
-                            if season.start_date <= parsed_game_date:
-                                calculated_season = season.season_number
-                            
-                    if calculated_season is None:
-                        logger.warning(f"Could not determine season for game {game_id} with date {parsed_game_date}")
-                        
-                except Exception as date_parse_error:
-                    logger.warning(f"Could not parse game date '{game_date_str}' for season calculation: {date_parse_error}")
+            calculated_season = get_season_from_date(boxscore_data["start_date"], db_manager)
             
             if calculated_season is None:
                 raise HTTPException(
