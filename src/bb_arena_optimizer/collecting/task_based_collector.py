@@ -9,7 +9,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Set, Optional, Any, Tuple
+from typing import Dict, List, Set, Optional, Any, Tuple, TypeVar, Generic
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -21,12 +21,14 @@ from ..storage.collector import DataCollectionService
 logger = logging.getLogger(__name__)
 
 
+T = TypeVar('T')
+
 @dataclass
-class TaskResult:
+class TaskResult(Generic[T]):
     """Result of a task execution."""
     task_name: str
     success: bool
-    data: Any = None
+    data: Optional[T] = None
     error: Optional[str] = None
     execution_time: float = 0.0
     items_processed: int = 0
@@ -67,7 +69,7 @@ class TaskBasedCollector:
         countries: List[int],
         seasons: List[int],
         max_league_level: int = 3
-    ) -> TaskResult:
+    ) -> TaskResult[Set[int]]:
         """
         Task 1: Collect all team_ids that participated in specified seasons 
         in any of the top leagues in specified countries.
@@ -231,7 +233,7 @@ class TaskBasedCollector:
                 # Progress updates
                 if i % 25 == 0:
                     progress = i / len(team_ids)
-                    logger.info(f"   📈 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
+                    logger.info(f"   📈 Task 2 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
                                f"Success: {successful_collections}, Failed: {failed_collections}")
             
             execution_time = time.time() - start_time
@@ -315,7 +317,7 @@ class TaskBasedCollector:
                 # Progress updates
                 if i % 25 == 0:
                     progress = i / len(team_ids)
-                    logger.info(f"   📈 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
+                    logger.info(f"   📈 Task 3 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
                                f"Success: {successful_collections}, Failed: {failed_collections}")
             
             execution_time = time.time() - start_time
@@ -357,7 +359,7 @@ class TaskBasedCollector:
         self, 
         team_ids: Set[int], 
         seasons: List[int],
-        max_teams_parallel: int = 3
+        max_teams_parallel: int = 6
     ) -> TaskResult:
         """
         Task 5: Collect home games for all specified teams and seasons.
@@ -389,7 +391,7 @@ class TaskBasedCollector:
                 batch_end = min(batch_start + max_teams_parallel, len(team_list))
                 batch_teams = team_list[batch_start:batch_end]
                 
-                logger.info(f"   📦 Processing batch {batch_start//max_teams_parallel + 1}: teams {batch_teams}")
+                logger.info(f"   📦 Processing batch {batch_start//max_teams_parallel + 1} of {len(team_list)//max_teams_parallel + 1}: teams {batch_teams}")
                 
                 # Create tasks for this batch
                 batch_tasks = []
@@ -407,11 +409,16 @@ class TaskBasedCollector:
                     if isinstance(result, Exception):
                         logger.error(f"❌ Team {team_id} failed: {result}")
                         failed_teams.append(team_id)
-                    else:
+                    elif isinstance(result, tuple) and len(result) == 2:
+                        # result is Tuple[int, int] here
                         games_collected, games_skipped = result
                         total_games_collected += games_collected
                         total_games_skipped += games_skipped
                         logger.debug(f"✅ Team {team_id}: {games_collected} collected, {games_skipped} skipped")
+                    else:
+                        # This shouldn't happen, but handle it gracefully
+                        logger.error(f"❌ Team {team_id}: Unexpected result type: {type(result)}")
+                        failed_teams.append(team_id)
                 
                 # Brief pause between batches to respect rate limits
                 if batch_end < len(team_list):
@@ -484,9 +491,6 @@ class TaskBasedCollector:
                 
                 # Debug: log first game to see available fields
                 if schedule_data['games']:
-                    first_game = schedule_data['games'][0]
-                    logger.info(f"🔍 Sample game data for team {team_id}, season {season}: {first_game}")
-                    
                     # Debug: show home vs away game breakdown
                     total_games = len(schedule_data['games'])
                     home_games_count = sum(1 for g in schedule_data['games'] if g.get('home'))
@@ -715,10 +719,6 @@ class TaskBasedCollector:
             if score_field in game and game[score_field] is not None:
                 return True
         
-        # Check if there's a 'completed' or 'finished' flag
-        if game.get('completed') or game.get('finished') or game.get('played'):
-            return True
-        
         # For completed historical seasons, all games should be finished
         # Since the schedule parser doesn't extract scores, but we know historical games are completed
         if season <= 68:  # Completed historical seasons
@@ -737,7 +737,7 @@ class TaskBasedCollector:
     
     async def _collect_single_game(self, game_id: str) -> bool:
         """
-        Collect a single game using the same pattern as the backend API endpoint.
+        Collect a single game using the clean architecture.
         
         Args:
             game_id: Game ID to collect
@@ -752,85 +752,28 @@ class TaskBasedCollector:
                 logger.debug(f"Game {game_id} already has attendance data, skipping")
                 return True
             
-            # Fetch boxscore data from API
+            # Fetch boxscore data from API (now returns typed BoxscoreData)
             boxscore_data = self.api.get_boxscore(game_id)
             if not boxscore_data:
                 logger.warning(f"No boxscore data returned for game {game_id}")
                 return False
             
-            # Extract required data (same logic as backend API endpoint)
-            attendance_data = boxscore_data.get("attendance")
-            home_team_id = boxscore_data.get("home_team_id")
-            away_team_id = boxscore_data.get("away_team_id")
+            # Calculate season from game date using shared function
+            from ..api.routers.games import get_season_from_date
+            calculated_season = get_season_from_date(boxscore_data["start_date"], self.db_manager)
             
-            # Validate required fields
-            if (attendance_data and 
-                home_team_id is not None and 
-                away_team_id is not None and 
-                isinstance(home_team_id, int) and home_team_id > 0 and
-                isinstance(away_team_id, int) and away_team_id > 0):
-                
-                # BBAPI never provides season, so always calculate it from the game date
-                final_season = None
-                game_date_str = boxscore_data.get("date")
-                
-                if game_date_str and isinstance(game_date_str, str):
-                    try:
-                        # Parse the game date
-                        if game_date_str.endswith('Z'):
-                            parsed_game_date = datetime.fromisoformat(game_date_str.replace('Z', '+00:00'))
-                        else:
-                            parsed_game_date = datetime.fromisoformat(game_date_str)
-                        
-                        # Get all seasons from database to find which season this game belongs to
-                        all_seasons = self.db_manager.get_all_seasons()
-                        for season in all_seasons:
-                            if season.start_date and season.end_date:
-                                if season.start_date <= parsed_game_date <= season.end_date:
-                                    final_season = season.season_number
-                                    break
-                            elif season.start_date and not season.end_date:
-                                # Current season with no end date
-                                if season.start_date <= parsed_game_date:
-                                    final_season = season.season_number
-                                    break
-                                    
-                        if final_season is None:
-                            logger.warning(f"Could not determine season for game {game_id} with date {parsed_game_date}")
-                            return False  # Skip this game if we can't determine season
-                                    
-                    except Exception as date_parse_error:
-                        logger.warning(f"Could not parse date for game {game_id}: {date_parse_error}")
-                        return False  # Skip this game if we can't parse the date
-                else:
-                    logger.warning(f"No valid date provided for game {game_id}")
-                    return False  # Skip this game if no date
-                
-                # Prepare game data for GameRecord creation (same format as backend API)
-                game_data_for_record = {
-                    "id": game_id,
-                    "type": boxscore_data.get("type", ""),
-                    "season": final_season,
-                    "date": boxscore_data.get("date"),
-                    "attendance": attendance_data,
-                    "ticket_revenue": boxscore_data.get("revenue")
-                }
-                
-                # Create GameRecord using the factory method (same as backend API)
-                from ..storage.models import GameRecord
-                game_record = GameRecord.from_api_data(
-                    game_data_for_record,
-                    home_team_id=home_team_id,
-                    away_team_id=away_team_id
-                )
-                
-                # Save to database
-                saved_id = self.db_manager.save_game_record(game_record)
-                logger.debug(f"Successfully saved game {game_id} with database ID {saved_id}")
-                return True
-            else:
-                logger.warning(f"Invalid or missing data for game {game_id}")
+            if calculated_season is None:
+                logger.warning(f"Could not determine season for game {game_id}")
                 return False
+                
+            # Create GameRecord using the clean factory method  
+            from ..storage.models import GameRecord
+            game_record = GameRecord.from_api_data(boxscore_data, season=calculated_season)
+            
+            # Save to database (preserves existing pricing data)
+            saved_id = self.db_manager.save_game_record(game_record)
+            logger.debug(f"Successfully saved game {game_id} with database ID {saved_id}")
+            return True
                 
         except Exception as e:
             logger.error(f"Error collecting game {game_id}: {e}")
@@ -904,7 +847,7 @@ class TaskBasedCollector:
                 # Progress updates
                 if i % 25 == 0:
                     progress = i / len(team_ids)
-                    logger.info(f"   📈 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
+                    logger.info(f"   📈 Task 4 Progress: {progress:.1%} ({i}/{len(team_ids)}) - "
                                f"Success: {successful_collections}, Failed: {failed_collections}")
             
             execution_time = time.time() - start_time
@@ -1017,7 +960,7 @@ async def run_team_discovery_task(
     collector = TaskBasedCollector(api, db_manager)
     result = await collector.task_1_collect_team_ids(countries, seasons, max_league_level)
     
-    if result.success:
+    if result.success and result.data is not None:
         logger.info(f"✅ Team discovery successful: {len(result.data)} teams found")
         return result.data
     else:
@@ -1094,7 +1037,7 @@ async def run_complete_data_collection_pipeline(
     team_ids: Set[int],
     seasons: List[int] = [68, 69],
     include_pricing_update: bool = True
-) -> Tuple[TaskResult, TaskResult, TaskResult, TaskResult, TaskResult]:
+) -> Tuple[TaskResult, TaskResult, TaskResult, TaskResult, TaskResult | None]:
     """
     Run the complete data collection pipeline: team discovery, then parallel collection, 
     then sequential pricing updates.
@@ -1108,7 +1051,7 @@ async def run_complete_data_collection_pipeline(
         
     Returns:
         Tuple of (team_info_result, arena_result, history_result, games_result, pricing_result)
-        If include_pricing_update is False, pricing_result will be None
+        pricing_result will be None if include_pricing_update is False or games collection failed
     """
     collector = TaskBasedCollector(api, db_manager)
     
