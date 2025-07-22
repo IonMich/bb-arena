@@ -1,12 +1,29 @@
 """BuzzerBeater API client for arena and team data."""
 
 import logging
-from typing import Any
+import datetime
+from typing import Any, TypedDict
 from xml.etree import ElementTree as ET
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+class BoxscoreData(TypedDict):
+    """Typed structure for boxscore data from BB API."""
+    match_id: int
+    bleachers_attendance: int
+    lower_tier_attendance: int
+    courtside_attendance: int
+    luxury_box_attendance: int
+    home_team_id: int
+    away_team_id: int
+    home_score: int
+    away_score: int
+    game_type: str
+    neutral: bool
+    start_date: str
 
 
 class BuzzerBeaterAPI:
@@ -179,7 +196,7 @@ class BuzzerBeaterAPI:
 
         return self._parse_team_data(root)
 
-    def get_boxscore(self, game_id: str) -> dict[str, Any] | None:
+    def get_boxscore(self, game_id: str) -> BoxscoreData | None:
         """Get detailed boxscore for a specific game including attendance.
 
         Args:
@@ -936,132 +953,107 @@ class BuzzerBeaterAPI:
 
         return team_data
 
-    def _parse_boxscore_data(self, root: ET.Element) -> dict[str, Any]:
-        """Parse boxscore XML data including attendance, season, type, and date."""
-        boxscore_data: dict[str, Any] = {
-            "game_id": None,
-            "attendance": {},
-            "revenue": None,
-            "scores": {},
-            "teams": {},
-            "season": None,
-            "type": None,
-            "date": None,
-        }
+    def _get_required_element(self, parent: ET.Element, xpath: str, field_name: str) -> ET.Element:
+        """Get a required XML element or raise ValueError."""
+        elem = parent.find(xpath)
+        if elem is None:
+            logger.error(f"No {field_name} element found in XML")
+            raise ValueError(f"No {field_name} element found in XML")
+        return elem
+    
+    def _get_required_attribute(self, elem: ET.Element, attr: str, field_name: str) -> str:
+        """Get a required XML attribute or raise ValueError."""
+        value = elem.get(attr)
+        if not value or not value.strip():
+            logger.error(f"No {field_name} attribute found")
+            raise ValueError(f"No {field_name} attribute found")
+        return value.strip()
+    
+    def _get_required_text(self, elem: ET.Element, field_name: str) -> str:
+        """Get required text content from XML element or raise ValueError."""
+        if not elem.text or not elem.text.strip():
+            logger.error(f"No {field_name} text found")
+            raise ValueError(f"No {field_name} text found")
+        return elem.text.strip()
+    
+    def _get_required_int_text(self, elem: ET.Element, field_name: str) -> int:
+        """Get required integer text content from XML element or raise ValueError."""
+        text = self._get_required_text(elem, field_name)
+        try:
+            return int(text)
+        except ValueError:
+            logger.error(f"Invalid {field_name} value: {text}")
+            raise ValueError(f"Invalid {field_name} value: {text}")
 
-        # Get basic game info
-        match_elem = root.find(".//match")
-        if match_elem is not None:
-            boxscore_data["game_id"] = match_elem.get("id")
-            
-            # Try to extract season from match element
-            season_attr = match_elem.get("season")
-            if season_attr:
-                try:
-                    boxscore_data["season"] = int(season_attr)
-                except ValueError:
-                    pass
-            
-            # Try to extract game type from match element
-            game_type = match_elem.get("type") or match_elem.get("gameType") or match_elem.get("matchType")
-            if game_type:
-                boxscore_data["type"] = game_type.strip()
-            
-            # Try to extract date from match element - prioritize startTime
-            date_attr = match_elem.get("startTime") or match_elem.get("date") or match_elem.get("gameDate") or match_elem.get("matchDate")
-            if date_attr:
-                boxscore_data["date"] = date_attr.strip()
-
-        # Look for startTime element (game date/time)
-        start_time_elem = root.find(".//startTime")
-        if start_time_elem is not None and start_time_elem.text:
-            boxscore_data["date"] = start_time_elem.text.strip()
+    def _parse_boxscore_data(self, root: ET.Element) -> BoxscoreData:
+        """Parse boxscore XML data including attendance, type, and date."""
         
-        # Also try to find season/type/date from other possible locations in the XML
+        # Extract match info
+        match_elem = self._get_required_element(root, ".//match", "match")
+        match_id = int(self._get_required_attribute(match_elem, "id", "match ID"))
+        game_type = self._get_required_attribute(match_elem, "type", "game type")
         
-        # Look for season in various possible locations
-        season_elem = root.find(".//season") or root.find(".//seasonNumber")
-        if season_elem is not None and season_elem.text:
-            try:
-                boxscore_data["season"] = int(season_elem.text.strip())
-            except ValueError:
-                pass
+        # Extract neutral flag
+        neutral_elem = self._get_required_element(match_elem, "./neutral", "neutral")
+        neutral_text = self._get_required_text(neutral_elem, "neutral value")
+        if neutral_text not in ["0", "1"]:
+            logger.error(f"Invalid neutral value: {neutral_text}")
+            raise ValueError(f"Invalid neutral value: {neutral_text}, must be 0 or 1")
+        neutral = neutral_text == "1"
         
-        # Look for game type in various possible locations
-        type_elem = root.find(".//gameType") or root.find(".//matchType") or root.find(".//type")
-        if type_elem is not None and type_elem.text:
-            boxscore_data["type"] = type_elem.text.strip()
+        # Extract start time
+        start_time_elem = self._get_required_element(root, ".//startTime", "startTime")
+        start_time = self._get_required_text(start_time_elem, "start time")
         
-        # Look for date in various possible locations if not already found
-        if not boxscore_data["date"]:
-            date_elem = root.find(".//gameDate") or root.find(".//matchDate") or root.find(".//date")
-            if date_elem is not None and date_elem.text:
-                boxscore_data["date"] = date_elem.text.strip()
+        # Extract attendance data
+        attendance_elem = self._get_required_element(root, ".//attendance", "attendance")
+        bleachers_attendance = self._get_required_int_text(
+            self._get_required_element(attendance_elem, "./bleachers", "bleachers attendance"), 
+            "bleachers attendance"
+        )
+        lower_tier_attendance = self._get_required_int_text(
+            self._get_required_element(attendance_elem, "./lowerTier", "lower tier attendance"), 
+            "lower tier attendance"
+        )
+        courtside_attendance = self._get_required_int_text(
+            self._get_required_element(attendance_elem, "./courtside", "courtside attendance"), 
+            "courtside attendance"
+        )
+        luxury_box_attendance = self._get_required_int_text(
+            self._get_required_element(attendance_elem, "./luxury", "luxury box attendance"), 
+            "luxury box attendance"
+        )
 
-        # Look for attendance data
-        attendance_elem = root.find(".//attendance")
-        if attendance_elem is not None:
-            # Parse different seat types
-            seat_mapping = {
-                "bleachers": "bleachers",
-                "lowerTier": "lower_tier", 
-                "courtside": "courtside",
-                "luxury": "luxury_boxes",
-            }
-            
-            for xml_name, internal_name in seat_mapping.items():
-                seat_elem = attendance_elem.find(f"./{xml_name}")
-                if seat_elem is not None and seat_elem.text:
-                    try:
-                        boxscore_data["attendance"][internal_name] = int(seat_elem.text.strip())
-                    except ValueError:
-                        pass
+        # Extract team data
+        home_team = self._get_required_element(root, ".//homeTeam", "home team")
+        home_team_id = int(self._get_required_attribute(home_team, "id", "home team ID"))
+        home_score = self._get_required_int_text(
+            self._get_required_element(home_team, ".//score", "home team score"),
+            "home team score"
+        )
 
-        # Look for revenue data
-        revenue_elem = root.find(".//revenue") or root.find(".//ticketRevenue")
-        if revenue_elem is not None and revenue_elem.text:
-            try:
-                boxscore_data["revenue"] = float(revenue_elem.text.strip())
-            except ValueError:
-                pass
+        away_team = self._get_required_element(root, ".//awayTeam", "away team")
+        away_team_id = int(self._get_required_attribute(away_team, "id", "away team ID"))
+        away_score = self._get_required_int_text(
+            self._get_required_element(away_team, ".//score", "away team score"),
+            "away team score"
+        )
 
-        # Get team scores and IDs
-        home_team = root.find(".//homeTeam")
-        away_team = root.find(".//awayTeam")
-        
-        if home_team is not None:
-            # Extract home team ID
-            home_team_id = home_team.get("id")
-            if home_team_id:
-                try:
-                    boxscore_data["home_team_id"] = int(home_team_id)
-                except ValueError:
-                    pass
-            
-            score_elem = home_team.find(".//score")
-            if score_elem is not None and score_elem.text:
-                try:
-                    boxscore_data["scores"]["home"] = int(score_elem.text.strip())
-                except ValueError:
-                    pass
-
-        if away_team is not None:
-            # Extract away team ID  
-            away_team_id = away_team.get("id")
-            if away_team_id:
-                try:
-                    boxscore_data["away_team_id"] = int(away_team_id)
-                except ValueError:
-                    pass
-            
-            score_elem = away_team.find(".//score")
-            if score_elem is not None and score_elem.text:
-                try:
-                    boxscore_data["scores"]["away"] = int(score_elem.text.strip())
-                except ValueError:
-                    pass
-
-        return boxscore_data
+        # Construct and return BoxscoreData
+        return BoxscoreData(
+            match_id=match_id,
+            bleachers_attendance=bleachers_attendance,
+            lower_tier_attendance=lower_tier_attendance,
+            courtside_attendance=courtside_attendance,
+            luxury_box_attendance=luxury_box_attendance,
+            home_team_id=home_team_id,
+            away_team_id=away_team_id,
+            home_score=home_score,
+            away_score=away_score,
+            game_type=game_type,
+            neutral=neutral,
+            start_date=start_time
+        )
 
     def _parse_standings_data(self, root: ET.Element) -> dict[str, Any]:
         """Parse standings XML data to extract team information."""

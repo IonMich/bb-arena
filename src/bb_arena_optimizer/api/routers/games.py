@@ -52,184 +52,6 @@ async def get_team_schedule(team_id: int, season: int | None = None):
         logger.error(f"Error fetching team {team_id} schedule: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch schedule: {str(e)}")
 
-
-@router.get("/game/{game_id}/boxscore")
-async def get_game_boxscore(game_id: str):
-    """Get game boxscore with attendance from BuzzerBeater API and store it."""
-    username = os.getenv("BB_USERNAME")
-    security_code = os.getenv("BB_SECURITY_CODE")
-    
-    if not username or not security_code:
-        raise HTTPException(
-            status_code=500, 
-            detail="BuzzerBeater credentials not configured."
-        )
-    
-    try:
-        db_manager = DatabaseManager("bb_arena_data.db")
-        
-        # Check if we already have this game stored
-        stored_game = db_manager.get_game_by_id(game_id)
-        
-        if stored_game and stored_game.total_attendance is not None:
-            # Return stored data if we have attendance info
-            response_data = {
-                "attendance": {
-                    "bleachers": stored_game.bleachers_attendance,
-                    "lower_tier": stored_game.lower_tier_attendance,
-                    "courtside": stored_game.courtside_attendance,
-                    "luxury_boxes": stored_game.luxury_boxes_attendance
-                },
-                "calculated_revenue": stored_game.calculated_revenue
-            }
-            
-            # Include pricing info if available
-            pricing_data = {}
-            if stored_game.bleachers_price is not None:
-                pricing_data["bleachers"] = stored_game.bleachers_price
-            if stored_game.lower_tier_price is not None:
-                pricing_data["lower_tier"] = stored_game.lower_tier_price
-            if stored_game.courtside_price is not None:
-                pricing_data["courtside"] = stored_game.courtside_price
-            if stored_game.luxury_boxes_price is not None:
-                pricing_data["luxury_boxes"] = stored_game.luxury_boxes_price
-            
-            if pricing_data:
-                response_data["pricing"] = pricing_data
-            
-            return response_data
-        
-        # Fetch from API if not stored or missing attendance data
-        with BuzzerBeaterAPI(username, security_code) as api:
-            boxscore_data = api.get_boxscore(game_id)
-            
-            if not boxscore_data:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No boxscore found for game {game_id}"
-                )
-            
-            # Store the game data if we have attendance information and required fields
-            attendance_data = boxscore_data.get("attendance")
-            home_team_id = boxscore_data.get("home_team_id")
-            away_team_id = boxscore_data.get("away_team_id")
-            
-            # Validate required fields more strictly
-            if (attendance_data and 
-                home_team_id is not None and 
-                away_team_id is not None and 
-                isinstance(home_team_id, int) and home_team_id > 0 and
-                isinstance(away_team_id, int) and away_team_id > 0):
-                try:
-                    # Get season information
-                    api_season = boxscore_data.get("season")
-                    calculated_season = None
-                    
-                    # If API doesn't provide season, try to calculate it from the game date
-                    if api_season is None:
-                        game_date_str = boxscore_data.get("date")
-                        if game_date_str and isinstance(game_date_str, str):
-                            try:
-                                # Parse the game date
-                                if game_date_str.endswith('Z'):
-                                    parsed_game_date = datetime.fromisoformat(game_date_str.replace('Z', '+00:00'))
-                                else:
-                                    parsed_game_date = datetime.fromisoformat(game_date_str)
-                                
-                                # Get all seasons from database to find which season this game belongs to
-                                all_seasons = db_manager.get_all_seasons()
-                                for season in all_seasons:
-                                    if season.start_date and season.end_date:
-                                        if season.start_date <= parsed_game_date <= season.end_date:
-                                            calculated_season = season.season_number
-                                            break
-                                    elif season.start_date and not season.end_date:
-                                        # Current season with no end date
-                                        if season.start_date <= parsed_game_date:
-                                            calculated_season = season.season_number
-                                        
-                                if calculated_season is None:
-                                    logger.warning(f"Could not determine season for game {game_id} with date {parsed_game_date}")
-                                    
-                            except Exception as date_parse_error:
-                                logger.warning(f"Could not parse game date '{game_date_str}' for season calculation: {date_parse_error}")
-                    
-                    final_season = api_season if api_season is not None else calculated_season
-                    
-                    # Validate that we have the required information
-                    if final_season is None:
-                        logger.error(f"Cannot save game {game_id}: No season information available from API or calculable from date")
-                        raise ValueError("Season information required but not available from API or calculable from date")
-                    
-                    # Validate that we have a game type
-                    game_type = boxscore_data.get("type")
-                    if not game_type:
-                        logger.error(f"Cannot save game {game_id}: No game type provided by API")
-                        raise ValueError("Game type required but not provided by API")
-                    
-                    # Validate that we have a date
-                    game_date = boxscore_data.get("date")
-                    if not game_date or not isinstance(game_date, str):
-                        logger.error(f"Cannot save game {game_id}: No valid date provided by API")
-                        raise ValueError("Game date required but not provided by API")
-                    
-                    # Debug logging
-                    logger.info(f"About to save game {game_id}:")
-                    logger.info(f"  home_team_id: {home_team_id} (type: {type(home_team_id)})")
-                    logger.info(f"  away_team_id: {away_team_id} (type: {type(away_team_id)})")
-                    logger.info(f"  attendance_data: {attendance_data}")
-                    logger.info(f"  final_season: {final_season} (from API: {api_season}, calculated: {calculated_season})")
-                    logger.info(f"  game_type: {game_type}")
-                    logger.info(f"  game_date: {game_date}")
-                    
-                    # Create GameRecord from boxscore data using the proper factory method
-                    # Prepare the game data in the format expected by from_api_data
-                    game_data_for_record = {
-                        "id": game_id,
-                        "type": game_type,
-                        "season": final_season,
-                        "date": game_date,
-                        "attendance": attendance_data,
-                        "ticket_revenue": boxscore_data.get("revenue")
-                    }
-                    
-                    logger.info(f"Game data for record creation: {game_data_for_record}")
-                    
-                    game_record = GameRecord.from_api_data(
-                        game_data_for_record,
-                        home_team_id=home_team_id,
-                        away_team_id=away_team_id
-                    )
-                    
-                    logger.info(f"Created GameRecord: game_id={game_record.game_id}, home={game_record.home_team_id}, away={game_record.away_team_id}, season={game_record.season}, type={game_record.game_type}, date={game_record.date}")
-                    
-                    # Save to database
-                    saved_id = db_manager.save_game_record(game_record)
-                    logger.info(f"Successfully saved game record for game {game_id} with database ID {saved_id} (Home: {home_team_id}, Away: {away_team_id})")
-                    
-                except Exception as save_error:
-                    logger.error(f"Failed to save game record for {game_id}: {save_error}")
-                    logger.error(f"Full traceback: {traceback.format_exc()}")
-                    # Don't re-raise the error - just log it and continue to return the boxscore data
-            else:
-                missing_fields = []
-                if not attendance_data:
-                    missing_fields.append("attendance")
-                if not home_team_id or not isinstance(home_team_id, int) or home_team_id <= 0:
-                    missing_fields.append("valid home_team_id")
-                if not away_team_id or not isinstance(away_team_id, int) or away_team_id <= 0:
-                    missing_fields.append("valid away_team_id")
-                logger.warning(f"Insufficient data to save game record for {game_id} - missing: {', '.join(missing_fields)}")
-            
-            return boxscore_data
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching game {game_id} boxscore: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch boxscore: {str(e)}")
-
-
 @router.get("/team/{team_id}/games")
 async def get_team_stored_games(team_id: int, season: int | None = None, limit: int = 100):
     """Get stored games for a team from the database."""
@@ -379,3 +201,104 @@ async def get_prefix_max_attendance(team_id: int, up_to_date: str):
     except Exception as e:
         logger.error(f"Error fetching prefix max attendance for team {team_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch prefix max attendance: {str(e)}")
+
+
+@router.get("/game/{game_id}/stored")
+async def get_game_from_db(game_id: str):
+    """Get game data from database only (no BB API call)."""
+    try:
+        db_manager = DatabaseManager("bb_arena_data.db")
+        stored_game = db_manager.get_game_by_id(game_id)
+        
+        if not stored_game:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Game {game_id} not found in database"
+            )
+        
+        return stored_game.to_dict()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching stored game {game_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch stored game: {str(e)}")
+
+
+@router.post("/game/{game_id}/fetch")
+async def fetch_and_store_game_from_bb(game_id: str):
+    """Fetch game from BB API and store to database."""
+    username = os.getenv("BB_USERNAME")
+    security_code = os.getenv("BB_SECURITY_CODE")
+    
+    if not username or not security_code:
+        raise HTTPException(
+            status_code=500, 
+            detail="BuzzerBeater credentials not configured."
+        )
+    
+    try:
+        db_manager = DatabaseManager("bb_arena_data.db")
+        
+        # Fetch from BB API
+        with BuzzerBeaterAPI(username, security_code) as api:
+            boxscore_data = api.get_boxscore(game_id)
+            
+            if not boxscore_data:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No boxscore found for game {game_id} in BB API"
+                )
+            
+            # Calculate season from game date using database seasons
+            calculated_season = None
+            game_date_str = boxscore_data["start_date"]
+            if game_date_str:
+                try:
+                    # Parse the game date
+                    if game_date_str.endswith('Z'):
+                        parsed_game_date = datetime.fromisoformat(game_date_str.replace('Z', '+00:00'))
+                    else:
+                        parsed_game_date = datetime.fromisoformat(game_date_str)
+                    
+                    # Get all seasons from database to find which season this game belongs to
+                    all_seasons = db_manager.get_all_seasons()
+                    for season in all_seasons:
+                        if season.start_date and season.end_date:
+                            if season.start_date <= parsed_game_date <= season.end_date:
+                                calculated_season = season.season_number
+                                break
+                        elif season.start_date and not season.end_date:
+                            # Current season with no end date
+                            if season.start_date <= parsed_game_date:
+                                calculated_season = season.season_number
+                            
+                    if calculated_season is None:
+                        logger.warning(f"Could not determine season for game {game_id} with date {parsed_game_date}")
+                        
+                except Exception as date_parse_error:
+                    logger.warning(f"Could not parse game date '{game_date_str}' for season calculation: {date_parse_error}")
+            
+            if calculated_season is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Cannot determine season for game {game_id}. Unable to store game without season information."
+                )
+            
+            # Convert to GameRecord and store (null values won't overwrite existing data)
+            game_record = GameRecord.from_api_data(boxscore_data, season=calculated_season)
+            saved_id = db_manager.save_game_record(game_record)
+            
+            # Return the stored record (which includes any preserved existing data)
+            stored_game = db_manager.get_game_by_id(game_id)
+            if not stored_game:
+                raise HTTPException(status_code=500, detail="Failed to retrieve stored game record")
+            
+            logger.info(f"Successfully fetched and stored game {game_id} with database ID {saved_id}")
+            return stored_game.to_dict()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching and storing game {game_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch and store game: {str(e)}")

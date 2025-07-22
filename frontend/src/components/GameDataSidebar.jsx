@@ -268,15 +268,24 @@ const GameDataSidebar = ({
       // Check if game is already known to be stored to avoid unnecessary API calls
       const wasAlreadyKnownStored = storedGames.has(game.id);
       
-      const boxscoreData = await arenaService.getGameBoxscore(game.id);
-      const loadTime = Date.now() - startTime;
-      const wasFromDatabase = loadTime < 200;
+      const { gameRecord, fromCache } = await arenaService.getGameSmart(game.id);
+      const wasFromDatabase = fromCache;
       
       onGameSelect({
         ...game,
-        attendance: boxscoreData.attendance,
-        calculated_revenue: boxscoreData.calculated_revenue,
-        pricing: boxscoreData.pricing,
+        attendance: {
+          bleachers: gameRecord.bleachers_attendance,
+          lower_tier: gameRecord.lower_tier_attendance,
+          courtside: gameRecord.courtside_attendance,
+          luxury_boxes: gameRecord.luxury_boxes_attendance
+        },
+        calculated_revenue: gameRecord.calculated_revenue,
+        pricing: gameRecord.bleachers_price ? {
+          bleachers: gameRecord.bleachers_price,
+          lower_tier: gameRecord.lower_tier_price,
+          courtside: gameRecord.courtside_price,
+          luxury_boxes: gameRecord.luxury_boxes_price
+        } : null,
         season: season || currentSeason // Add season context
       });
       
@@ -321,7 +330,7 @@ const GameDataSidebar = ({
       let failed = 0;
       for (const game of completedGames) {
         try {
-          await arenaService.getGameBoxscore(game.id);
+          await arenaService.getGameSmart(game.id);
           // Re-check stored status after fetch
           const storedStatus = await arenaService.checkGamesStored(teamId, [game.id]);
           if (storedStatus[game.id]) {

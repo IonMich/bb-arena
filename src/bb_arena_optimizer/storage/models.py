@@ -1,8 +1,10 @@
 """Database models for storing BuzzerBeater data."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime, UTC as datetime_utc
-from typing import Any
+from typing import Any, Dict
+
+from bb_arena_optimizer.api.client import BoxscoreData
 
 
 @dataclass
@@ -96,7 +98,6 @@ class GameRecord:
     lower_tier_attendance: int | None = None
     courtside_attendance: int | None = None
     luxury_boxes_attendance: int | None = None
-    total_attendance: int | None = None
     
     # Game venue information
     neutral_arena: bool = False  # True if game is played at a neutral venue
@@ -116,102 +117,92 @@ class GameRecord:
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+    @property
+    def total_attendance(self) -> int | None:
+        """Calculate total attendance from individual section attendances."""
+        attendances = [
+            self.bleachers_attendance,
+            self.lower_tier_attendance,
+            self.courtside_attendance,
+            self.luxury_boxes_attendance
+        ]
+        
+        # Only calculate if we have at least one non-None attendance value
+        valid_attendances = [a for a in attendances if a is not None]
+        if not valid_attendances:
+            return None
+            
+        # Sum all valid attendances (treat None as 0)
+        return sum(a if a is not None else 0 for a in attendances)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert GameRecord to JSON-serializable dictionary."""
+        result = asdict(self)
+        
+        # Convert datetime objects to ISO strings for JSON serialization
+        if self.date:
+            result['date'] = self.date.isoformat()
+        if self.created_at:
+            result['created_at'] = self.created_at.isoformat()
+        if self.updated_at:
+            result['updated_at'] = self.updated_at.isoformat()
+            
+        # Add computed total_attendance to the dictionary
+        result['total_attendance'] = self.total_attendance
+        
+        return result
+
     @classmethod
-    def from_api_data(
-        cls, game_data: dict[str, Any], home_team_id: int | None = None, away_team_id: int | None = None
-    ) -> "GameRecord":
-        """Create GameRecord from API game data.
-        
+    def from_api_data(cls, boxscore_data: BoxscoreData, season: int | None = None) -> "GameRecord":
+        """Create GameRecord from a dict of extracted boxscore data.
+
+        Performs extra processing like: 
+        - date parsing and conversion to datetime
+        - fixing BBM and BBM playoff games to always be neutral
         Args:
-            game_data: Game data from the API
-            home_team_id: ID of the home team (required)
-            away_team_id: ID of the away team (required)
+            boxscore_data: Boxscore data from the API
         """
-        # Validate input
-        if not game_data or not isinstance(game_data, dict):
-            raise ValueError("game_data must be a non-empty dictionary")
+        start_date_str = boxscore_data["start_date"].strip()
+        if not start_date_str:
+            raise ValueError("BoxscoreData start_date is required but was empty after stripping")
         
-        if home_team_id is None or away_team_id is None:
-            raise ValueError("Both home_team_id and away_team_id are required")
-        
-        # Parse date
-        game_date = None
-        if game_data.get("date"):
-            import contextlib
-
-            with contextlib.suppress(ValueError, AttributeError):
-                game_date = datetime.fromisoformat(
-                    game_data["date"].replace("Z", "+00:00")
-                )
-
-        # Extract attendance data if available
-        attendance_data = game_data.get("attendance") or {}
-        total_attendance = None
-        if attendance_data and isinstance(attendance_data, dict):
-            attendance_sum = sum(v for v in attendance_data.values() if isinstance(v, int | float))
-            total_attendance = int(attendance_sum) if attendance_sum else None
-
-        # Convert revenue to integer dollars (from float or string)
-        ticket_revenue = None
-        if game_data.get("ticket_revenue") is not None:
-            try:
-                ticket_revenue = int(float(game_data["ticket_revenue"]))
-            except (ValueError, TypeError):
-                pass
-
-        # Convert price fields to integer dollars
-        def to_int_dollars(value) -> int | None:
-            if value is None:
-                return None
-            try:
-                return int(float(value))
-            except (ValueError, TypeError):
-                return None
+        try:
+            # Handle timezone-aware strings (with Z or +00:00)
+            if start_date_str.endswith("Z"):
+                # Replace Z with +00:00 for ISO format parsing
+                game_date = datetime.fromisoformat(start_date_str.replace("Z", "+00:00"))
+            elif "+" in start_date_str or start_date_str.endswith("00:00"):
+                # Already has timezone info
+                game_date = datetime.fromisoformat(start_date_str)
+            else:
+                # Assume naive datetime string is in UTC
+                naive_datetime = datetime.fromisoformat(start_date_str)
+                game_date = naive_datetime.replace(tzinfo=datetime_utc)
+        except ValueError as e:
+            raise ValueError(f"Invalid start_date format '{start_date_str}': {e}")
 
         # Determine neutral_arena logic:
-        game_type = game_data.get("type")
-        # BBM and BBM playoff are always neutral, regardless of the field
-        if game_type in ["bbm", "bbm.playoff"]:
+        # BBM and BBM playoff are always neutral, regardless of the API field
+        if boxscore_data["game_type"] in ["bbm", "bbm.playoff"]:
             is_neutral = True
         else:
-            # Use the neutral field from the API if present, else fallback to False
-            is_neutral = bool(game_data.get("neutral", 0))
-
-        # If neutral, clear prices
-        if is_neutral:
-            bleachers_price = None
-            lower_tier_price = None
-            courtside_price = None
-            luxury_boxes_price = None
-        else:
-            bleachers_price = to_int_dollars(game_data.get("bleachers_price"))
-            lower_tier_price = to_int_dollars(game_data.get("lower_tier_price"))
-            courtside_price = to_int_dollars(game_data.get("courtside_price"))
-            luxury_boxes_price = to_int_dollars(game_data.get("luxury_boxes_price"))
+            # Use the neutral field from the BoxscoreData
+            is_neutral = boxscore_data["neutral"]
 
         return cls(
-            game_id=game_data.get("id", ""),
-            home_team_id=home_team_id,
-            away_team_id=away_team_id,
+            game_id=str(boxscore_data["match_id"]),
+            home_team_id=boxscore_data["home_team_id"],
+            away_team_id=boxscore_data["away_team_id"],
             date=game_date,
-            game_type=game_type,
-            season=game_data.get("season"),
-            division=game_data.get("division"),
-            country=game_data.get("country"),
-            cup_round=game_data.get("cup_round"),
-            score_home=game_data.get("score_home"),
-            score_away=game_data.get("score_away"),
-            bleachers_attendance=attendance_data.get("bleachers") if isinstance(attendance_data, dict) else None,
-            lower_tier_attendance=attendance_data.get("lower_tier") if isinstance(attendance_data, dict) else None,
-            courtside_attendance=attendance_data.get("courtside") if isinstance(attendance_data, dict) else None,
-            luxury_boxes_attendance=attendance_data.get("luxury_boxes") if isinstance(attendance_data, dict) else None,
-            total_attendance=total_attendance,
+            game_type=boxscore_data["game_type"],
+            season=season,
+            score_home=boxscore_data["home_score"],
+            score_away=boxscore_data["away_score"],
+            bleachers_attendance=boxscore_data["bleachers_attendance"],
+            lower_tier_attendance=boxscore_data["lower_tier_attendance"],
+            courtside_attendance=boxscore_data["courtside_attendance"],
+            luxury_boxes_attendance=boxscore_data["luxury_box_attendance"],
             neutral_arena=is_neutral,
-            ticket_revenue=ticket_revenue,
-            bleachers_price=bleachers_price,
-            lower_tier_price=lower_tier_price,
-            courtside_price=courtside_price,
-            luxury_boxes_price=luxury_boxes_price,
             created_at=datetime.now(datetime_utc),
             updated_at=datetime.now(datetime_utc)
         )

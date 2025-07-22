@@ -2,6 +2,8 @@
  * Service for fetching arena data from the backend API
  */
 
+import { validateGameRecord } from '../types/GameRecord.js';
+
 const API_BASE_URL = 'http://localhost:8000';
 
 class ArenaService {
@@ -167,17 +169,68 @@ class ArenaService {
   }
 
   /**
-   * Fetch game boxscore from BuzzerBeater API
+   * Get game data from database only (no BB API call)
+   * @param {string} gameId - Game ID to fetch
+   * @returns {Promise<import('../types/GameRecord.js').GameRecord|null>} GameRecord or null if not found
    */
-  async getGameBoxscore(gameId) {
+  async getGameFromDB(gameId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bb/game/${gameId}/boxscore`);
+      const response = await fetch(`${API_BASE_URL}/api/bb/game/${gameId}/stored`);
+      if (response.status === 404) {
+        return null; // Game not found in database
+      }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      
+      const data = await response.json();
+      return validateGameRecord(data);
     } catch (error) {
-      console.error(`Error fetching game ${gameId} boxscore:`, error);
+      console.error(`Error fetching stored game ${gameId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch game from BB API and store to database
+   * @param {string} gameId - Game ID to fetch
+   * @returns {Promise<import('../types/GameRecord.js').GameRecord>} GameRecord from BB API
+   */
+  async fetchAndStoreGameFromBB(gameId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/bb/game/${gameId}/fetch`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return validateGameRecord(data);
+    } catch (error) {
+      console.error(`Error fetching and storing game ${gameId} from BB:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get game data with smart caching - tries database first, then BB API
+   * @param {string} gameId - Game ID to fetch
+   * @returns {Promise<{gameRecord: import('../types/GameRecord.js').GameRecord, fromCache: boolean}>}
+   */
+  async getGameSmart(gameId) {
+    try {
+      // Try database first
+      const cachedGame = await this.getGameFromDB(gameId);
+      if (cachedGame) {
+        return { gameRecord: cachedGame, fromCache: true };
+      }
+      
+      // Fetch from BB API if not in database
+      const freshGame = await this.fetchAndStoreGameFromBB(gameId);
+      return { gameRecord: freshGame, fromCache: false };
+    } catch (error) {
+      console.error(`Error in smart game fetch for ${gameId}:`, error);
       throw error;
     }
   }
@@ -387,16 +440,12 @@ class ArenaService {
   }
 
   /**
-   * Check if a game is likely stored in the database by testing load time
+   * Check if a game is stored in the database
    */
   async isGameStored(gameId) {
     try {
-      const startTime = Date.now();
-      await this.getGameBoxscore(gameId);
-      const loadTime = Date.now() - startTime;
-      
-      // If it loads very quickly (< 200ms), it's likely from the database
-      return loadTime < 200;
+      const game = await this.getGameFromDB(gameId);
+      return game !== null;
     } catch {
       // If there's an error, assume it's not stored
       return false;
