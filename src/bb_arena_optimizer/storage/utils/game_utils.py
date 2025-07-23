@@ -3,7 +3,6 @@
 import sqlite3
 from datetime import datetime, UTC as datetime_utc
 from pathlib import Path
-from typing import Any
 
 from ..models import GameRecord
 from ...utils.logging_config import get_logger
@@ -63,6 +62,9 @@ class GameRecordManager:
 
     def save_game_record(self, game_record: GameRecord) -> int:
         """Save or update game record in database.
+        
+        When updating existing records, null values in the new record will not
+        overwrite existing non-null values in the database.
 
         Args:
             game_record: GameRecord instance to save
@@ -74,52 +76,61 @@ class GameRecordManager:
         self._validate_game_record(game_record)
         
         with sqlite3.connect(self.db_path) as conn:
-            # Try to update existing record first - use dynamic placeholders for robustness
-            update_columns = [
-                "home_team_id", "away_team_id", "date", "game_type",
-                "season", "division", "country", "cup_round",
-                "score_home", "score_away", "bleachers_attendance",
-                "lower_tier_attendance", "courtside_attendance",
-                "luxury_boxes_attendance", "total_attendance", "neutral_arena",
-                "ticket_revenue", "bleachers_price", "lower_tier_price",
-                "courtside_price", "luxury_boxes_price", "updated_at"
-            ]
-            update_set = ", ".join([f"{col} = ?" for col in update_columns])
+            # Check if record already exists
+            existing_cursor = conn.execute("SELECT * FROM games WHERE game_id = ?", (game_record.game_id,))
+            existing_record = existing_cursor.fetchone()
             
-            cursor = conn.execute(
-                f"""
-                UPDATE games SET {update_set}
-                WHERE game_id = ?
-            """,
-                (
-                    game_record.home_team_id,
-                    game_record.away_team_id,
-                    game_record.date,
-                    game_record.game_type,
-                    game_record.season,
-                    game_record.division,
-                    game_record.country,
-                    game_record.cup_round,
-                    game_record.score_home,
-                    game_record.score_away,
-                    game_record.bleachers_attendance,
-                    game_record.lower_tier_attendance,
-                    game_record.courtside_attendance,
-                    game_record.luxury_boxes_attendance,
-                    game_record.total_attendance,
-                    game_record.neutral_arena,
-                    game_record.ticket_revenue,
-                    game_record.bleachers_price,
-                    game_record.lower_tier_price,
-                    game_record.courtside_price,
-                    game_record.luxury_boxes_price,
-                    datetime.now(datetime_utc),
-                    game_record.game_id,
-                ),
-            )
-
-            if cursor.rowcount == 0:
-                # Insert new record - use dynamic placeholders to prevent column/value mismatch
+            if existing_record:
+                # Build dynamic update that preserves non-null existing values
+                update_parts = []
+                update_values = []
+                
+                # Define all updateable fields with their values
+                field_mapping = {
+                    "home_team_id": game_record.home_team_id,
+                    "away_team_id": game_record.away_team_id,
+                    "date": game_record.date,
+                    "game_type": game_record.game_type,
+                    "season": game_record.season,
+                    "division": game_record.division,
+                    "country": game_record.country,
+                    "cup_round": game_record.cup_round,
+                    "score_home": game_record.score_home,
+                    "score_away": game_record.score_away,
+                    "bleachers_attendance": game_record.bleachers_attendance,
+                    "lower_tier_attendance": game_record.lower_tier_attendance,
+                    "courtside_attendance": game_record.courtside_attendance,
+                    "luxury_boxes_attendance": game_record.luxury_boxes_attendance,
+                    "neutral_arena": game_record.neutral_arena,
+                    "ticket_revenue": game_record.ticket_revenue,
+                    "bleachers_price": game_record.bleachers_price,
+                    "lower_tier_price": game_record.lower_tier_price,
+                    "courtside_price": game_record.courtside_price,
+                    "luxury_boxes_price": game_record.luxury_boxes_price,
+                }
+                
+                # For each field, only update if new value is not None (don't overwrite existing data with null)
+                for field_name, new_value in field_mapping.items():
+                    if new_value is not None:
+                        update_parts.append(f"{field_name} = ?")
+                        update_values.append(new_value)
+                
+                # Always update timestamp
+                update_parts.append("updated_at = ?")
+                update_values.append(datetime.now(datetime_utc))
+                update_values.append(game_record.game_id)  # For WHERE clause
+                
+                if update_parts:
+                    cursor = conn.execute(
+                        f"UPDATE games SET {', '.join(update_parts)} WHERE game_id = ?",
+                        update_values
+                    )
+                    
+                    # Get the database ID
+                    id_cursor = conn.execute("SELECT id FROM games WHERE game_id = ?", (game_record.game_id,))
+                    return id_cursor.fetchone()[0]
+            else:
+                # Insert new record
                 columns = [
                     "game_id", "home_team_id", "away_team_id", "date", "game_type",
                     "season", "division", "country", "cup_round",
@@ -164,12 +175,12 @@ class GameRecordManager:
                         datetime.now(datetime_utc),
                     ),
                 )
-
-            conn.commit()
-            row_id = cursor.lastrowid
-            if row_id is None:
-                raise ValueError("Failed to insert game record")
-            return row_id
+                
+                conn.commit()
+                row_id = cursor.lastrowid
+                if row_id is None:
+                    raise ValueError("Failed to insert game record")
+                return row_id
 
     def get_games_for_team(
         self, team_id: str, limit: int | None = None
@@ -217,7 +228,6 @@ class GameRecordManager:
                         lower_tier_attendance=row["lower_tier_attendance"],
                         courtside_attendance=row["courtside_attendance"],
                         luxury_boxes_attendance=row["luxury_boxes_attendance"],
-                        total_attendance=row["total_attendance"],
                         neutral_arena=bool(row["neutral_arena"]),
                         ticket_revenue=row["ticket_revenue"],
                         calculated_revenue=row["calculated_revenue"] if "calculated_revenue" in row.keys() else None,
@@ -272,7 +282,6 @@ class GameRecordManager:
                     lower_tier_attendance=row["lower_tier_attendance"],
                     courtside_attendance=row["courtside_attendance"],
                     luxury_boxes_attendance=row["luxury_boxes_attendance"],
-                    total_attendance=row["total_attendance"],
                     neutral_arena=bool(row["neutral_arena"]),
                     ticket_revenue=row["ticket_revenue"],
                     calculated_revenue=row["calculated_revenue"] if "calculated_revenue" in row.keys() else None,

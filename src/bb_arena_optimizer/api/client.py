@@ -26,6 +26,24 @@ class BoxscoreData(TypedDict):
     start_date: str
 
 
+class ScheduleMatchData(TypedDict):
+    """Typed structure for a single match from schedule API."""
+    match_id: int
+    home_team_id: int
+    away_team_id: int
+    home_score: int | None  # Optional - None for upcoming games
+    away_score: int | None  # Optional - None for upcoming games
+    game_type: str
+    start_date: str
+
+
+class ScheduleData(TypedDict):
+    """Typed structure for schedule data from BB API."""
+    team_id: int
+    season: int
+    matches: list[ScheduleMatchData]
+
+
 class BuzzerBeaterAPI:
     """BuzzerBeater API client for arena and team data."""
 
@@ -141,30 +159,17 @@ class BuzzerBeaterAPI:
 
         return self._parse_arena_data(root)
 
-    def get_economy_info(self) -> dict[str, Any] | None:
-        """Get economy information including ticket revenues.
-
-        Returns:
-            Dictionary with economy data or None if error
-        """
-        root = self._make_request("economy.aspx")
-
-        if root is None:
-            return None
-
-        return self._parse_economy_data(root)
-
     def get_schedule(
         self, team_id: int | None = None, season: int | None = None
-    ) -> dict[str, Any] | None:
-        """Get team schedule.
-
+    ) -> ScheduleData | None:
+        """Get team schedule with typed return structure.
+        
         Args:
             team_id: Optional team ID (defaults to current user's team)
             season: Optional season number (defaults to current season)
-
+            
         Returns:
-            Dictionary with schedule data or None if error
+            ScheduleData with typed matches or None if error
         """
         params = {}
         if team_id:
@@ -177,7 +182,7 @@ class BuzzerBeaterAPI:
         if root is None:
             return None
 
-        return self._parse_schedule_data(root)
+        return self._parse_schedule_data(root, season or 0)
 
     def get_team_info(self, team_id: int | None = None) -> dict[str, Any] | None:
         """Get basic team information.
@@ -766,72 +771,30 @@ class BuzzerBeaterAPI:
 
         return arena_data
 
-    def _parse_economy_data(self, root: ET.Element) -> dict[str, Any]:
-        """Parse economy XML data."""
-        economy_data: dict[str, Any] = {
-            "transactions": [],
-            "total_revenue": 0.0,
-            "ticket_revenue": 0.0,
-        }
 
-        # Parse last week and this week transactions
-        for week_elem in root.findall(".//lastWeek") + root.findall(".//thisWeek"):
-            # Parse all transaction types
-            for child in week_elem:
-                if child.tag in ["initial", "final", "current"]:
-                    continue  # Skip balance entries
-
-                amount_text = child.text
-                if amount_text:
-                    try:
-                        amount = float(amount_text.strip())
-                    except ValueError:
-                        continue
-
-                    trans_data = {
-                        "date": child.get("date", ""),
-                        "type": child.tag,
-                        "amount": amount,
-                        "description": child.tag,
-                    }
-
-                    # Add additional info for transfers
-                    if child.tag == "transfer":
-                        player_id = child.get("playerid")
-                        if player_id:
-                            trans_data["description"] = f"Transfer (Player {player_id})"
-                    elif child.tag == "matchRevenue":
-                        match_id = child.get("matchid")
-                        if match_id:
-                            trans_data["description"] = (
-                                f"Match Revenue (Match {match_id})"
-                            )
-                            economy_data["ticket_revenue"] += amount
-
-                    economy_data["transactions"].append(trans_data)
-
-                    # Only positive amounts count as revenue
-                    if amount > 0:
-                        economy_data["total_revenue"] += amount
-
-        return economy_data
-
-    def _parse_schedule_data(self, root: ET.Element) -> dict[str, Any]:
-        """Parse schedule XML data."""
-        schedule_data: dict[str, Any] = {"games": [], "upcoming_home_games": []}
+    def _parse_schedule_data(self, root: ET.Element, season: int) -> ScheduleData:
+        """Parse schedule XML data into typed structure."""
+        matches: list[ScheduleMatchData] = []
         
         # Get team ID from schedule element
         schedule_elem = root.find(".//schedule")
         current_team_id = (
             schedule_elem.get("teamid") if schedule_elem is not None else None
         )
-        schedule_data["team_id"] = current_team_id
+        
+        if current_team_id is None:
+            raise ValueError("Could not determine team ID from schedule data")
+            
+        team_id = int(current_team_id)
 
         for match in root.findall(".//match"):
             # Get basic match info
-            match_id = match.get("id")
-            start_time = match.get("start")
+            match_id_str = match.get("id")
+            start_time = match.get("start") 
             match_type = match.get("type")
+            
+            if not match_id_str or not start_time or not match_type:
+                continue
 
             # Get team info
             home_team_elem = match.find("./homeTeam")
@@ -840,25 +803,18 @@ class BuzzerBeaterAPI:
             if home_team_elem is None or away_team_elem is None:
                 continue
 
-            home_team_id = home_team_elem.get("id")
-
-            home_team_name_elem = home_team_elem.find("./teamName")
-            away_team_name_elem = away_team_elem.find("./teamName")
-
-            home_team_name = (
-                home_team_name_elem.text
-                if home_team_name_elem is not None
-                else "Unknown"
-            )
-            away_team_name = (
-                away_team_name_elem.text
-                if away_team_name_elem is not None
-                else "Unknown"
-            )
-
-            # Determine if this is a home game for the current team
-            is_home = home_team_id == current_team_id
-            opponent = away_team_name if is_home else home_team_name
+            home_team_id_str = home_team_elem.get("id")
+            away_team_id_str = away_team_elem.get("id")
+            
+            if not home_team_id_str or not away_team_id_str:
+                continue
+                
+            try:
+                match_id = int(match_id_str)
+                home_team_id = int(home_team_id_str)
+                away_team_id = int(away_team_id_str)
+            except ValueError:
+                continue
 
             # Extract scores from the XML (if available)
             home_score = None
@@ -880,24 +836,23 @@ class BuzzerBeaterAPI:
                 except ValueError:
                     pass
 
-            game_data = {
-                "id": match_id,
-                "date": start_time,
-                "opponent": opponent,
-                "home": is_home,
-                "type": match_type,
-                "attendance": None,  # Not available in schedule
-                "score_home": home_score,  # Extracted from XML
-                "score_away": away_score,  # Extracted from XML
+            match_data: ScheduleMatchData = {
+                "match_id": match_id,
+                "home_team_id": home_team_id,
+                "away_team_id": away_team_id,
+                "home_score": home_score,
+                "away_score": away_score,
+                "game_type": match_type,
+                "start_date": start_time
             }
 
-            schedule_data["games"].append(game_data)
+            matches.append(match_data)
 
-            # Check if it's an upcoming home game
-            if is_home:
-                schedule_data["upcoming_home_games"].append(game_data)
-
-        return schedule_data
+        return ScheduleData(
+            team_id=team_id,
+            season=season,
+            matches=matches
+        )
 
     def _parse_team_data(self, root: ET.Element) -> dict[str, Any]:
         """Parse team XML data."""

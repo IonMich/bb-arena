@@ -198,7 +198,7 @@ class TeamInfoManager:
         for country_id in country_ids:
             try:
                 # Fetch level 1 leagues for this country
-                leagues_data = api_client.get_leagues(level=1, country_id=country_id)
+                leagues_data = api_client.get_leagues(country_id=country_id, max_level=1)
                 
                 if leagues_data and 'leagues' in leagues_data:
                     for league_data in leagues_data['leagues']:
@@ -467,15 +467,6 @@ class TeamInfoManager:
             logger.error(f"Error getting current league info for team {team_id}: {e}")
             return None
 
-    def collect_team_history_from_webpage(self, team_id: int) -> bool:
-        """Collect and save team league history from BuzzerBeater webpage.
-        
-        Args:
-            team_id: Team ID to collect history for
-            
-        Returns:
-            True if successful, False otherwise
-        """
     def collect_team_history_from_webpage(self, team_id: int) -> bool:
         """Collect and save team league history from BuzzerBeater webpage.
         

@@ -315,3 +315,71 @@ async def fetch_and_store_game_from_bb(game_id: str):
     except Exception as e:
         logger.error(f"Error fetching and storing game {game_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch and store game: {str(e)}")
+
+
+@router.post("/team/{team_id}/update-scores")
+async def update_team_scores_from_schedule(team_id: int, season: int | None = None):
+    """Update game scores for a team from schedule API.
+    
+    This is much more efficient than refetching via boxscore API when we only need scores.
+    """
+    username = os.getenv("BB_USERNAME")
+    security_code = os.getenv("BB_SECURITY_CODE")
+    
+    if not username or not security_code:
+        raise HTTPException(
+            status_code=500, 
+            detail="BuzzerBeater credentials not configured."
+        )
+    
+    try:
+        db_manager = DatabaseManager("bb_arena_data.db")
+        
+        with BuzzerBeaterAPI(username, security_code) as api:
+            # Get typed schedule data
+            schedule_data = api.get_schedule(team_id, season)
+            
+            if not schedule_data:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No schedule found for team {team_id}"
+                )
+            
+            # Get home games from database that are missing scores
+            stored_games = db_manager.get_games_for_team(str(team_id))
+            games_needing_scores = [
+                game for game in stored_games 
+                if (game.score_home is None or game.score_away is None) and
+                   game.home_team_id == team_id and  # Only home games for this team
+                   not game.neutral_arena  # Exclude neutral venue games
+            ]
+            
+            updated_count = 0
+            
+            # Create a lookup of schedule matches by game_id
+            schedule_lookup = {str(match["match_id"]): match for match in schedule_data["matches"]}
+            
+            for game in games_needing_scores:
+                if game.game_id in schedule_lookup:
+                    schedule_match = schedule_lookup[game.game_id]
+                    
+                    # Only update if schedule has scores
+                    if schedule_match["home_score"] is not None and schedule_match["away_score"] is not None:
+                        game.update_scores_from_schedule(schedule_match)
+                        db_manager.save_game_record(game)
+                        updated_count += 1
+                        logger.info(f"Updated scores for game {game.game_id}: {schedule_match['home_score']} - {schedule_match['away_score']}")
+            
+            return {
+                "team_id": team_id,
+                "season": season,
+                "games_checked": len(games_needing_scores),
+                "games_updated": updated_count,
+                "total_schedule_matches": len(schedule_data["matches"])
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating scores for team {team_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update scores: {str(e)}")

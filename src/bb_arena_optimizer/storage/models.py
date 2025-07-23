@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, UTC as datetime_utc
 from typing import Any, Dict
 
-from bb_arena_optimizer.api.client import BoxscoreData
+from bb_arena_optimizer.api.client import BoxscoreData, ScheduleMatchData
 
 
 @dataclass
@@ -151,6 +151,18 @@ class GameRecord:
         result['total_attendance'] = self.total_attendance
         
         return result
+
+    def update_scores_from_schedule(self, schedule_match: ScheduleMatchData) -> None:
+        """Update game scores from schedule data.
+        
+        Args:
+            schedule_match: ScheduleMatchData containing scores to update
+        """
+        if schedule_match["home_score"] is not None:
+            self.score_home = schedule_match["home_score"]
+        if schedule_match["away_score"] is not None:
+            self.score_away = schedule_match["away_score"]
+        self.updated_at = datetime.now(datetime_utc)
 
     @classmethod
     def from_api_data(cls, boxscore_data: BoxscoreData, season: int | None = None) -> "GameRecord":
