@@ -4,7 +4,16 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
 
 ## Quick Start
 
-1. **Configure Environment Variables**:
+1. **Clone the Repository**:
+
+   ```bash
+   git clone https://github.com/IonMich/bb-arena.git
+   cd bb-arena
+   ```
+
+2. [Install `uv`](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
+
+3. **Configure Environment Variables**:
 
    ```bash
    cp .env.example .env
@@ -17,19 +26,13 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
 
 ### Frontend (Web Interface)
 
-1. **Install Dependencies**:
-
-   ```bash
-   uv sync
-   ```
-
-2. **Start Python Server**:
+1. **Start Python Server**:
 
    ```bash
    uv run run_server.py
    ```
 
-3. **Start Frontend**:
+2. **Start Frontend**:
 
    ```bash
    cd frontend
@@ -37,19 +40,19 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
    npm run dev
    ```
 
+3. **Access the Web Interface**:
+
+   Open your browser and go to `http://localhost:5173`.
+
 ### Bulk Collection Script
 
-1. **Install Dependencies**:
-
-   ```bash
-   uv sync --dev
-   ```
-
-2. **Run Collection Script**:
+1. **Run Collection Script**:
 
    ```bash
    uv run python scripts/test_collection.py
    ```
+
+   Add the `--help` flag to see available options.
 
 ## Development Testing
 
@@ -61,8 +64,8 @@ uv run pytest
 ## Development
 
 ```bash
-# Type checking
-uv run mypy src/
+# Type Checking
+uv run ty check src/
 
 # Linting
 uv run ruff check src/
