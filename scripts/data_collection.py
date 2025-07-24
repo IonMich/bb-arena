@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-Test the task-based collector with configurable countries, seasons, and league levels.
+BuzzerBeater Arena Data Collection Script
+
+Comprehensive data collection tool using the task-based collector with configurable 
+countries, seasons, and league levels. Supports parallel execution of multiple data 
+collection tasks for optimal performance.
+
 Defaults to USA level 1 teams for seasons 68,69.
 """
 
@@ -21,8 +26,8 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-async def test_collection(countries, seasons, max_league_level, selected_tasks):
-    """Test task-based collection for specified countries, seasons, and league levels."""
+async def run_data_collection(countries, seasons, max_league_level, selected_tasks):
+    """Run comprehensive data collection for specified countries, seasons, and league levels."""
     
     # Get credentials from environment
     username = os.getenv('BB_USERNAME')
@@ -53,7 +58,7 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
         # Initialize collector
         collector = TaskBasedCollector(api, db_manager, rate_config)
         
-        print(f"\n🌍 Testing Collection")
+        print(f"\n🌍 BuzzerBeater Data Collection")
         print("=" * 60)
         print(f"Target: Countries {countries}, Seasons {seasons}, Max Level {max_league_level}")
         
@@ -95,8 +100,8 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
             print(f"✅ Found {len(team_ids)} teams for the specified criteria")
         
         # Use all discovered teams since the count should be manageable
-        test_team_ids = team_ids
-        print(f"\n🧪 Processing all {len(test_team_ids)} discovered teams")
+        target_team_ids = team_ids
+        print(f"\n🎯 Processing all {len(target_team_ids)} discovered teams")
         
         # Run selected tasks
         print(f"\n🚀 TASKS {selected_tasks}: Running selected data collection tasks")
@@ -114,19 +119,19 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
         
         if 2 in selected_tasks:
             print("📋 Will run Task 2: Team Info Collection")
-            parallel_tasks.append(('team_info', collector.task_2_collect_team_info(test_team_ids)))
+            parallel_tasks.append(('team_info', collector.task_2_collect_team_info(target_team_ids)))
         
         if 3 in selected_tasks:
             print("🏟️ Will run Task 3: Arena Snapshots Collection")
-            parallel_tasks.append(('arena', collector.task_3_collect_arena_snapshots(test_team_ids)))
+            parallel_tasks.append(('arena', collector.task_3_collect_arena_snapshots(target_team_ids)))
         
         if 4 in selected_tasks:
             print("📚 Will run Task 4: Team History Collection")
-            parallel_tasks.append(('history', collector.task_4_collect_team_history(test_team_ids)))
+            parallel_tasks.append(('history', collector.task_4_collect_team_history(target_team_ids)))
         
         if 5 in selected_tasks:
             print("🏈 Will run Task 5: Home Games Collection")
-            parallel_tasks.append(('games', collector.task_5_collect_home_games(test_team_ids, seasons)))
+            parallel_tasks.append(('games', collector.task_5_collect_home_games(target_team_ids, seasons)))
         
         # Execute parallel tasks
         if parallel_tasks:
@@ -154,7 +159,7 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
         # Run task 6 sequentially after parallel tasks (if selected)
         if 6 in selected_tasks:
             print("\n💰 Running Task 6: Game Pricing Updates (sequential)")
-            pricing_result = await collector.task_6_update_game_pricing(test_team_ids)
+            pricing_result = await collector.task_6_update_game_pricing(target_team_ids)
         
         # Task 2 Results
         if team_info_result:
@@ -228,14 +233,14 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
                 print(f"   - Total games updated: {data.get('total_games_updated', 0)}")
         
         # Overall summary
-        print(f"\n🎉 Collection Test Results")
+        print(f"\n🎉 Data Collection Results")
         print("=" * 60)
         print(f"✅ Task 1 (Team Discovery): {team_ids_result.success}")
         print(f"   └─ {len(team_ids)} teams discovered from countries {countries}, max level {max_league_level}")
         
         if team_info_result:
             print(f"✅ Task 2 (Team Info): {team_info_result.success}")
-            print(f"   └─ {team_info_result.items_processed}/{len(test_team_ids)} teams processed")
+            print(f"   └─ {team_info_result.items_processed}/{len(target_team_ids)} teams processed")
         elif 2 in selected_tasks:
             print(f"❌ Task 2 (Team Info): FAILED")
         else:
@@ -243,7 +248,7 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
             
         if arena_result:
             print(f"✅ Task 3 (Arena Data): {arena_result.success}")
-            print(f"   └─ {arena_result.items_processed}/{len(test_team_ids)} teams processed")
+            print(f"   └─ {arena_result.items_processed}/{len(target_team_ids)} teams processed")
         elif 3 in selected_tasks:
             print(f"❌ Task 3 (Arena Data): FAILED")
         else:
@@ -251,7 +256,7 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
             
         if history_result:
             print(f"✅ Task 4 (Team History): {history_result.success}")
-            print(f"   └─ {history_result.items_processed}/{len(test_team_ids)} teams processed")
+            print(f"   └─ {history_result.items_processed}/{len(target_team_ids)} teams processed")
         elif 4 in selected_tasks:
             print(f"❌ Task 4 (Team History): FAILED")
         else:
@@ -285,7 +290,7 @@ async def test_collection(countries, seasons, max_league_level, selected_tasks):
         
         if all_tasks_success:
             print(f"\n✅ All tasks completed successfully!")
-            print(f"💡 Task-based collector with parallel execution is working correctly")
+            print(f"💡 Data collection with parallel execution completed successfully")
             print(f"📈 Ready to scale up to multiple countries and league levels")
         else:
             print(f"\n⚠️  Some tasks had issues - review logs above")
@@ -318,7 +323,7 @@ def get_available_countries(db_path: str = "bb_arena_data.db") -> list[tuple[int
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description='Test task-based collector with configurable parameters',
+        description='BuzzerBeater Arena data collection with configurable parameters',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -395,4 +400,4 @@ if __name__ == "__main__":
             print("You may need to populate the league_hierarchy table first.")
         sys.exit(0)
     
-    asyncio.run(test_collection(args.countries, args.seasons, args.max_league_level, args.tasks))
+    asyncio.run(run_data_collection(args.countries, args.seasons, args.max_league_level, args.tasks))
