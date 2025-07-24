@@ -54,6 +54,9 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
 
    Add the `--help` flag to see available options.
 
+   <!-- add the image -->
+   ![Comparison of Predicted vs Actual Attendance, Grouped by Seating Section](output/attendance_pred_actual.png)
+
 ## Development Testing
 
 ```bash
