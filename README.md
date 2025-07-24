@@ -84,7 +84,15 @@ A Python application for collecting, storing, and analyzing BuzzerBeater basketb
 
 ### Data Analysis
 
-   ![Comparison of Predicted vs Actual Attendance, Grouped by Seating Section](output/attendance_pred_actual.png)
+The project includes two Jupyter notebooks for analyzing the collected data:
+
+- `arena_analysis.ipynb`: Data Preprocessing and Exploration
+- `demand_prediction_model.ipynb`: Attendance Prediction Modeling
+
+> [!IMPORTANT]
+> The statistical model is still under active development with a RMSE of >500 seats. Contributions to improve the model are welcome!
+
+![Comparison of Predicted vs Actual Attendance, Grouped by Seating Section](output/attendance_pred_actual.png)
 
 ## Development Testing
 
