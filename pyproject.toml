@@ -3,29 +3,15 @@ name = "bb-arena-optimizer"
 version = "0.1.0"
 description = "BuzzerBeater Arena Ticket Pricing Optimizer"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "requests>=2.31.0",
     "beautifulsoup4>=4.12.0",
-    "pandas>=2.0.0",
-    "numpy>=1.24.0",
     "python-dotenv>=1.0.0",
     "lxml>=4.9.0",
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
     "pydantic>=2.0.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
-    "mypy>=1.0.0",
-    "jupyter>=1.0.0",
-    "ipykernel>=6.25.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
 ]
 
 [tool.pytest.ini_options]
@@ -40,78 +26,38 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "ipykernel>=6.29.5",
-    "mypy>=1.16.1",
-    "pytest>=8.4.1",
-    "ruff>=0.12.2",
+analysis = [
+    "ipykernel>=6.30.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.3",
+    "numpy>=2.3.1",
+    "pandas>=2.3.1",
     "scikit-learn>=1.7.1",
+    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
+]
+dev = [
+    {include-group = "lint"},
+    {include-group = "test"},
+    {include-group = "types"},
+    {include-group = "analysis"},
+]
+lint = [
+    "ruff>=0.12.4",
+]
+test = [
+    "pytest>=8.4.1",
+]
+types = [
+    "ty>=0.0.1a15",
     "types-pytz>=2025.2.0.20250516",
     "types-requests>=2.32.4.20250611",
 ]
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-check_untyped_defs = true
-disallow_untyped_decorators = false
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-show_error_codes = true
-
-# Allow untyped calls for external libraries
-[[tool.mypy.overrides]]
-module = [
-    "requests.*",
-    "pandas.*",
-    "numpy.*",
-    "matplotlib.*",
-    "seaborn.*",
-    "beautifulsoup4.*",
-    "lxml.*"
-]
-ignore_missing_imports = true
 
 [tool.ruff]
 # Same as Black.
 line-length = 88
 indent-width = 4
-
-# Assume Python 3.11+
-target-version = "py311"
-
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-]
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
@@ -147,3 +93,6 @@ line-ending = "auto"
 
 [tool.ruff.lint.isort]
 known-first-party = ["bb_arena_optimizer"]
+
+[tool.ty.rules]
+unused-ignore-comment = "warn"
