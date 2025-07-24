@@ -94,3 +94,6 @@ logs/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+output/*
+-output/attendance_pred_actual.png
