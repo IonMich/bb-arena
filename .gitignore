@@ -96,4 +96,4 @@ logs/
 dmypy.json
 
 output/*
--output/attendance_pred_actual.png
+!output/attendance_pred_actual.png
